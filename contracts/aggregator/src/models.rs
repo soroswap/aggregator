@@ -33,7 +33,7 @@ pub struct DexDistribution {
     pub index: i32,
     pub path: Vec<Address>,
     pub parts: i128,
-}
+} 
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -43,3 +43,11 @@ pub struct ProtocolAddressPair {
 }
 
 pub const MAX_DISTRIBUTION_LENGTH: u32 = 15;
+
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Protocol {
+    pub adaptator: Address,
+    pub active: bool,
+}

@@ -8,8 +8,17 @@ mod event;
 mod storage;
 mod test;
 
-use storage::{put_protocol_address, has_protocol_address, get_protocol_address, extend_instance_ttl, is_initialized, set_initialized, set_admin, get_admin};
-use models::{DexDistribution, ProtocolAddressPair, MAX_DISTRIBUTION_LENGTH};
+use storage::{
+    push_protocol,
+    put_protocol_address, 
+    has_protocol_address, 
+    get_protocol_address, 
+    extend_instance_ttl, 
+    is_initialized, 
+    set_initialized, 
+    set_admin, 
+    get_admin};
+use models::{DexDistribution, ProtocolAddressPair, Protocol, MAX_DISTRIBUTION_LENGTH};
 pub use error::{SoroswapAggregatorError, CombinedAggregatorError};
 use crate::dex_interfaces::{dex_constants, soroswap_interface, phoenix_interface};
 
@@ -58,7 +67,9 @@ fn is_valid_protocol(protocol_id: i32) -> Result<(), CombinedAggregatorError> {
 pub trait SoroswapAggregatorTrait {
 
     /// Initializes the contract and sets the soroswap_router address
-    fn initialize(e: Env, admin: Address, protocol_addresses: Vec<ProtocolAddressPair>) -> Result<(), CombinedAggregatorError>;
+    fn initialize(
+        e: Env, admin: Address,
+        initial_protocols: Vec<Protocol>) -> Result<(), CombinedAggregatorError>;
 
     /// Updates the protocol addresses for the aggregator
     fn update_protocols(
@@ -122,22 +133,20 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     fn initialize(
         e: Env,
         admin: Address,
-        protocol_addresses: Vec<ProtocolAddressPair>,
+        initial_protocols: Vec<Protocol>,
     ) -> Result<(), CombinedAggregatorError> {
         if is_initialized(&e) {
             return Err(CombinedAggregatorError::AggregatorInitializeAlreadyInitialized.into());
         }
     
-        for pair in protocol_addresses.iter() {
-            is_valid_protocol(pair.protocol_id)?;
-            put_protocol_address(&e, pair);
+        for protocol in initial_protocols.iter() {
+            push_protocol(&e, protocol);
         }
 
-        set_admin(&e, admin);
-    
+        set_admin(&e, admin);    
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, true, protocol_addresses);
+        event::initialized(&e, true, initial_protocols);
         extend_instance_ttl(&e);
         Ok(())
     }
