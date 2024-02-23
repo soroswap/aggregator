@@ -42,20 +42,28 @@ TOKEN_ADDR1=$(soroban contract deploy \
     --source phoenix-admin \
     --network $NETWORK)
 
+echo "Token 1 deployed."
+
 TOKEN_ADDR2=$(soroban contract deploy \
     --wasm soroban_token_contract.optimized.wasm \
     --source phoenix-admin \
     --network $NETWORK)
 
+echo "Token 2 deployed."
+
 FACTORY_ADDR=$(soroban contract deploy \
-    --wasm phoenix_factory.optimized.wasm \
+    --wasm phoenix_factory.wasm \
     --source phoenix-admin \
     --network $NETWORK)
+
+echo "Factory deployed."
 
 MULTIHOP_ADDR=$(soroban contract deploy \
     --wasm phoenix_multihop.optimized.wasm \
     --source phoenix-admin \
     --network $NETWORK)
+
+echo "Multihop deployed."
 
 echo "Tokens, factory and multihop deployed."
 

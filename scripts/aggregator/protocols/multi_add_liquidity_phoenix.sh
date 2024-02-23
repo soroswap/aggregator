@@ -107,7 +107,7 @@ do
     -- \
     mint \
     --to phoenix-admin \
-    --amount 1000000000000
+    --amount 100000000000000
 done
 
 #Create different paths to add liquidity
@@ -174,15 +174,20 @@ echo -e "${BLUE}Adding liquidity to path 1${NC}"
 echo ""
 for ((i=0; i<${#PATH_1[@]}-1; i++))
 do
+    echo -e "${YELLOW}${PATH_1[i]}${NC}"
+    echo -e "${YELLOW}${PATH_1[i+1]}${NC}"
     # Create Liquidity pool
-    soroban contract invoke \
+    if ! soroban contract invoke \
         --id $PHOENIX_FACTORY_ADDRESS \
         --source phoenix-admin \
         --network $NETWORK \
         -- \
         create_liquidity_pool \
         --lp_init_info "{ \"admin\": \"${PHOENIX_ADMIN_ADDRESS}\", \"lp_wasm_hash\": \"${PAIR_WASM_HASH}\", \"share_token_decimals\": 7, \"swap_fee_bps\": 1000, \"fee_recipient\": \"${PHOENIX_ADMIN_ADDRESS}\", \"max_allowed_slippage_bps\": 10000, \"max_allowed_spread_bps\": 10000, \"max_referral_bps\": 10000, \"token_init_info\": { \"token_wasm_hash\": \"${TOKEN_WASM_HASH}\", \"token_a\": \"${PATH_1[i]}\", \"token_b\": \"${PATH_1[i+1]}\" }, \"stake_init_info\": { \"stake_wasm_hash\": \"${STAKE_WASM_HASH}\", \"min_bond\": \"100\", \"min_reward\": \"100\", \"max_distributions\": 3 } }" \
-        --caller $PHOENIX_ADMIN_ADDRESS  || echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        --caller $PHOENIX_ADMIN_ADDRESS; then
+        echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        continue # Skip the rest of the loop and move to the next iteration
+    fi
 
     PAIR_ADDR=$(soroban contract invoke \
         --network $NETWORK \
@@ -193,7 +198,7 @@ do
         --token_a ${PATH_1[i]} \
         --token_b ${PATH_1[i+1]} )
 
-    PAIR_ADDR="${PAIR_ADDR//\"/}"
+    PAIR_ADDR=${PAIR_ADDR//\"/}
 
     soroban contract invoke \
         --id $PAIR_ADDR \
@@ -211,16 +216,20 @@ echo -e "${BLUE}Adding liquidity to path 2${NC}"
 echo ""
 for ((i=0; i<${#PATH_2[@]}-1; i++))
 do
-    echo -e "${YELLOW}Adding to ${PATH_2_SYMBOL[i]} ${PATH_2_SYMBOL[i+1]}${NC}"
+    echo -e "${YELLOW}${PATH_2[i]}${NC}"
+    echo -e "${YELLOW}${PATH_2[i+1]}${NC}"
     # Create Liquidity pool
-    soroban contract invoke \
+    if ! soroban contract invoke \
         --id $PHOENIX_FACTORY_ADDRESS \
         --source phoenix-admin \
         --network $NETWORK \
         -- \
         create_liquidity_pool \
         --lp_init_info "{ \"admin\": \"${PHOENIX_ADMIN_ADDRESS}\", \"lp_wasm_hash\": \"${PAIR_WASM_HASH}\", \"share_token_decimals\": 7, \"swap_fee_bps\": 1000, \"fee_recipient\": \"${PHOENIX_ADMIN_ADDRESS}\", \"max_allowed_slippage_bps\": 10000, \"max_allowed_spread_bps\": 10000, \"max_referral_bps\": 10000, \"token_init_info\": { \"token_wasm_hash\": \"${TOKEN_WASM_HASH}\", \"token_a\": \"${PATH_2[i]}\", \"token_b\": \"${PATH_2[i+1]}\" }, \"stake_init_info\": { \"stake_wasm_hash\": \"${STAKE_WASM_HASH}\", \"min_bond\": \"100\", \"min_reward\": \"100\", \"max_distributions\": 3 } }" \
-        --caller $PHOENIX_ADMIN_ADDRESS  || echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        --caller $PHOENIX_ADMIN_ADDRESS; then
+        echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        continue # Skip the rest of the loop and move to the next iteration
+    fi
 
     PAIR_ADDR=$(soroban contract invoke \
         --network $NETWORK \
@@ -231,37 +240,38 @@ do
         --token_a ${PATH_2[i]} \
         --token_b ${PATH_2[i+1]} )
 
-    PAIR_ADDR="${PAIR_ADDR//\"/}"
+    PAIR_ADDR=${PAIR_ADDR//\"/}
 
     soroban contract invoke \
         --id $PAIR_ADDR \
         --source phoenix-admin \
         --network $NETWORK --fee 10000000 \
         -- \
-        provide_liquidity --sender $PHOENIX_ADMIN_ADDRESS --desired_a 100000000000 --desired_b 50000000000
+        provide_liquidity --sender $PHOENIX_ADMIN_ADDRESS --desired_a 10000000000 --desired_b 5000000000
 
 done
 
 #--------------------------------------------------------------------------------------------------------------------------------------
-#Define the desired values for the add_liquidity function on path 3
-AMOUNT_A_DESIRED_VALUES=(60000 55000 80000)
-AMOUNT_B_DESIRED_VALUES=(61000 53500 80500)
 #Add liquidity to the pairs in path 3
 echo ""
 echo -e "${BLUE}Adding liquidity to path 3${NC}"
 echo ""
 for ((i=0; i<${#PATH_3[@]}-1; i++))
 do
-    echo -e "${YELLOW}Adding ${PATH_3_SYMBOL[i]} and ${PATH_3_SYMBOL[i+1]}${NC}"
+    echo -e "${YELLOW}${PATH_3[i]}${NC}"
+    echo -e "${YELLOW}${PATH_3[i+1]}${NC}"
     # Create Liquidity pool
-    soroban contract invoke \
+    if ! soroban contract invoke \
         --id $PHOENIX_FACTORY_ADDRESS \
         --source phoenix-admin \
         --network $NETWORK \
         -- \
         create_liquidity_pool \
         --lp_init_info "{ \"admin\": \"${PHOENIX_ADMIN_ADDRESS}\", \"lp_wasm_hash\": \"${PAIR_WASM_HASH}\", \"share_token_decimals\": 7, \"swap_fee_bps\": 1000, \"fee_recipient\": \"${PHOENIX_ADMIN_ADDRESS}\", \"max_allowed_slippage_bps\": 10000, \"max_allowed_spread_bps\": 10000, \"max_referral_bps\": 10000, \"token_init_info\": { \"token_wasm_hash\": \"${TOKEN_WASM_HASH}\", \"token_a\": \"${PATH_3[i]}\", \"token_b\": \"${PATH_3[i+1]}\" }, \"stake_init_info\": { \"stake_wasm_hash\": \"${STAKE_WASM_HASH}\", \"min_bond\": \"100\", \"min_reward\": \"100\", \"max_distributions\": 3 } }" \
-        --caller $PHOENIX_ADMIN_ADDRESS  || echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        --caller $PHOENIX_ADMIN_ADDRESS; then
+        echo "Failed to create liquidity pool (already exists), continuing with next steps..."
+        continue # Skip the rest of the loop and move to the next iteration
+    fi
 
     PAIR_ADDR=$(soroban contract invoke \
         --network $NETWORK \
@@ -272,14 +282,14 @@ do
         --token_a ${PATH_3[i]} \
         --token_b ${PATH_3[i+1]} )
 
-    PAIR_ADDR="${PAIR_ADDR//\"/}"
+    PAIR_ADDR=${PAIR_ADDR//\"/}
 
     soroban contract invoke \
         --id $PAIR_ADDR \
         --source phoenix-admin \
         --network $NETWORK --fee 10000000 \
         -- \
-        provide_liquidity --sender $PHOENIX_ADMIN_ADDRESS --desired_a 90000000000 --desired_b 4000000000
+        provide_liquidity --sender $PHOENIX_ADMIN_ADDRESS --desired_a 9000000000 --desired_b 400000000
 done
 
 echo ""
