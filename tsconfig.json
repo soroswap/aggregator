@@ -8,10 +8,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node16",
-    "outDir": "./lib",
+    "outDir": "./dist",
   },
   "include": [
     "scripts",
-    "lib",
+    "dist",
   ]
 }
