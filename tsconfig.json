@@ -11,7 +11,7 @@
     "outDir": "./dist",
   },
   "include": [
-    "scripts",
+    "src",
     "dist",
   ]
 }

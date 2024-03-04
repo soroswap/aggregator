@@ -47,21 +47,14 @@ class EnvConfig {
     const fileContents = fs.readFileSync(path.join(__dirname, '../../configs.json'), 'utf8');
     const configs: Config = JSON.parse(fileContents);
 
-    let rpc_url, friendbot_url, passphrase;
-
-    if (network === 'mainnet') {
-      rpc_url = process.env.RPC_URL;
-      friendbot_url = undefined;
-      passphrase = process.env.NETWORK_PASSPHRASE;
-    } else {
-      const networkConfig = configs.networkConfig.find((config) => config.network === network);
-      if (!networkConfig) {
-        throw new Error(`Network configuration for '${network}' not found`);
-      }
-      rpc_url = networkConfig.soroban_rpc_url;
-      friendbot_url = networkConfig.friendbot_url;
-      passphrase = networkConfig.soroban_network_passphrase;
+    const networkConfig = configs.networkConfig.find((config) => config.network === network);
+    if (!networkConfig) {
+      throw new Error(`Network configuration for '${network}' not found`);
     }
+
+    const rpc_url = networkConfig.soroban_rpc_url;
+    const friendbot_url = networkConfig.friendbot_url;
+    const passphrase = networkConfig.soroban_network_passphrase;
 
     const admin = process.env.ADMIN;
     if (
