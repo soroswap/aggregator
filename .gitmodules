@@ -4,3 +4,6 @@
 [submodule "contracts/protocols/phoenix"]
 	path = contracts/protocols/phoenix
 	url = https://github.com/Phoenix-Protocol-Group/phoenix-contracts.git
+[submodule "contracts/protocols/soroswap"]
+	path = contracts/protocols/soroswap
+	url = https://github.com/soroswap/core.git
