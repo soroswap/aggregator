@@ -41,7 +41,7 @@ after everything is built you can now follow the following instructions
 
 ## Deployment
 
-To deploy th smart contracts you first would need to build the source with
+To deploy the smart contracts you first would need to build the source with
 ```bash
 yarn build
 ```
@@ -58,3 +58,6 @@ if you want to publish the deployments (move the contracts from .soroban to publ
 yarn upload <network>
 ```
 
+## Standalone
+
+when using standalone as network the deploy script will look inside the .soroban directory inside the soroswap protocol directory, this directory will only exist if you deploy soroswap core inside the contracts/protocols/soroswap directory while being inside thwe container

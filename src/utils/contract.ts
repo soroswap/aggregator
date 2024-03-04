@@ -1,7 +1,18 @@
 // import { randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { Keypair, Operation, hash, xdr } from 'stellar-sdk';
+import {
+  Address,
+  Asset,
+  Contract,
+  Keypair,
+  Operation,
+  StrKey,
+  hash,
+  scValToNative,
+  xdr,
+} from 'stellar-sdk';
 import { fileURLToPath } from 'url';
 import { AddressBook } from './address_book.js';
 import { config } from './env_config.js';
@@ -11,13 +22,10 @@ import { createTxBuilder, invoke, invokeTransaction } from './tx.js';
 const CONTRACT_REL_PATH: object = {
   aggregator:
     '../../contracts/aggregator/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
-  // comet: '../../../blend-contracts/comet.wasm',
-  // oraclemock: '../../src/external/oracle.wasm',
-  // emitter: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/emitter.wasm',
-  // poolFactory: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool_factory.wasm',
-  // backstop: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/backstop.wasm',
-  // lendingPool: '../../../blend-contracts/target/wasm32-unknown-unknown/optimized/pool.wasm',
 };
+
+const network = process.argv[2];
+const loadedConfig = config(network);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,114 +45,143 @@ export async function installContract(wasmKey: string, addressBook: AddressBook,
   await invoke(op, source, false);
 }
 
-// export async function deployContract(
-//   contractKey: string,
-//   wasmKey: string,
-//   addressBook: AddressBook,
-//   source: Keypair
-// ) {
-//   const contractIdSalt = randomBytes(32);
-//   const networkId = hash(Buffer.from(config.passphrase));
-//   const contractIdPreimage = xdr.ContractIdPreimage.contractIdPreimageFromAddress(
-//     new xdr.ContractIdPreimageFromAddress({
-//       address: Address.fromString(source.publicKey()).toScAddress(),
-//       salt: contractIdSalt,
-//     })
-//   );
+export async function deployContract(
+  contractKey: string,
+  wasmKey: string,
+  addressBook: AddressBook,
+  source: Keypair
+) {
+  const contractIdSalt = randomBytes(32);
+  const networkId = hash(Buffer.from(loadedConfig.passphrase));
+  const contractIdPreimage = xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+    new xdr.ContractIdPreimageFromAddress({
+      address: Address.fromString(source.publicKey()).toScAddress(),
+      salt: contractIdSalt,
+    })
+  );
 
-//   const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
-//     new xdr.HashIdPreimageContractId({
-//       networkId: networkId,
-//       contractIdPreimage: contractIdPreimage,
-//     })
-//   );
-//   console.log('Deploying WASM', wasmKey, 'for', contractKey);
-//   const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
-//   addressBook.setContractId(contractKey, contractId);
-//   const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
+  const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: contractIdPreimage,
+    })
+  );
+  console.log('Deploying WASM', wasmKey, 'for', contractKey);
+  const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
+  addressBook.setContractId(contractKey, contractId);
+  const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
 
-//   const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
-//     new xdr.CreateContractArgs({
-//       contractIdPreimage: contractIdPreimage,
-//       executable: xdr.ContractExecutable.contractExecutableWasm(wasmHash),
-//     })
-//   );
+  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
+    new xdr.CreateContractArgs({
+      contractIdPreimage: contractIdPreimage,
+      executable: xdr.ContractExecutable.contractExecutableWasm(wasmHash),
+    })
+  );
 
-//   addressBook.writeToFile();
-//   await invokeAndUnwrap(
-//     Operation.invokeHostFunction({
-//       func: deployFunction,
-//       auth: [],
-//     }),
-//     config.admin,
-//     () => undefined
-//   );
-// }
+  addressBook.writeToFile();
+  await invoke(
+    Operation.invokeHostFunction({
+      func: deployFunction,
+      auth: [],
+    }),
+    loadedConfig.admin,
+    false
+  );
+}
 
-// export async function deployStellarAsset(asset: Asset, addressBook: AddressBook, source: Keypair) {
-//   const xdrAsset = asset.toXDRObject();
-//   const networkId = hash(Buffer.from(config.passphrase));
-//   const preimage = xdr.HashIdPreimage.envelopeTypeContractId(
-//     new xdr.HashIdPreimageContractId({
-//       networkId: networkId,
-//       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
-//     })
-//   );
-//   const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
+export async function invokeContract(
+  contractKey: string,
+  addressBook: AddressBook,
+  method: string,
+  params: xdr.ScVal[],
+  source: Keypair
+) {
+  console.log('Invoking contract: ', contractKey, ' with method: ', method);
+  const contractAddress = addressBook.getContractId(contractKey);
+  const contractInstance = new Contract(contractAddress);
 
-//   addressBook.setContractId(asset.code, contractId);
-//   const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
-//     new xdr.CreateContractArgs({
-//       contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
-//       executable: xdr.ContractExecutable.contractExecutableStellarAsset(),
-//     })
-//   );
-//   await invokeAndUnwrap(
-//     Operation.invokeHostFunction({
-//       func: deployFunction,
-//       auth: [],
-//     }),
-//     source,
-//     () => undefined
-//   );
-// }
+  const contractOperation = contractInstance.call(method, ...params);
+  return await invoke(contractOperation, source, false);
+}
 
-// export async function bumpContractInstance(
-//   contractKey: string,
-//   addressBook: AddressBook,
-//   source: Keypair
-// ) {
-//   const address = Address.fromString(addressBook.getContractId(contractKey));
-//   console.log('bumping contract instance: ', address.toString());
-//   const contractInstanceXDR = xdr.LedgerKey.contractData(
-//     new xdr.LedgerKeyContractData({
-//       contract: address.toScAddress(),
-//       key: xdr.ScVal.scvLedgerKeyContractInstance(),
-//       durability: xdr.ContractDataDurability.persistent(),
-//     })
-//   );
-//   const bumpTransactionData = new xdr.SorobanTransactionData({
-//     resources: new xdr.SorobanResources({
-//       footprint: new xdr.LedgerFootprint({
-//         readOnly: [contractInstanceXDR],
-//         readWrite: [],
-//       }),
-//       instructions: 0,
-//       readBytes: 0,
-//       writeBytes: 0,
-//     }),
-//     resourceFee: xdr.Int64.fromString('0'),
-//     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//     // @ts-ignore
-//     ext: new xdr.ExtensionPoint(0),
-//   });
+export async function invokeCustomContract(
+  contractId: string,
+  method: string,
+  params: xdr.ScVal[],
+  source: Keypair
+) {
+  console.log('Invoking contract: ', contractId, ' with method: ', method);
+  const contractInstance = new Contract(contractId);
 
-//   const txBuilder = await createTxBuilder(source);
-//   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
-//   txBuilder.setSorobanData(bumpTransactionData);
-//   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
-//   console.log(result.toString(), '\n');
-// }
+  const contractOperation = contractInstance.call(method, ...params);
+  return await invoke(contractOperation, source, false);
+}
+
+export async function deployStellarAsset(asset: Asset, source: Keypair) {
+  const xdrAsset = asset.toXDRObject();
+  const networkId = hash(Buffer.from(loadedConfig.passphrase));
+  const preimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
+    })
+  );
+  const contractId = StrKey.encodeContract(hash(preimage.toXDR()));
+  console.log('🚀 « deployed Stellar Asset:', contractId);
+
+  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
+    new xdr.CreateContractArgs({
+      contractIdPreimage: xdr.ContractIdPreimage.contractIdPreimageFromAsset(xdrAsset),
+      executable: xdr.ContractExecutable.contractExecutableStellarAsset(),
+    })
+  );
+  return await invoke(
+    Operation.invokeHostFunction({
+      func: deployFunction,
+      auth: [],
+    }),
+    source,
+    false
+  );
+}
+
+export async function bumpContractInstance(
+  contractKey: string,
+  addressBook: AddressBook,
+  source: Keypair
+) {
+  const address = Address.fromString(addressBook.getContractId(contractKey));
+  console.log('bumping contract instance: ', address.toString());
+  const contractInstanceXDR = xdr.LedgerKey.contractData(
+    new xdr.LedgerKeyContractData({
+      contract: address.toScAddress(),
+      key: xdr.ScVal.scvLedgerKeyContractInstance(),
+      durability: xdr.ContractDataDurability.persistent(),
+    })
+  );
+  const bumpTransactionData = new xdr.SorobanTransactionData({
+    resources: new xdr.SorobanResources({
+      footprint: new xdr.LedgerFootprint({
+        readOnly: [contractInstanceXDR],
+        readWrite: [],
+      }),
+      instructions: 0,
+      readBytes: 0,
+      writeBytes: 0,
+    }),
+    resourceFee: xdr.Int64.fromString('0'),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    ext: new xdr.ExtensionPoint(0),
+  });
+
+  const txBuilder = await createTxBuilder(source);
+  txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
+  txBuilder.setSorobanData(bumpTransactionData);
+  const result = await invokeTransaction(txBuilder.build(), source, false);
+  // @ts-expect-error console.log(status)
+  console.log(result.status, '\n');
+}
 
 export async function bumpContractCode(wasmKey: string, addressBook: AddressBook, source: Keypair) {
   console.log('bumping contract code: ', wasmKey);
@@ -174,84 +211,9 @@ export async function bumpContractCode(wasmKey: string, addressBook: AddressBook
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  console.log(result.toString(), '\n');
+  // @ts-expect-error console.log(status)
+  console.log(result.status, '\n');
 }
-
-// export async function bumpContractData(
-//   contractKey: string,
-//   addressBook: AddressBook,
-//   dataKey: xdr.ScVal,
-//   source: Keypair
-// ) {
-//   const address = Address.fromString(addressBook.getContractId(contractKey));
-//   console.log('bumping contract ledger entry: ', address.toString());
-//   const contractDataXDR = xdr.LedgerKey.contractData(
-//     new xdr.LedgerKeyContractData({
-//       contract: address.toScAddress(),
-//       key: dataKey,
-//       durability: xdr.ContractDataDurability.persistent(),
-//     })
-//   );
-//   const bumpTransactionData = new xdr.SorobanTransactionData({
-//     resources: new xdr.SorobanResources({
-//       footprint: new xdr.LedgerFootprint({
-//         readOnly: [contractDataXDR],
-//         readWrite: [],
-//       }),
-//       instructions: 0,
-//       readBytes: 0,
-//       writeBytes: 0,
-//     }),
-//     resourceFee: xdr.Int64.fromString('0'),
-//     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//     // @ts-ignore
-//     ext: new xdr.ExtensionPoint(0),
-//   });
-
-//   const txBuilder = await createTxBuilder(source);
-//   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
-//   txBuilder.setSorobanData(bumpTransactionData);
-//   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
-//   console.log(result.toString(), '\n');
-// }
-
-// export async function restoreContractData(
-//   contractKey: string,
-//   addressBook: AddressBook,
-//   dataKey: xdr.ScVal,
-//   source: Keypair
-// ) {
-//   const address = Address.fromString(addressBook.getContractId(contractKey));
-//   console.log('restoring contract ledger entry: ', address.toString());
-//   const contractDataXDR = xdr.LedgerKey.contractData(
-//     new xdr.LedgerKeyContractData({
-//       contract: address.toScAddress(),
-//       key: dataKey,
-//       durability: xdr.ContractDataDurability.persistent(),
-//     })
-//   );
-//   const restoreTransactionData = new xdr.SorobanTransactionData({
-//     resources: new xdr.SorobanResources({
-//       footprint: new xdr.LedgerFootprint({
-//         readOnly: [],
-//         readWrite: [contractDataXDR],
-//       }),
-//       instructions: 0,
-//       readBytes: 0,
-//       writeBytes: 0,
-//     }),
-//     resourceFee: xdr.Int64.fromString('0'),
-//     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//     // @ts-ignore
-//     ext: new xdr.ExtensionPoint(0),
-//   });
-
-//   const txBuilder = await createTxBuilder(source);
-//   txBuilder.addOperation(Operation.restoreFootprint({}));
-//   txBuilder.setSorobanData(restoreTransactionData);
-//   const result = await invokeTransaction(txBuilder.build(), source, false, () => undefined);
-//   console.log(result.toString(), '\n');
-// }
 
 export async function airdropAccount(user: Keypair) {
   try {
@@ -263,5 +225,64 @@ export async function airdropAccount(user: Keypair) {
   }
 }
 
-const network = process.argv[2];
-const loadedConfig = config(network);
+export async function deploySorobanToken(
+  wasmKey: string,
+  addressBook: AddressBook,
+  source: Keypair
+) {
+  const contractIdSalt = randomBytes(32);
+  const networkId = hash(Buffer.from(loadedConfig.passphrase));
+  const contractIdPreimage = xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+    new xdr.ContractIdPreimageFromAddress({
+      address: Address.fromString(source.publicKey()).toScAddress(),
+      salt: contractIdSalt,
+    })
+  );
+
+  const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: contractIdPreimage,
+    })
+  );
+  const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
+  const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), 'hex');
+
+  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
+    new xdr.CreateContractArgs({
+      contractIdPreimage: contractIdPreimage,
+      executable: xdr.ContractExecutable.contractExecutableWasm(wasmHash),
+    })
+  );
+
+  // addressBook.writeToFile();
+  const result = await invoke(
+    Operation.invokeHostFunction({
+      func: deployFunction,
+      auth: [],
+    }),
+    loadedConfig.admin,
+    false
+  );
+
+  if (result) {
+    return contractId;
+  }
+}
+
+export async function getTokenBalance(contractId: string, from: string, source: Keypair) {
+  const tokenContract = new Contract(contractId);
+  const op = tokenContract.call('balance', new Address(from).toScVal());
+
+  const result = await invoke(op, source, true);
+  const parsedResult = scValToNative(result.result.retval).toString();
+
+  if (!parsedResult) {
+    throw new Error('The operation has no result.');
+  }
+  if (parsedResult == 0) {
+    return parsedResult;
+  }
+  const resultNumber = parseInt(parsedResult.slice(0, -1));
+  return resultNumber;
+}

@@ -17,16 +17,6 @@ export async function signWithKeypair(
   return tx.toXDR();
 }
 
-// export async function logInvocation(invocation: Promise<ContractResult<any>>) {
-//   console.log('invoking contract...');
-//   const result = await invocation;
-//   console.log('Hash: ', result.hash);
-//   console.log(JSON.stringify(result.resources, null, 2));
-//   console.log(result.toString());
-//   result.unwrap();
-//   console.log();
-// }
-
 export async function invoke(
   operation: string | xdr.Operation,
   source: Keypair,
@@ -47,12 +37,10 @@ export async function invokeTransaction(tx: Transaction, source: Keypair, sim: b
   if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
-    return simulation_resp;
+    throw Error(`Simulation error: ${JSON.stringify(simulation_resp)}`);
   } else if (sim) {
     // Only simulate the TX. Assemble the TX to borrow the resource estimation algorithm in
-    // `assembleTransaction` and return the simulation results.
-    const prepped_tx = SorobanRpc.assembleTransaction(tx, simulation_resp).build();
-    return prepped_tx;
+    return simulation_resp;
   }
 
   // assemble and sign the TX
@@ -102,31 +90,12 @@ export async function createTxBuilder(source: Keypair): Promise<TransactionBuild
   }
 }
 
-// export async function invokeClassicOp(operation: xdr.Operation<Operation>, source: Keypair) {
-//   console.log('invoking classic op...');
-//   const txBuilder = await createTxBuilder(source);
-//   txBuilder.addOperation(operation);
-//   const tx = txBuilder.build();
-//   tx.sign(source);
-//   try {
-//     let response: txResponse = await config.rpc.sendTransaction(tx);
-//     let status: txStatus = response.status;
-//     const tx_hash = response.hash;
-//     console.log(`Hash: ${tx_hash}\n`);
-//     // Poll this until the status is not "NOT_FOUND"
-//     while (status === 'PENDING' || status === 'NOT_FOUND') {
-//       // See if the transaction is complete
-//       await new Promise((resolve) => setTimeout(resolve, 2000));
-//       console.log('checking tx...');
-//       response = await config.rpc.getTransaction(tx_hash);
-//       status = response.status;
-//     }
-//     console.log('Transaction status:', response.status);
-//     if (status === 'ERROR') {
-//       console.log(response);
-//     }
-//   } catch (e) {
-//     console.error(e);
-//     throw Error('failed to submit classic op TX');
-//   }
-// }
+export const getCurrentTimePlusOneHour = () => {
+  // Get the current time in milliseconds
+  const now = Date.now();
+
+  // Add one hour (3600000 milliseconds)
+  const oneHourLater = now + 3600000;
+
+  return oneHourLater;
+};
