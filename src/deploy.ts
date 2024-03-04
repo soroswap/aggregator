@@ -9,10 +9,10 @@
 // import { Asset } from 'stellar-sdk';
 // import { CometClient } from '../external/comet.js';
 // import { tryDeployStellarAsset } from '../external/token.js';
-import { AddressBook } from '../utils/address_book.js';
-import { airdropAccount, bumpContractCode, installContract } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
-import { signWithKeypair } from '../utils/tx.js';
+import { AddressBook } from './utils/address_book.js';
+import { airdropAccount, bumpContractCode, installContract } from './utils/contract.js';
+import { config } from './utils/env_config.js';
+import { signWithKeypair } from './utils/tx.js';
 
 export async function deployAndInitContracts(addressBook: AddressBook) {
   const signWithAdmin = (txXdr: string) =>
