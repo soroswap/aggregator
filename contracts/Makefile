@@ -1,6 +1,5 @@
 $MAKEFILES = $(shell find . -maxdepth 3 -type f -name Makefile)
-# SUBDIRS   = $(filter-out ./,$(dir $($MAKEFILES)))
-SUBDIRS = token pair factory library router 
+SUBDIRS = aggregator
 default: build
 
 all: test
