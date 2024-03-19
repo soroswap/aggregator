@@ -1,15 +1,5 @@
-// import {
-//   BackstopClient,
-//   EmitterClient,
-//   Network,
-//   PoolFactoryClient,
-//   PoolInitMeta,
-//   TxOptions,
-// } from '@blend-capital/blend-sdk';
-// import { Asset } from 'stellar-sdk';
-// import { CometClient } from '../external/comet.js';
-// import { tryDeployStellarAsset } from '../external/token.js';
-import { Address, nativeToScVal, xdr } from 'stellar-sdk';
+import { Address, xdr } from 'stellar-sdk';
+import { phoenixMultiAddLiquidity } from './protocols/phoenix/multi_add_liquidity_phoenix.js';
 import { AddressBook } from './utils/address_book.js';
 import {
   airdropAccount,
@@ -20,6 +10,7 @@ import {
   invokeContract,
 } from './utils/contract.js';
 import { config } from './utils/env_config.js';
+import { TokensBook } from './utils/tokens_book.js';
 
 export async function deployAndInitAggregator(addressBook: AddressBook) {
   await airdropAccount(loadedConfig.admin);
@@ -36,35 +27,33 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   const routerAddress = soroswapAddressBook.getContractId('router');
 
-  // Constructing the ProtocolAddressPair in ScVal format
-  const protocolAddressPairScVal = [
+  const protocolAddressPair = [
     {
       protocol_id: 0,
       address: new Address(routerAddress),
     },
-  ].map((pair) => {
+  ];
+
+  const protocolAddressPairScVal = protocolAddressPair.map((pair) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
-        key: nativeToScVal('protocol_id'),
-        val: xdr.ScVal.scvI32(pair.protocol_id),
+        key: xdr.ScVal.scvSymbol('address'),
+        val: pair.address.toScVal(),
       }),
       new xdr.ScMapEntry({
-        key: nativeToScVal('address'),
-        val: pair.address.toScVal(),
+        key: xdr.ScVal.scvSymbol('protocol_id'),
+        val: xdr.ScVal.scvI32(pair.protocol_id),
       }),
     ]);
   });
 
-  // Assuming protocolAddressPairScVal is now an array of ScMapEntry or similar that represents each ProtocolAddressPair
   const aggregatorProtocolAddressesScVal = xdr.ScVal.scvVec(protocolAddressPairScVal);
 
-  // Initializing Soroswap Aggregator
-  const aggregatorInitParams = [
+  const aggregatorInitParams: xdr.ScVal[] = [
     new Address(loadedConfig.admin.publicKey()).toScVal(),
     aggregatorProtocolAddressesScVal,
   ];
 
-  console.log('🚀 « aggregatorInitParams:', aggregatorInitParams);
   await invokeContract(
     'aggregator',
     addressBook,
@@ -73,12 +62,12 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     loadedConfig.admin
   );
 
-  console.log(rpc_network);
-  // add any other contracts here router / factory / etc same idea install and bump
-  // if (network != 'mainnet') {
-  //   // mocks
-  //   console.log('Installing and deploying: Phoenix Mocked Contracts');
-  // }
+  if (network != 'mainnet') {
+    // mocks
+    console.log('Installing and deploying: Phoenix Mocked Contracts');
+    await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook);
+    // await deployAndInitPhoenix(addressBook)
+  }
   // console.log('Deploying and Initializing Soroswap Aggregator');
 }
 
@@ -90,13 +79,11 @@ const soroswapAddressBook = AddressBook.loadFromFile(
   network,
   `../../contracts/protocols/soroswap/${soroswapDir}`
 );
+const soroswapTokensBook = TokensBook.loadFromFile(
+  `../../contracts/protocols/soroswap/${soroswapDir}`
+);
 
 const loadedConfig = config(network);
-const rpc_network = {
-  rpc: loadedConfig.rpc.serverURL.toString(),
-  passphrase: loadedConfig.passphrase,
-  opts: { allowHttp: true },
-};
 
 await deployAndInitAggregator(addressBook);
 addressBook.writeToFile();
