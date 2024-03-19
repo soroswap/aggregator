@@ -1,7 +1,7 @@
 import { Address, Keypair, nativeToScVal } from 'stellar-sdk';
-import { AddressBook } from '../utils/address_book.js';
-import { bumpContractCode, deployContract, installContract, invokeContract } from '../utils/contract.js';
-import { config } from '../utils/env_config.js';
+import { AddressBook } from '../../utils/address_book.js';
+import { bumpContractCode, deployContract, installContract, invokeContract } from '../../utils/contract.js';
+import { config } from '../../utils/env_config.js';
 
 
 export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmin: Keypair) {

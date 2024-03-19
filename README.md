@@ -1,7 +1,7 @@
 # Soroswap Aggregator 
 
 The aggregator currently aggregates the pools from soroswap protocol and phoenix protocol
-
+**For standalone development read #Development section**
 
 ### 1. Setup
 
@@ -46,18 +46,17 @@ To deploy the smart contracts you first would need to build the source with
 yarn build
 ```
 
-after the scripts are built you can run this to deploy, networks can be 'testnet', 'standalone', 'futurenet'
+after the scripts are built you can run this to deploy, networks can be 'testnet', 'standalone', 'futurenet', 'mainnet'
 ```bash
 yarn deploy <network>
 ```
 
-when deployment is completed you can find the addresses in ./.sosorban directore
+when deployment is completed you can find the addresses in ./.sosorban directory
 
-if you want to publish the deployments (move the contracts from .soroban to public) you can run 
+## Development
+When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
+
+**For development in standalone you should deploy soroswap smart contracts from the soroswap submodule, to do so there is a script you can run... You will need to set the .env inside the submodule**
 ```bash
-yarn upload <network>
+bash scripts/deploySoroswap.sh <network>
 ```
-
-## Standalone
-
-when using standalone as network the deploy script will look inside the .soroban directory inside the soroswap protocol directory, this directory will only exist if you deploy soroswap core inside the contracts/protocols/soroswap directory while being inside thwe container
