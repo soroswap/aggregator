@@ -5,11 +5,13 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
 export interface Token {
-  address: string;
   name: string;
-  symbol: string;
-  logoURI?: string;
+  contract: string;
+  code: string;
+  issuer?: string;
+  icon?: string;
   decimals: number;
 }
 
@@ -64,7 +66,7 @@ export class TokensBook {
   addToken(networkName: string, token: Token) {
     const network = this.networks.find((n) => n.network === networkName);
     if (network) {
-      const tokenExists = network.tokens.some((t) => t.address === token.address);
+      const tokenExists = network.tokens.some((t) => t.contract === token.contract);
 
       if (!tokenExists) {
         network.tokens.push(token);
@@ -80,7 +82,7 @@ export class TokensBook {
   prependToken(networkName: string, token: Token) {
     const network = this.networks.find((n) => n.network === networkName);
     if (network) {
-      const tokenExists = network.tokens.some((t) => t.address === token.address);
+      const tokenExists = network.tokens.some((t) => t.contract === token.contract);
 
       if (!tokenExists) {
         network.tokens.unshift(token);

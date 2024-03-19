@@ -1,13 +1,10 @@
-import { Address, nativeToScVal } from 'stellar-sdk';
+import { Address, Keypair, nativeToScVal } from 'stellar-sdk';
 import { AddressBook } from '../utils/address_book.js';
-import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from '../utils/contract.js';
+import { bumpContractCode, deployContract, installContract, invokeContract } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
 
 
-export async function deployAndInitPhoenix(addressBook: AddressBook) {
-  const phoenixAdmin = loadedConfig.getUser('PHOENIX')
-  await airdropAccount(phoenixAdmin);
-
+export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmin: Keypair) {
   console.log('Installing Phoenix Contracts');
   // Phoenix Factory
   await installContract('phoenix_factory', addressBook, phoenixAdmin);
