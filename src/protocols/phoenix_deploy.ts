@@ -1,4 +1,4 @@
-import { Address } from 'stellar-sdk';
+import { Address, nativeToScVal } from 'stellar-sdk';
 import { AddressBook } from '../utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from '../utils/contract.js';
 import { config } from '../utils/env_config.js';
@@ -46,33 +46,22 @@ export async function deployAndInitPhoenix(addressBook: AddressBook) {
   console.log("Phoenix Factory Address", addressBook.getContractId('phoenix_factory'))
   await invokeContract('phoenix_multihop', addressBook, 'initialize', multihopInitParams, phoenixAdmin);
 
-  // console.log('-------------------------------------------------------');
-  // console.log('Initializing Phoenix Factory');
-  // console.log('-------------------------------------------------------');
-  // // Initializing Phoenix Factory
-  // const factoryInitParams = [
-  //   new Address(phoenixAdmin.publicKey()).toScVal(),
-  //   nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_multihop'), 'hex')),
-  //   nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_pool'), 'hex')),
-  //   nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stake'), 'hex')),
-  //   nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_token'), 'hex')),
-  //   nativeToScVal([{address: new Address(phoenixAdmin.publicKey())}])
-  // ];
-  // await invokeContract('phoenix_factory', addressBook, 'initialize', factoryInitParams, phoenixAdmin);
+  console.log('-------------------------------------------------------');
+  console.log('Initializing Phoenix Factory');
+  console.log('-------------------------------------------------------');
 
-  // if (network != 'mainnet') {
-  //   // mocks
-  //   console.log('Installing and deploying: Phoenix Mocked Contracts');
-  // }
-  // console.log('Deploying and Initializing Soroswap Aggregator');
+  // Initializing Phoenix Factory
+  const factoryInitParams = [
+    new Address(phoenixAdmin.publicKey()).toScVal(), //admin
+    nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_multihop'), 'hex')),
+    nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_pool'), 'hex')),
+    nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stake'), 'hex')),
+    nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_token'), 'hex')),
+    nativeToScVal([{address: new Address(phoenixAdmin.publicKey())}]),
+    nativeToScVal(7, { type: 'u32' })
+  ];
+  await invokeContract('phoenix_factory', addressBook, 'initialize', factoryInitParams, phoenixAdmin);
 }
 
 const network = process.argv[2];
-
-const soroswapDir = network === 'standalone' ? '.soroban' : 'public';
-const soroswapAddressBook = AddressBook.loadFromFile(
-  network,
-  `../../contracts/protocols/soroswap/${soroswapDir}`
-);
-
 const loadedConfig = config(network);
