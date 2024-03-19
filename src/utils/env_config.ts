@@ -56,7 +56,7 @@ class EnvConfig {
     const friendbot_url = networkConfig.friendbot_url;
     const passphrase = networkConfig.soroban_network_passphrase;
 
-    const admin = process.env.ADMIN;
+    const admin = process.env.SOROSWAP_ADMIN_SECRET_KEY;
     if (
       rpc_url === undefined ||
       (network != 'mainnet' && friendbot_url === undefined) ||

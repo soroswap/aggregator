@@ -1,5 +1,5 @@
 import { Address, xdr } from 'stellar-sdk';
-import { phoenixMultiAddLiquidity } from './protocols/phoenix/multi_add_liquidity_phoenix.js';
+import { deployAndInitPhoenix } from './protocols/phoenix_deploy.js';
 import { AddressBook } from './utils/address_book.js';
 import {
   airdropAccount,
@@ -26,7 +26,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   await bumpContractInstance('aggregator', addressBook, loadedConfig.admin);
 
   const routerAddress = soroswapAddressBook.getContractId('router');
-
+  console.log("Soroswap Router Address", routerAddress)
   const protocolAddressPair = [
     {
       protocol_id: 0,
@@ -54,6 +54,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     aggregatorProtocolAddressesScVal,
   ];
 
+  console.log("Initializing Aggregator")
   await invokeContract(
     'aggregator',
     addressBook,
@@ -65,8 +66,8 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   if (network != 'mainnet') {
     // mocks
     console.log('Installing and deploying: Phoenix Mocked Contracts');
-    await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook);
-    // await deployAndInitPhoenix(addressBook)
+    await deployAndInitPhoenix(addressBook)
+    // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook);
   }
   // console.log('Deploying and Initializing Soroswap Aggregator');
 }

@@ -43,6 +43,7 @@ export async function deployAndInitPhoenix(addressBook: AddressBook) {
     new Address(phoenixAdmin.publicKey()).toScVal(),
     new Address(addressBook.getContractId('phoenix_factory')).toScVal(),
   ];
+  console.log("Phoenix Factory Address", addressBook.getContractId('phoenix_factory'))
   await invokeContract('phoenix_multihop', addressBook, 'initialize', multihopInitParams, phoenixAdmin);
 
   // console.log('-------------------------------------------------------');
