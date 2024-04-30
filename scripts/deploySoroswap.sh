@@ -7,6 +7,6 @@ if [ -z "$NETWORK" ]; then
     exit 1
 fi
 
-cd contracts/protocols/soroswap/
+cd protocols/soroswap/
 yarn
 yarn build && yarn deploy $NETWORK
