@@ -8,7 +8,7 @@ use crate::dex_interfaces::{dex_constants};
 use crate::error::CombinedAggregatorError;
 
 soroban_sdk::contractimport!(
-    file = "../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm"
+    file = "../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm"
 );
 pub type SoroswapRouterClient<'a> = Client<'a>;
 

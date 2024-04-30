@@ -12,10 +12,10 @@ build: phoenix_build soroswap_build
 
 # New target for building phoenix
 phoenix_build:
-	@cd ../protocols/phoenix && make build
+	@cd ../../protocols/phoenix && make build
 
 soroswap_build:
-	@cd ../protocols/soroswap/contracts && make build
+	@cd ../../protocols/soroswap/contracts && make build
 
 fmt:
 	cargo fmt --all --check
