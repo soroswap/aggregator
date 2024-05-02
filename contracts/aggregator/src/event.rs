@@ -1,16 +1,16 @@
 //! Definition of the Events used in the contract
 use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec};
-use crate::models::{ProtocolAddressPair, DexDistribution};
+use crate::models::{ProtocolAddressPair, DexDistribution, Protocol};
 
 // INITIALIZED
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
     pub state: bool,
-    pub protocol_addresses: Vec<ProtocolAddressPair>
+    pub protocol_addresses: Vec<Protocol>
 }
 
-pub(crate) fn initialized(e: &Env, state: bool, protocol_addresses: Vec<ProtocolAddressPair>) {
+pub(crate) fn initialized(e: &Env, state: bool, protocol_addresses: Vec<Protocol>) {
     
     let event: InitializedEvent = InitializedEvent {
         state: state,
