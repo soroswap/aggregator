@@ -12,7 +12,7 @@ build: phoenix_build
 
 # New target for building phoenix
 phoenix_build:
-	@cd ../../protocols/phoenix && make build
+	@cd ../../../protocols/phoenix && make build
 	
 fmt:
 	cargo fmt --all --check

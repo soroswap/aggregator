@@ -1,21 +1,19 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, vec};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec};
 
-mod models;
-mod dex_interfaces;
 mod error;
 mod event;
 mod storage;
-mod test;
+mod protocol_interface;
+// mod test;
 
 use storage::{put_protocol_address, has_protocol_address, get_protocol_address, extend_instance_ttl, is_initialized, set_initialized, set_admin, get_admin};
-use models::{DexDistribution, ProtocolAddressPair, MAX_DISTRIBUTION_LENGTH};
-pub use error::{SoroswapAggregatorError, CombinedAggregatorError};
-use crate::dex_interfaces::{dex_constants, soroswap_interface, phoenix_interface};
+pub use error::{SoroswapAggregatorProxyError, CombinedProxyError};
+use protocol_interface::{protocol_swap};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedAggregatorError> {
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedProxyError> {
     if amount < 0 {
-        Err(CombinedAggregatorError::AggregatorNegativeNotAllowed)
+        Err(CombinedProxyError::ProxyNegativeNotAllowed)
     } else {
         Ok(())
     }
@@ -26,220 +24,142 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedAggregatorEr
 /// # Arguments
 /// * `e` - The runtime environment.
 /// * `timestamp` - The deadline timestamp to compare against the current ledger timestamp.
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), CombinedAggregatorError> {
+fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), CombinedProxyError> {
     let ledger_timestamp = e.ledger().timestamp();
     if ledger_timestamp >= timestamp {
-        Err(SoroswapAggregatorError::DeadlineExpired.into())
+        Err(SoroswapAggregatorProxyError::DeadlineExpired.into())
     } else {
         Ok(())
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), CombinedAggregatorError> {
+fn check_initialized(e: &Env) -> Result<(), CombinedProxyError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(CombinedAggregatorError::AggregatorNotInitialized)
-    }
-}
-
-fn is_valid_protocol(protocol_id: i32) -> Result<(), CombinedAggregatorError> {
-    match protocol_id {
-        dex_constants::SOROSWAP | dex_constants::PHOENIX => Ok(()),
-        // Add additional protocols here as needed
-        _ => Err(CombinedAggregatorError::AggregatorUnsupportedProtocol),
+        Err(CombinedProxyError::ProxyNotInitialized)
     }
 }
 
 /*
-    SOROSWAP AGGREGATOR SMART CONTRACT INTERFACE:
+    AGGREGATOR PROXY SMART CONTRACT INTERFACE:
 */
 
-pub trait SoroswapAggregatorTrait {
+pub trait AggregatorProxyTrait {
 
     /// Initializes the contract and sets the soroswap_router address
-    fn initialize(e: Env, admin: Address, protocol_addresses: Vec<ProtocolAddressPair>) -> Result<(), CombinedAggregatorError>;
+    fn initialize(e: Env, admin: Address, protocol_address: Address) -> Result<(), CombinedProxyError>;
 
     /// Updates the protocol addresses for the aggregator
-    fn update_protocols(
+    fn update_protocol(
         e: Env,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError>;
-    /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
-    /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
-    /// for swap (if applicable), and the portion of the total `amount` to swap through that DEX. This 
-    /// function aims to optimize the swap by leveraging different DEX protocols based on the distribution
-    /// strategy to minimize slippage and maximize output.
-    ///
-    /// # Arguments
-    /// * `e` - The runtime environment.
-    /// * `from_token` - The address of the input token to swap.
-    /// * `dest_token` - The address of the destination token to receive.
-    /// * `amount` - The total amount of `from_token` to be swapped.
-    /// * `amount_out_min` - The minimum amount of `dest_token` expected to receive, ensuring the swap 
-    ///   does not proceed under unfavorable conditions.
-    /// * `distribution` - A vector of `DexDistribution` specifying how the total swap amount is distributed 
-    ///   across different DEX protocols, including the swap path for each (if required by the DEX).
-    /// * `to` - The recipient address for the `dest_token`.
-    /// * `deadline` - A Unix timestamp marking the deadline by which the swap must be completed.
-    ///
-    /// # Returns
-    /// The total amount of `dest_token` received from the swap if successful, encapsulated in a `Result`.
-    /// On failure, returns a `CombinedAggregatorError` detailing the cause of the error.
+        protocol_address: Address,
+    ) -> Result<(), CombinedProxyError>;
+    
     fn swap(
         e: Env,
-        from_token: Address,
-        dest_token: Address,
-        amount: i128,
-        amount_out_min: i128,
-        distribution: Vec<DexDistribution>,
         to: Address,
+        path: Vec<Address>,
+        amount_in: i128,
+        amount_out_min_or_max: i128,
         deadline: u64,
-    ) -> Result<i128, CombinedAggregatorError>;
-
-    /// Returns the expected return amount for a given input amount and distribution
-    // fn getExpectedReturn(
-    //     e: Env,
-    //     from_token: Address,
-    //     dest_token: Address,
-    //     amount: i128,
-    //     parts: i128,
-    // ) -> Result<i128, CombinedAggregatorError>;
+        isExactIn: bool,
+    ) -> Result<i128, CombinedProxyError>;
 
     /*  *** Read only functions: *** */
 
-    fn get_admin(e: &Env) -> Result<Address, CombinedAggregatorError>;
-    fn get_protocols(e: &Env) -> Result<Vec<ProtocolAddressPair>, CombinedAggregatorError>;
+    fn get_admin(e: &Env) -> Result<Address, CombinedProxyError>;
+    fn get_protocol_address(e: &Env) -> Result<Address, CombinedProxyError>;
 
 }
 
 #[contract]
-struct SoroswapAggregator;
+struct SoroswapAggregatorProxyForPhoenix;
 
 #[contractimpl]
-impl SoroswapAggregatorTrait for SoroswapAggregator {
-    /// Initializes the contract and sets the soroswap_router address
+impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
+    /// Initializes the contract and sets the phoenix multihop address
     fn initialize(
         e: Env,
         admin: Address,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError> {
+        protocol_address: Address,
+    ) -> Result<(), CombinedProxyError> {
         if is_initialized(&e) {
-            return Err(CombinedAggregatorError::AggregatorInitializeAlreadyInitialized.into());
+            return Err(CombinedProxyError::ProxyInitializeAlreadyInitialized.into());
         }
     
-        for pair in protocol_addresses.iter() {
-            is_valid_protocol(pair.protocol_id)?;
-            put_protocol_address(&e, pair);
-        }
-
         set_admin(&e, admin);
+        put_protocol_address(&e, protocol_address.clone());
     
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, true, protocol_addresses);
+        event::initialized(&e, true, protocol_address);
         extend_instance_ttl(&e);
         Ok(())
     }
     
-    fn update_protocols(
+    fn update_protocol(
         e: Env,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError> {
+        protocol_address: Address,
+    ) -> Result<(), CombinedProxyError> {
         check_initialized(&e)?;
         let admin: Address = get_admin(&e);
         admin.require_auth();
         // Check if the sender is the admin
         
-        for pair in protocol_addresses.iter() {
-            is_valid_protocol(pair.protocol_id)?;
-            // Proceed to update the protocol address since the id is valid
-            put_protocol_address(&e, pair);
-        }
+        put_protocol_address(&e, protocol_address.clone());
     
-        event::protocols_updated(&e, protocol_addresses);
+        event::protocol_updated(&e, protocol_address);
         extend_instance_ttl(&e);
         Ok(())
     }
 
     fn swap(
         e: Env,
-        _from_token: Address,
-        _dest_token: Address,
-        amount: i128,
-        amount_out_min: i128,
-        distribution: Vec<DexDistribution>,
         to: Address,
+        path: Vec<Address>,
+        amount_in: i128,
+        amount_out_min_or_max: i128,
         deadline: u64,
-    ) -> Result<i128, CombinedAggregatorError> {
+        isExactIn: bool,
+    ) -> Result<i128, CombinedProxyError> {
         check_initialized(&e)?;
-        check_nonnegative_amount(amount)?;
-        check_nonnegative_amount(amount_out_min)?;
+        check_nonnegative_amount(amount_in)?;
+        check_nonnegative_amount(amount_out_min_or_max)?;
         extend_instance_ttl(&e);
         to.require_auth();
         ensure_deadline(&e, deadline)?;
 
-        if distribution.len() > MAX_DISTRIBUTION_LENGTH {
-            return Err(CombinedAggregatorError::AggregatorDistributionLengthExceeded);
-        }
-    
-        let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();    
+        let swap_result = protocol_swap(
+            &e, 
+            &amount_in, 
+            &amount_out_min_or_max, 
+            path.clone(), 
+            to.clone(), 
+            deadline, 
+            isExactIn
+        )?;
 
-        if total_parts == 0 {
-            return Err(CombinedAggregatorError::AggregatorInvalidTotalParts);
-        }
 
-        let mut total_swapped: i128 = 0;
-       
-        for dist in distribution.iter() {
-            let swap_amount = amount.checked_mul(dist.parts)
-                .and_then(|prod| prod.checked_div(total_parts))
-                .ok_or(CombinedAggregatorError::AggregatorArithmeticError)?;
-            
-            match dist.index {
-                dex_constants::SOROSWAP => {
-                    // Call function to handle swap via Soroswap
-                    let swap_result = soroswap_interface::swap_with_soroswap(&e, &swap_amount, dist.path.clone(), to.clone(), deadline.clone())?;
-                    total_swapped += swap_result;
-                },
-                dex_constants::PHOENIX => {
-                    // Call function to handle swap via Phoenix
-                    let swap_result = phoenix_interface::swap_with_phoenix(&e, &swap_amount, dist.path.clone(), to.clone(), deadline.clone())?;
-                    total_swapped += swap_result;
-                },
-                _ => return Err(CombinedAggregatorError::AggregatorUnsupportedProtocol),
-            }
-        }
-
-        event::swap(&e, amount, distribution, to);
-        Ok(total_swapped)
+        event::swap(&e, amount_in, path, to);
+        Ok(amount_in)
     }
 
     /*  *** Read only functions: *** */
 
-    fn get_admin(e: &Env) -> Result<Address, CombinedAggregatorError> {
+    fn get_admin(e: &Env) -> Result<Address, CombinedProxyError> {
         check_initialized(&e)?;
         Ok(get_admin(&e))
     }
 
-    fn get_protocols(e: &Env) -> Result<Vec<ProtocolAddressPair>, CombinedAggregatorError> {
+    fn get_protocol_address(e: &Env) -> Result<Address, CombinedProxyError> {
         check_initialized(&e)?;
-        let protocols = vec![
-            e,
-            dex_constants::SOROSWAP,
-            dex_constants::PHOENIX,
-        ];
-    
-        let mut addresses = Vec::new(e);
-    
-        for protocol_id in protocols.iter() {
-            if has_protocol_address(e, protocol_id) {
-                let address = get_protocol_address(e, protocol_id);
-                addresses.push_back(ProtocolAddressPair { protocol_id, address });
-            }
+        if !has_protocol_address(e) {
+            return Err(CombinedProxyError::ProxyProtocolAddressNotFound);
         }
-    
-        Ok(addresses)
+        
+        let address = get_protocol_address(e);
+        Ok(address)
     }    
 
 }

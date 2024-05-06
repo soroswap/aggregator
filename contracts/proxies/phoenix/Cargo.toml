@@ -15,10 +15,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { version = "20.5.0" }
+soroswap-library = "0.3.0"
 # num-integer = { version = "0.1.45", default-features = false, features = [
 #   "i128",
 # ] }
-# soroswap-library = "0.3.0"
 
 [dev_dependencies]
 soroban-sdk = { version = "20.5.0", features = ["testutils"] }

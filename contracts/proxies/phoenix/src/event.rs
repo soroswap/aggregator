@@ -1,22 +1,21 @@
 //! Definition of the Events used in the contract
 use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec};
-use crate::models::{ProtocolAddressPair, DexDistribution};
 
 // INITIALIZED
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
     pub state: bool,
-    pub protocol_addresses: Vec<ProtocolAddressPair>
+    pub protocol_address: Address
 }
 
-pub(crate) fn initialized(e: &Env, state: bool, protocol_addresses: Vec<ProtocolAddressPair>) {
+pub(crate) fn initialized(e: &Env, state: bool, protocol_address: Address) {
     
     let event: InitializedEvent = InitializedEvent {
         state: state,
-        protocol_addresses,
+        protocol_address,
     };
-    e.events().publish(("SoroswapAggregator", symbol_short!("init")), event);
+    e.events().publish(("SoroswapAggregatorProxyForPhoenix", symbol_short!("init")), event);
 }
 
 // SWAP EVENT
@@ -24,7 +23,7 @@ pub(crate) fn initialized(e: &Env, state: bool, protocol_addresses: Vec<Protocol
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SwapEvent {
     pub amount_in: i128,
-    pub distribution: Vec<DexDistribution>,
+    pub path: Vec<Address>,
     pub to: Address
 }
 
@@ -40,32 +39,32 @@ pub struct SwapEvent {
 pub(crate) fn swap(
     e: &Env,
     amount_in: i128,
-    distribution: Vec<DexDistribution>,
+    path: Vec<Address>,
     to: Address
 ) {
     let event = SwapEvent {
         amount_in,
-        distribution,
+        path,
         to,
     };
 
-    e.events().publish(("SoroswapAggregator", symbol_short!("swap")), event);
+    e.events().publish(("SoroswapAggregatorProxyForPhoenix", symbol_short!("swap")), event);
 }
 // UPDATE PROTOCOL EVENT
 #[contracttype] 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct UpdateProtocolsEvent {
-    pub protocol_addresses: Vec<ProtocolAddressPair>
+pub struct UpdateProtocolEvent {
+    pub protocol_address: Address
 }
 
-/// Publishes an `UpdateProtocolsEvent` to the event stream.
-pub(crate) fn protocols_updated(
+/// Publishes an `UpdateProtocolEvent` to the event stream.
+pub(crate) fn protocol_updated(
     e: &Env,
-    protocol_addresses: Vec<ProtocolAddressPair>
+    protocol_address: Address
 ) {
-    let event = UpdateProtocolsEvent {
-        protocol_addresses,
+    let event = UpdateProtocolEvent {
+        protocol_address,
     };
 
-    e.events().publish(("SoroswapAggregator", symbol_short!("update")), event);
+    e.events().publish(("SoroswapAggregatorProxyForPhoenix", symbol_short!("update")), event);
 }
