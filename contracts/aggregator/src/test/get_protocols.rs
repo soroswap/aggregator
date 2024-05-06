@@ -2,7 +2,7 @@ use soroban_sdk::{Address, Vec, vec, testutils::Address as _};
 
 use crate::error::CombinedAggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-use crate::models::{ProtocolAddressPair};
+use crate::models::{ProxyAddressPair};
 
 #[test]
 fn test_get_protocols() {

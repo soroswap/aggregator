@@ -2,11 +2,11 @@ use soroban_sdk::{Address, Vec, vec, testutils::Address as _};
 
 use crate::error::CombinedAggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-use crate::models::{ProtocolAddressPair};
+use crate::models::{ProxyAddressPair};
 
-pub fn new_unsupported_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProtocolAddressPair> {
+pub fn new_unsupported_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
     vec![&test.env,
-        ProtocolAddressPair {
+        ProxyAddressPair {
             protocol_id: 99i32,
             address: test.router_contract.address.clone(),
         },
