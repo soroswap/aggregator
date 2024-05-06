@@ -64,7 +64,7 @@ pub trait AggregatorProxyTrait {
         amount_out_min_or_max: i128,
         deadline: u64,
         isExactIn: bool,
-    ) -> Result<i128, CombinedProxyError>;
+    ) -> Result<Vec<i128>, CombinedProxyError>;
 
     /*  *** Read only functions: *** */
 
@@ -122,7 +122,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         amount_out_min_or_max: i128,
         deadline: u64,
         isExactIn: bool,
-    ) -> Result<i128, CombinedProxyError> {
+    ) -> Result<Vec<i128>, CombinedProxyError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount_in)?;
         check_nonnegative_amount(amount_out_min_or_max)?;
@@ -142,7 +142,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
 
 
         event::swap(&e, amount_in, path, to);
-        Ok(amount_in)
+        Ok(swap_result)
     }
 
     /*  *** Read only functions: *** */

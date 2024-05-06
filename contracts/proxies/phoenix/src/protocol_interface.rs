@@ -1,4 +1,4 @@
-use soroban_sdk::{Env, Address, Vec};
+use soroban_sdk::{Env, Address, Vec, vec};
 use crate::storage::{get_protocol_address, has_protocol_address};
 use crate::error::CombinedProxyError;
 
@@ -41,7 +41,7 @@ pub fn protocol_swap(
     to: Address,
     deadline: u64,
     isExactIn: bool,
-) -> Result<i128, CombinedProxyError> {
+) -> Result<Vec<i128>, CombinedProxyError> {
     if !has_protocol_address(e) {
         return Err(CombinedProxyError::ProxyProtocolAddressNotFound);
     }
@@ -53,5 +53,6 @@ pub fn protocol_swap(
 
     phoenix_multihop_client.swap(&to, &operations, &None, &amount_in);
 
-    Ok(amount_in.clone())
+    // Returning empty array (should check phoenix response if it return amounts, apparently it doesnt)
+    Ok(vec![&e])
 }
