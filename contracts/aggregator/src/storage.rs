@@ -65,7 +65,10 @@ pub fn add_protocol_id(e: &Env, protocol_id: String) {
 }
 
 pub fn get_protocol_ids(e: &Env) -> Vec<String> {
-    e.storage().instance().get(&DataKey::ProtocolList).unwrap()
+    match e.storage().instance().get(&DataKey::ProtocolList) {
+        Some(protocol_ids) => protocol_ids,
+        None => Vec::new(e)
+    }
 }
 
 pub fn remove_protocol_id(e: &Env, protocol_id: String) {

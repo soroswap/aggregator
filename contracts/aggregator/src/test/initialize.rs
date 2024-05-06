@@ -10,6 +10,7 @@ fn test_initialize_and_get_admin() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
+
     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
 
     let admin = test.aggregator_contract.get_admin();

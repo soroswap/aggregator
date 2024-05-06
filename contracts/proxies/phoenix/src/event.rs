@@ -68,3 +68,10 @@ pub(crate) fn protocol_updated(
 
     e.events().publish(("SoroswapAggregatorProxyForPhoenix", symbol_short!("update")), event);
 }
+
+pub(crate) fn protocol_paused(
+    e: &Env,
+    status: bool
+) {
+    e.events().publish(("SoroswapAggregatorProxyForPhoenix", symbol_short!("paused")), status);
+}

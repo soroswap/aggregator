@@ -7,7 +7,18 @@ mod storage;
 mod protocol_interface;
 // mod test;
 
-use storage::{put_protocol_address, has_protocol_address, get_protocol_address, extend_instance_ttl, is_initialized, set_initialized, set_admin, get_admin};
+use storage::{
+    put_protocol_address, 
+    has_protocol_address, 
+    get_protocol_address, 
+    extend_instance_ttl, 
+    is_initialized, 
+    set_initialized, 
+    set_admin, 
+    get_admin,
+    set_paused,
+    is_paused
+};
 pub use error::{SoroswapAggregatorProxyError, CombinedProxyError};
 use protocol_interface::{protocol_swap};
 
@@ -41,6 +52,14 @@ fn check_initialized(e: &Env) -> Result<(), CombinedProxyError> {
     }
 }
 
+fn check_is_paused(e: &Env) -> Result<(), CombinedProxyError> {
+    if !is_paused(e) {
+        Ok(())
+    } else {
+        Err(CombinedProxyError::ProxyNotInitialized)
+    }
+}
+
 /*
     AGGREGATOR PROXY SMART CONTRACT INTERFACE:
 */
@@ -54,6 +73,14 @@ pub trait AggregatorProxyTrait {
     fn update_protocol(
         e: Env,
         protocol_address: Address,
+    ) -> Result<(), CombinedProxyError>;
+
+    fn pause(
+        e: Env,
+    ) -> Result<(), CombinedProxyError>;
+
+    fn unpause(
+        e: Env,
     ) -> Result<(), CombinedProxyError>;
     
     fn swap(
@@ -70,6 +97,7 @@ pub trait AggregatorProxyTrait {
 
     fn get_admin(e: &Env) -> Result<Address, CombinedProxyError>;
     fn get_protocol_address(e: &Env) -> Result<Address, CombinedProxyError>;
+    fn is_paused(e: &Env) -> bool;
 
 }
 
@@ -114,6 +142,33 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         Ok(())
     }
 
+    fn pause(
+        e: Env,
+    ) -> Result<(), CombinedProxyError> {
+        check_initialized(&e)?;
+        check_is_paused(&e)?;
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+
+        set_paused(&e, true);
+        event::protocol_paused(&e, true);
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
+    fn unpause(
+        e: Env,
+    ) -> Result<(), CombinedProxyError> {
+        check_initialized(&e)?;
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+
+        set_paused(&e, false);
+        event::protocol_paused(&e, false);
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
     fn swap(
         e: Env,
         to: Address,
@@ -124,6 +179,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         isExactIn: bool,
     ) -> Result<Vec<i128>, CombinedProxyError> {
         check_initialized(&e)?;
+        check_is_paused(&e)?;
         check_nonnegative_amount(amount_in)?;
         check_nonnegative_amount(amount_out_min_or_max)?;
         extend_instance_ttl(&e);
@@ -161,5 +217,9 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         let address = get_protocol_address(e);
         Ok(address)
     }    
+
+    fn is_paused(e: &Env) -> bool {
+        is_paused(&e)
+    }
 
 }

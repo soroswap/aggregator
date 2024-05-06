@@ -26,6 +26,9 @@ pub enum SoroswapAggregatorProxyError {
     /// SoroswapAggregatorProxy: insufficient output amount
     InsufficientOutputAmount = 407,
 
+    /// SoroswapAggregatorProxy: is Paused
+    ContractPaused = 408,
+
     /// SoroswapAggregatorProxy: Protocol address not found
     ProtocolAddressNotFound = 416,
 }
@@ -43,6 +46,7 @@ pub enum CombinedProxyError {
     ProxyInsufficientAmount = 505,
     ProxySwapError=506,
     ProxyInsufficientOutputAmount = 507,
+    ProxyContractPaused = 508,
     ProxyProtocolAddressNotFound = 516,
 
     LibraryInsufficientAmount = 510,
@@ -76,6 +80,7 @@ impl From<SoroswapAggregatorProxyError> for CombinedProxyError {
             SoroswapAggregatorProxyError::InsufficientAmount => CombinedProxyError::ProxyInsufficientAmount,
             SoroswapAggregatorProxyError::SwapError => CombinedProxyError::ProxySwapError,
             SoroswapAggregatorProxyError::InsufficientOutputAmount => CombinedProxyError::ProxyInsufficientOutputAmount,
+            SoroswapAggregatorProxyError::ContractPaused => CombinedProxyError::ProxyContractPaused,
             SoroswapAggregatorProxyError::ProtocolAddressNotFound => CombinedProxyError::ProxyProtocolAddressNotFound,
         }
     }

@@ -6,17 +6,18 @@ use soroban_sdk::{
     Vec,
     BytesN, 
     Address, 
+    String,
     testutils::{
         Address as _,
         Ledger,
     },
 };
-use crate::{SoroswapAggregator, SoroswapAggregatorClient, dex_constants};
+use crate::{SoroswapAggregator, SoroswapAggregatorClient};
 use crate::models::{ProxyAddressPair};
 
 // Token Contract
 mod token {
-    soroban_sdk::contractimport!(file = "../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
+    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
     pub type TokenClient<'a> = Client<'a>;
 }
 use token::TokenClient;
@@ -27,7 +28,7 @@ pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> TokenClient<'a> {
 
 // Pair Contract
 mod pair {
-    soroban_sdk::contractimport!(file = "../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
+    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
    pub type SoroswapPairClient<'a> = Client<'a>;
 }
 use pair::SoroswapPairClient;
@@ -35,14 +36,14 @@ use pair::SoroswapPairClient;
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm"
+        file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm"
     );
     e.deployer().upload_contract_wasm(WASM)
 }
 
 // SoroswapFactory Contract
 mod factory {
-    soroban_sdk::contractimport!(file = "../protocols/soroswap/contracts/factory/target/wasm32-unknown-unknown/release/soroswap_factory.wasm");
+    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/factory/target/wasm32-unknown-unknown/release/soroswap_factory.wasm");
     pub type SoroswapFactoryClient<'a> = Client<'a>;
 }
 use factory::SoroswapFactoryClient;
@@ -57,7 +58,7 @@ fn create_soroswap_factory<'a>(e: & Env, setter: & Address) -> SoroswapFactoryCl
 
 // SoroswapRouter Contract
 mod router {
-    soroban_sdk::contractimport!(file = "../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.wasm");
+    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm");
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 use router::SoroswapRouterClient;
@@ -78,29 +79,29 @@ fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
 pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
     vec![&test.env,
         ProxyAddressPair {
-            protocol_id: dex_constants::SOROSWAP,
+            protocol_id: String::from_str(&test.env, "soroswap"),
             address: test.router_contract.address.clone(),
         },
     ]
 }
 
-pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
-    vec![&test.env,
-        ProxyAddressPair {
-            protocol_id: dex_constants::SOROSWAP,
-            address: test.router_contract.address.clone(),
-        },
-    ]
-}
+// pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+//     vec![&test.env,
+//         ProxyAddressPair {
+//             protocol_id: dex_constants::SOROSWAP,
+//             address: test.router_contract.address.clone(),
+//         },
+//     ]
+// }
 
-pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
-    vec![&test.env,
-        ProxyAddressPair {
-            protocol_id: dex_constants::PHOENIX,
-            address: test.router_contract.address.clone(),
-        },
-    ]
-}
+// pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+//     vec![&test.env,
+//         ProxyAddressPair {
+//             protocol_id: dex_constants::PHOENIX,
+//             address: test.router_contract.address.clone(),
+//         },
+//     ]
+// }
 
 pub struct SoroswapAggregatorTest<'a> {
     env: Env,
@@ -222,6 +223,5 @@ impl<'a> SoroswapAggregatorTest<'a> {
 }
 
 pub mod initialize;
-pub mod swap;
-pub mod update_protocols;
-pub mod get_protocols;
+pub mod protocols_actions;
+// pub mod swap;

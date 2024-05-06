@@ -7,6 +7,7 @@ enum DataKey {
     ProtocolAddress,
     Initialized,
     Admin,
+    Paused(bool)
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -45,4 +46,12 @@ pub fn set_admin(e: &Env, address: Address) {
 
 pub fn get_admin(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Admin).unwrap()
+}
+
+pub fn set_paused(e: &Env, paused: bool) {
+    e.storage().instance().set(&DataKey::Paused(true), &paused);
+}
+
+pub fn is_paused(e: &Env) -> bool {
+    e.storage().instance().get(&DataKey::Paused(true)).unwrap_or(false)
 }
