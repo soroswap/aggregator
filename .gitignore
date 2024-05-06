@@ -1,6 +1,8 @@
 */Cargo.lock
 contracts/*/target
 contracts/*/test_snapshots
+contracts/proxies/*/target
+contracts/proxies/*/test_snapshots
 /target/
 /.sccache/
 .DS_Store
