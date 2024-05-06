@@ -2,7 +2,7 @@
 name = "soroswap-proxy"
 version = "0.1.0"
 edition = "2021"
-description = "Soroswap-Proxy is a smart contract on the Soroban platform, tailored for use with the Soroswap-Aggregator. It facilitates efficient transaction routing through the SoroswapFinance protocol."
+description = "Soroswap-Proxy is a smart contract on the Soroban platform, tailored for use with the Soroswap-Aggregator. It facilitates efficient transaction routing through the Soroswap protocol."
 homepage = "https://github.com/soroswap/aggregator"
 repository = "https://github.com/soroswap/aggregator"
 authors = ["coderipper <joaquin@paltalabs.io>"]
@@ -15,10 +15,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { version = "20.5.0" }
+soroswap-library = "0.3.0"
 # num-integer = { version = "0.1.45", default-features = false, features = [
 #   "i128",
 # ] }
-# soroswap-library = "0.3.0"
 
 [dev_dependencies]
 soroban-sdk = { version = "20.5.0", features = ["testutils"] }

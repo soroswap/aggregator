@@ -10,8 +10,9 @@ build: soroswap_build
 	soroban contract optimize --wasm target/wasm32-unknown-unknown/release/soroswap_proxy.wasm
 	@ls -l target/wasm32-unknown-unknown/release/*.wasm
 
+# New target for building soroswap
 soroswap_build:
-	@cd ../../protocols/soroswap/contracts && make build
+	@cd ../../../protocols/soroswap/contracts && make build
 
 fmt:
 	cargo fmt --all --check

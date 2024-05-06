@@ -5,40 +5,30 @@ use soroswap_library::{SoroswapLibraryError};
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
-pub enum SoroswapAggregatorError {
-    /// SoroswapAggregator: not yet initialized
+pub enum SoroswapAggregatorProxyError {
+    /// SoroswapAggregatorProxy: not yet initialized
     NotInitialized = 401,
 
-    /// SoroswapAggregator: negative amount is not allowed
+    /// SoroswapAggregatorProxy: negative amount is not allowed
     NegativeNotAllowed = 402,
 
-    /// SoroswapAggregator: deadline expired
+    /// SoroswapAggregatorProxy: deadline expired
     DeadlineExpired = 403,
     
-    /// SoroswapAggregator: already initialized
+    /// SoroswapAggregatorProxy: already initialized
     InitializeAlreadyInitialized = 404,
 
-    /// SoroswapAggregator: insufficient a amount
-    InsufficientAAmount = 405,
+    /// SoroswapAggregatorProxy: insufficient a amount
+    InsufficientAmount = 405,
 
-    /// SoroswapAggregator: insufficient b amount
-    InsufficientBAmount = 406,
+    /// SoroswapAggregatorProxy: Error swapping
+    SwapError = 406,
 
-    /// SoroswapAggregator: insufficient output amount
+    /// SoroswapAggregatorProxy: insufficient output amount
     InsufficientOutputAmount = 407,
 
-    /// SoroswapAggregator: excessive input amount
-    ExcessiveInputAmount = 408,
-
-    /// SoroswapAggregator: Unsupported protocol
-    UnsupportedProtocol = 409,
-
-    /// SoroswapAggregator: Protocol address not found
+    /// SoroswapAggregatorProxy: Protocol address not found
     ProtocolAddressNotFound = 416,
-    DistributionLengthExceeded = 417,
-    InvalidTotalParts = 418,
-    ArithmeticError = 419,
-
 }
 
 
@@ -46,20 +36,15 @@ pub enum SoroswapAggregatorError {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 // Define a new set of integer literals for the CombinedError enum
-pub enum CombinedAggregatorError {
-    AggregatorNotInitialized = 501,
-    AggregatorNegativeNotAllowed = 502,
-    AggregatorDeadlineExpired = 503,
-    AggregatorInitializeAlreadyInitialized = 504,
-    AggregatorInsufficientAAmount = 505,
-    AggregatorInsufficientBAmount = 506,
-    AggregatorInsufficientOutputAmount = 507,
-    AggregatorExcessiveInputAmount = 508,
-    AggregatorUnsupportedProtocol = 509,
-    AggregatorProtocolAddressNotFound = 516,
-    AggregatorDistributionLengthExceeded = 517,
-    AggregatorInvalidTotalParts = 518,
-    AggregatorArithmeticError = 519,
+pub enum CombinedProxyError {
+    ProxyNotInitialized = 501,
+    ProxyNegativeNotAllowed = 502,
+    ProxyDeadlineExpired = 503,
+    ProxyInitializeAlreadyInitialized = 504,
+    ProxyInsufficientAmount = 505,
+    ProxySwapError=506,
+    ProxyInsufficientOutputAmount = 507,
+    ProxyProtocolAddressNotFound = 516,
 
     LibraryInsufficientAmount = 510,
     LibraryInsufficientLiquidity = 511,
@@ -69,35 +54,30 @@ pub enum CombinedAggregatorError {
     LibrarySortIdenticalTokens = 515,
 }
 
-impl From<SoroswapLibraryError> for CombinedAggregatorError {
+impl From<SoroswapLibraryError> for CombinedProxyError {
     fn from(err: SoroswapLibraryError) -> Self {
         match err {
-            SoroswapLibraryError::InsufficientAmount => CombinedAggregatorError::LibraryInsufficientAmount,
-            SoroswapLibraryError::InsufficientLiquidity => CombinedAggregatorError::LibraryInsufficientLiquidity,
-            SoroswapLibraryError::InsufficientInputAmount => CombinedAggregatorError::LibraryInsufficientInputAmount,
-            SoroswapLibraryError::InsufficientOutputAmount => CombinedAggregatorError::LibraryInsufficientOutputAmount,
-            SoroswapLibraryError::InvalidPath => CombinedAggregatorError::LibraryInvalidPath,
-            SoroswapLibraryError::SortIdenticalTokens => CombinedAggregatorError::LibrarySortIdenticalTokens,
+            SoroswapLibraryError::InsufficientAmount => CombinedProxyError::LibraryInsufficientAmount,
+            SoroswapLibraryError::InsufficientLiquidity => CombinedProxyError::LibraryInsufficientLiquidity,
+            SoroswapLibraryError::InsufficientInputAmount => CombinedProxyError::LibraryInsufficientInputAmount,
+            SoroswapLibraryError::InsufficientOutputAmount => CombinedProxyError::LibraryInsufficientOutputAmount,
+            SoroswapLibraryError::InvalidPath => CombinedProxyError::LibraryInvalidPath,
+            SoroswapLibraryError::SortIdenticalTokens => CombinedProxyError::LibrarySortIdenticalTokens,
         }
     }
 }
 
-impl From<SoroswapAggregatorError> for CombinedAggregatorError {
-    fn from(err: SoroswapAggregatorError) -> Self {
+impl From<SoroswapAggregatorProxyError> for CombinedProxyError {
+    fn from(err: SoroswapAggregatorProxyError) -> Self {
         match err {
-            SoroswapAggregatorError::NotInitialized => CombinedAggregatorError::AggregatorNotInitialized,
-            SoroswapAggregatorError::NegativeNotAllowed => CombinedAggregatorError::AggregatorNegativeNotAllowed,
-            SoroswapAggregatorError::DeadlineExpired => CombinedAggregatorError::AggregatorDeadlineExpired,
-            SoroswapAggregatorError::InitializeAlreadyInitialized => CombinedAggregatorError::AggregatorInitializeAlreadyInitialized,
-            SoroswapAggregatorError::InsufficientAAmount => CombinedAggregatorError::AggregatorInsufficientAAmount,
-            SoroswapAggregatorError::InsufficientBAmount => CombinedAggregatorError::AggregatorInsufficientBAmount,
-            SoroswapAggregatorError::InsufficientOutputAmount => CombinedAggregatorError::AggregatorInsufficientOutputAmount,
-            SoroswapAggregatorError::ExcessiveInputAmount => CombinedAggregatorError::AggregatorExcessiveInputAmount,
-            SoroswapAggregatorError::UnsupportedProtocol => CombinedAggregatorError::AggregatorUnsupportedProtocol,
-            SoroswapAggregatorError::ProtocolAddressNotFound => CombinedAggregatorError::AggregatorProtocolAddressNotFound,
-            SoroswapAggregatorError::DistributionLengthExceeded => CombinedAggregatorError::AggregatorDistributionLengthExceeded,
-            SoroswapAggregatorError::InvalidTotalParts => CombinedAggregatorError::AggregatorInvalidTotalParts,
-            SoroswapAggregatorError::ArithmeticError => CombinedAggregatorError::AggregatorArithmeticError,
+            SoroswapAggregatorProxyError::NotInitialized => CombinedProxyError::ProxyNotInitialized,
+            SoroswapAggregatorProxyError::NegativeNotAllowed => CombinedProxyError::ProxyNegativeNotAllowed,
+            SoroswapAggregatorProxyError::DeadlineExpired => CombinedProxyError::ProxyDeadlineExpired,
+            SoroswapAggregatorProxyError::InitializeAlreadyInitialized => CombinedProxyError::ProxyInitializeAlreadyInitialized,
+            SoroswapAggregatorProxyError::InsufficientAmount => CombinedProxyError::ProxyInsufficientAmount,
+            SoroswapAggregatorProxyError::SwapError => CombinedProxyError::ProxySwapError,
+            SoroswapAggregatorProxyError::InsufficientOutputAmount => CombinedProxyError::ProxyInsufficientOutputAmount,
+            SoroswapAggregatorProxyError::ProtocolAddressNotFound => CombinedProxyError::ProxyProtocolAddressNotFound,
         }
     }
 }

@@ -1,11 +1,10 @@
 use soroban_sdk::{contracttype, Env, Address};
-use crate::models::{ProtocolAddressPair};
 
 #[derive(Clone)]
 #[contracttype]
 
 enum DataKey {
-    ProtocolAddress(i32),
+    ProtocolAddress,
     Initialized,
     Admin,
 }
@@ -28,16 +27,16 @@ pub fn is_initialized(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Initialized)
 }
 
-pub fn put_protocol_address(e: &Env, pair: ProtocolAddressPair) {
-    e.storage().instance().set(&DataKey::ProtocolAddress(pair.protocol_id), &pair.address);
+pub fn put_protocol_address(e: &Env, address: Address) {
+    e.storage().instance().set(&DataKey::ProtocolAddress, &address);
 }
 
-pub fn has_protocol_address(e: &Env, protocol_id: i32) -> bool {
-    e.storage().instance().has(&DataKey::ProtocolAddress(protocol_id))
+pub fn has_protocol_address(e: &Env) -> bool {
+    e.storage().instance().has(&DataKey::ProtocolAddress)
 }
 
-pub fn get_protocol_address(e: &Env, protocol_id: i32) -> Address {
-    e.storage().instance().get(&DataKey::ProtocolAddress(protocol_id)).unwrap()
+pub fn get_protocol_address(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::ProtocolAddress).unwrap()
 }
 
 pub fn set_admin(e: &Env, address: Address) {
