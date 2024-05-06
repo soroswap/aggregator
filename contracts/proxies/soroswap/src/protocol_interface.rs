@@ -41,9 +41,6 @@ pub fn protocol_swap(
         )
     };
 
-    match result {
-        Ok(val) => Ok(val),
-        Err(err) => Err(CombinedProxyError::ProxySwapError),
-    }
+    Ok(result)
 }
 
