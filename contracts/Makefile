@@ -1,5 +1,5 @@
 $MAKEFILES = $(shell find . -maxdepth 3 -type f -name Makefile)
-SUBDIRS = aggregator
+SUBDIRS = proxies
 default: build
 
 all: test
