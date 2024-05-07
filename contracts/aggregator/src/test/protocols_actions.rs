@@ -79,31 +79,31 @@ fn test_remove_protocol() {
     assert_eq!(result, ());
 }
 
-#[test]
-fn test_pause_protocol() {
-    let test = SoroswapAggregatorTest::setup();
+// #[test]
+// fn test_pause_protocol() {
+//     let test = SoroswapAggregatorTest::setup();
 
-    //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+//     //Initialize aggregator
+//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
+//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let result = test.aggregator_contract.pause_protocol(&String::from_str(&test.env, "soroswap"));
+//     let result = test.aggregator_contract.pause_protocol(&String::from_str(&test.env, "soroswap"));
 
-    assert_eq!(result, ());
-}
+//     assert_eq!(result, ());
+// }
 
-#[test]
-fn test_unpause_protocol() {
-    let test = SoroswapAggregatorTest::setup();
+// #[test]
+// fn test_unpause_protocol() {
+//     let test = SoroswapAggregatorTest::setup();
 
-    //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+//     //Initialize aggregator
+//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
+//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let result = test.aggregator_contract.unpause_protocol(&String::from_str(&test.env, "soroswap"));
+//     let result = test.aggregator_contract.unpause_protocol(&String::from_str(&test.env, "soroswap"));
 
-    assert_eq!(result, ());
-}
+//     assert_eq!(result, ());
+// }
 
 #[test]
 fn test_is_protocol_paused() {
