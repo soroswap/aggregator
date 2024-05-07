@@ -1,12 +1,6 @@
 use soroban_sdk::{Env, Address, Vec, vec};
 use crate::storage::{get_protocol_address, has_protocol_address};
-use crate::error::CombinedProxyError;
-
-// pub struct Swap {
-//   pub ask_asset: Address,
-//   pub offer_asset: Address,
-//   pub ask_asset_min_amount: Option<i128>,
-// }
+use soroswap_aggregator_proxy_interface::{ProxyError};
 
 soroban_sdk::contractimport!(
     file = "../../../protocols/phoenix/target/wasm32-unknown-unknown/release/phoenix_multihop.wasm"
@@ -41,9 +35,9 @@ pub fn protocol_swap(
     to: Address,
     deadline: u64,
     isExactIn: bool,
-) -> Result<Vec<i128>, CombinedProxyError> {
+) -> Result<Vec<i128>, ProxyError> {
     if !has_protocol_address(e) {
-        return Err(CombinedProxyError::ProxyProtocolAddressNotFound);
+        return Err(ProxyError::ProtocolAddressNotFound);
     }
 
     let phoenix_multihop_address = get_protocol_address(e);

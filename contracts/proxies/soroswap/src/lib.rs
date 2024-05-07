@@ -84,7 +84,6 @@ impl SoroswapAggregatorProxyTrait for SoroswapAggregatorProxy {
         to.require_auth();
         ensure_deadline(&e, deadline)?;
 
-        //Should execute swap on soroswap
         let swap_result = protocol_swap(
             &e, 
             &amount_in, 
