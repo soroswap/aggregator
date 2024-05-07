@@ -1,20 +1,20 @@
 //! Definition of the Events used in the contract
-use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec};
-use crate::models::{ProtocolAddressPair, DexDistribution};
+use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec, String};
+use crate::models::{ProxyAddressPair, DexDistribution};
 
 // INITIALIZED
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
     pub state: bool,
-    pub protocol_addresses: Vec<ProtocolAddressPair>
+    pub proxy_addresses: Vec<ProxyAddressPair>
 }
 
-pub(crate) fn initialized(e: &Env, state: bool, protocol_addresses: Vec<ProtocolAddressPair>) {
+pub(crate) fn initialized(e: &Env, state: bool, proxy_addresses: Vec<ProxyAddressPair>) {
     
     let event: InitializedEvent = InitializedEvent {
         state: state,
-        protocol_addresses,
+        proxy_addresses,
     };
     e.events().publish(("SoroswapAggregator", symbol_short!("init")), event);
 }
@@ -55,17 +55,57 @@ pub(crate) fn swap(
 #[contracttype] 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateProtocolsEvent {
-    pub protocol_addresses: Vec<ProtocolAddressPair>
+    pub proxy_addresses: Vec<ProxyAddressPair>
 }
 
 /// Publishes an `UpdateProtocolsEvent` to the event stream.
 pub(crate) fn protocols_updated(
     e: &Env,
-    protocol_addresses: Vec<ProtocolAddressPair>
+    proxy_addresses: Vec<ProxyAddressPair>
 ) {
     let event = UpdateProtocolsEvent {
-        protocol_addresses,
+        proxy_addresses,
     };
 
     e.events().publish(("SoroswapAggregator", symbol_short!("update")), event);
+}
+
+// REMOVE PROTOCOL EVENT
+#[contracttype] 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UpdateProtocolEvent {
+    pub protocol_id: String
+}
+
+pub(crate) fn protocol_removed(
+    e: &Env,
+    protocol_id: String,
+) {
+    let event = UpdateProtocolEvent {
+        protocol_id,
+    };
+
+    e.events().publish(("SoroswapAggregator", symbol_short!("removed")), event);
+}
+
+pub(crate) fn protocol_paused(
+    e: &Env,
+    protocol_id: String,
+) {
+    let event = UpdateProtocolEvent {
+        protocol_id,
+    };
+
+    e.events().publish(("SoroswapAggregator", symbol_short!("paused")), event);
+}
+
+pub(crate) fn protocol_unpaused(
+    e: &Env,
+    protocol_id: String,
+) {
+    let event = UpdateProtocolEvent {
+        protocol_id,
+    };
+
+    e.events().publish(("SoroswapAggregator", symbol_short!("unpaused")), event);
 }

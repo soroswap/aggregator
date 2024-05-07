@@ -1,5 +1,5 @@
 $MAKEFILES = $(shell find . -maxdepth 3 -type f -name Makefile)
-SUBDIRS = proxies
+SUBDIRS = soroswap phoenix
 default: build
 
 all: test

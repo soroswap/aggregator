@@ -1,25 +1,25 @@
 [package]
-name = "soroswap-aggregator"
-version = "0.0.1"
+name = "soroswap-proxy"
+version = "0.1.0"
 edition = "2021"
-description = "Soroswap-Aggregator is a DeFi smart contract designed for the Soroban platform, enabling optimized cross-DEX trading by aggregating liquidity sources. It offers users the best trade execution paths across multiple decentralized exchanges with minimal slippage and optimized gas costs"
-homepage = "https://github.com/soroswap/core/tree/main/contracts/aggregator"
-repository = "https://github.com/soroswap/core/tree/main/contracts/aggregator"
+description = "Soroswap-Proxy is a smart contract on the Soroban platform, tailored for use with the Soroswap-Aggregator. It facilitates efficient transaction routing through the Soroswap protocol."
+homepage = "https://github.com/soroswap/aggregator"
+repository = "https://github.com/soroswap/aggregator"
 authors = ["coderipper <joaquin@paltalabs.io>"]
 readme = "README.md"
 keywords = ["no_std", "wasm", "soroswap", "amm", "soroban"]
 publish = true
-
-
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { version = "20.5.0" }
+soroswap-aggregator-proxy-interface={ path="../interface", version="0.1.0", package="soroswap-aggregator-proxy-interface" }
 
 [dev_dependencies]
 soroban-sdk = { version = "20.5.0", features = ["testutils"] }
+soroswap-aggregator-proxy-interface={path="../interface"}
 
 [profile.release]
 opt-level = "z"

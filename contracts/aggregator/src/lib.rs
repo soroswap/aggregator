@@ -1,21 +1,34 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, vec};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
 
 mod models;
-mod dex_interfaces;
 mod error;
 mod event;
 mod storage;
+mod proxy;
 mod test;
 
-use storage::{put_protocol_address, has_protocol_address, get_protocol_address, extend_instance_ttl, is_initialized, set_initialized, set_admin, get_admin};
-use models::{DexDistribution, ProtocolAddressPair, MAX_DISTRIBUTION_LENGTH};
-pub use error::{SoroswapAggregatorError, CombinedAggregatorError};
-use crate::dex_interfaces::{dex_constants, soroswap_interface, phoenix_interface};
+use storage::{
+    put_proxy_address, 
+    has_proxy_address, 
+    get_proxy_address, 
+    remove_proxy_address, 
+    get_protocol_ids, 
+    extend_instance_ttl, 
+    is_initialized, 
+    set_initialized, 
+    set_admin, 
+    get_admin,
+    set_pause_protocol,
+    is_protocol_paused,
+};
+use models::{DexDistribution, ProxyAddressPair, MAX_DISTRIBUTION_LENGTH};
+pub use error::{AggregatorError};
+use proxy::SoroswapAggregatorProxyClient;
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedAggregatorError> {
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
     if amount < 0 {
-        Err(CombinedAggregatorError::AggregatorNegativeNotAllowed)
+        Err(AggregatorError::NegativeNotAllowed)
     } else {
         Ok(())
     }
@@ -26,28 +39,20 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedAggregatorEr
 /// # Arguments
 /// * `e` - The runtime environment.
 /// * `timestamp` - The deadline timestamp to compare against the current ledger timestamp.
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), CombinedAggregatorError> {
+fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AggregatorError> {
     let ledger_timestamp = e.ledger().timestamp();
     if ledger_timestamp >= timestamp {
-        Err(SoroswapAggregatorError::DeadlineExpired.into())
+        Err(AggregatorError::DeadlineExpired)
     } else {
         Ok(())
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), CombinedAggregatorError> {
+fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(CombinedAggregatorError::AggregatorNotInitialized)
-    }
-}
-
-fn is_valid_protocol(protocol_id: i32) -> Result<(), CombinedAggregatorError> {
-    match protocol_id {
-        dex_constants::SOROSWAP | dex_constants::PHOENIX => Ok(()),
-        // Add additional protocols here as needed
-        _ => Err(CombinedAggregatorError::AggregatorUnsupportedProtocol),
+        Err(AggregatorError::NotInitialized)
     }
 }
 
@@ -58,13 +63,31 @@ fn is_valid_protocol(protocol_id: i32) -> Result<(), CombinedAggregatorError> {
 pub trait SoroswapAggregatorTrait {
 
     /// Initializes the contract and sets the soroswap_router address
-    fn initialize(e: Env, admin: Address, protocol_addresses: Vec<ProtocolAddressPair>) -> Result<(), CombinedAggregatorError>;
+    fn initialize(e: Env, admin: Address, proxy_addresses: Vec<ProxyAddressPair>) -> Result<(), AggregatorError>;
 
     /// Updates the protocol addresses for the aggregator
     fn update_protocols(
         e: Env,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError>;
+        proxy_addresses: Vec<ProxyAddressPair>,
+    ) -> Result<(), AggregatorError>;
+
+    /// Removes the protocol from the aggregator
+    fn remove_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError>;
+
+    /// Pauses the protocol from the aggregator
+    fn pause_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError>;
+
+    /// Unpause the protocol from the aggregator
+    fn unpause_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError>;
     /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
     /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
     /// for swap (if applicable), and the portion of the total `amount` to swap through that DEX. This 
@@ -85,7 +108,7 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Returns
     /// The total amount of `dest_token` received from the swap if successful, encapsulated in a `Result`.
-    /// On failure, returns a `CombinedAggregatorError` detailing the cause of the error.
+    /// On failure, returns a `AggregatorError` detailing the cause of the error.
     fn swap(
         e: Env,
         from_token: Address,
@@ -95,7 +118,7 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<i128, CombinedAggregatorError>;
+    ) -> Result<Vec<i128>, AggregatorError>;
 
     /// Returns the expected return amount for a given input amount and distribution
     // fn getExpectedReturn(
@@ -104,12 +127,13 @@ pub trait SoroswapAggregatorTrait {
     //     dest_token: Address,
     //     amount: i128,
     //     parts: i128,
-    // ) -> Result<i128, CombinedAggregatorError>;
+    // ) -> Result<i128, AggregatorError>;
 
     /*  *** Read only functions: *** */
 
-    fn get_admin(e: &Env) -> Result<Address, CombinedAggregatorError>;
-    fn get_protocols(e: &Env) -> Result<Vec<ProtocolAddressPair>, CombinedAggregatorError>;
+    fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
+    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError>;
+    fn is_protocol_paused(e: &Env, protocol_id: String) -> bool;
 
 }
 
@@ -122,42 +146,84 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     fn initialize(
         e: Env,
         admin: Address,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError> {
+        proxy_addresses: Vec<ProxyAddressPair>,
+    ) -> Result<(), AggregatorError> {
         if is_initialized(&e) {
-            return Err(CombinedAggregatorError::AggregatorInitializeAlreadyInitialized.into());
+            return Err(AggregatorError::AlreadyInitialized);
         }
     
-        for pair in protocol_addresses.iter() {
-            is_valid_protocol(pair.protocol_id)?;
-            put_protocol_address(&e, pair);
+        for pair in proxy_addresses.iter() {
+            put_proxy_address(&e, pair);
         }
 
         set_admin(&e, admin);
     
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, true, protocol_addresses);
+        event::initialized(&e, true, proxy_addresses);
         extend_instance_ttl(&e);
         Ok(())
     }
     
     fn update_protocols(
         e: Env,
-        protocol_addresses: Vec<ProtocolAddressPair>,
-    ) -> Result<(), CombinedAggregatorError> {
+        proxy_addresses: Vec<ProxyAddressPair>,
+    ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         let admin: Address = get_admin(&e);
         admin.require_auth();
         // Check if the sender is the admin
         
-        for pair in protocol_addresses.iter() {
-            is_valid_protocol(pair.protocol_id)?;
-            // Proceed to update the protocol address since the id is valid
-            put_protocol_address(&e, pair);
+        for pair in proxy_addresses.iter() {
+            put_proxy_address(&e, pair);
         }
     
-        event::protocols_updated(&e, protocol_addresses);
+        event::protocols_updated(&e, proxy_addresses);
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
+    fn remove_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+        
+        remove_proxy_address(&e, protocol_id.clone());
+    
+        event::protocol_removed(&e, protocol_id);
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
+    fn pause_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+        
+        set_pause_protocol(&e, protocol_id.clone(), true);
+    
+        event::protocol_paused(&e, protocol_id);
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
+    fn unpause_protocol(
+        e: Env,
+        protocol_id: String,
+    ) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+        
+        set_pause_protocol(&e, protocol_id.clone(), false);
+    
+        event::protocol_unpaused(&e, protocol_id);
         extend_instance_ttl(&e);
         Ok(())
     }
@@ -171,75 +237,87 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<i128, CombinedAggregatorError> {
+    ) -> Result<Vec<i128>, AggregatorError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         check_nonnegative_amount(amount_out_min)?;
         extend_instance_ttl(&e);
         to.require_auth();
         ensure_deadline(&e, deadline)?;
-
+    
         if distribution.len() > MAX_DISTRIBUTION_LENGTH {
-            return Err(CombinedAggregatorError::AggregatorDistributionLengthExceeded);
+            return Err(AggregatorError::DistributionLengthExceeded);
         }
     
         let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();    
-
+    
         if total_parts == 0 {
-            return Err(CombinedAggregatorError::AggregatorInvalidTotalParts);
+            return Err(AggregatorError::InvalidTotalParts);
         }
 
+        // Vector to store responses from each swap
+        let mut swap_responses: Vec<i128> = Vec::new(&e); 
         let mut total_swapped: i128 = 0;
-       
-        for dist in distribution.iter() {
-            let swap_amount = amount.checked_mul(dist.parts)
-                .and_then(|prod| prod.checked_div(total_parts))
-                .ok_or(CombinedAggregatorError::AggregatorArithmeticError)?;
+    
+        for (index, dist) in distribution.iter().enumerate() {
+            let swap_amount = if index == (distribution.len() - 1).try_into().unwrap() {
+                // For the last iteration, swap whatever remains
+                amount - total_swapped
+            } else {
+                // Calculate part of the total amount based on distribution parts
+                amount.checked_mul(dist.parts)
+                    .and_then(|prod| prod.checked_div(total_parts))
+                    .ok_or(AggregatorError::ArithmeticError)?
+            };
             
-            match dist.index {
-                dex_constants::SOROSWAP => {
-                    // Call function to handle swap via Soroswap
-                    let swap_result = soroswap_interface::swap_with_soroswap(&e, &swap_amount, dist.path.clone(), to.clone(), deadline.clone())?;
-                    total_swapped += swap_result;
-                },
-                dex_constants::PHOENIX => {
-                    // Call function to handle swap via Phoenix
-                    let swap_result = phoenix_interface::swap_with_phoenix(&e, &swap_amount, dist.path.clone(), to.clone(), deadline.clone())?;
-                    total_swapped += swap_result;
-                },
-                _ => return Err(CombinedAggregatorError::AggregatorUnsupportedProtocol),
+            let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone());
+            let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
+            let response = proxy_client.swap(&to, &dist.path, &swap_amount, &amount_out_min, &deadline, &dist.is_exact_in);
+    
+            // Store the response from the swap
+            for item in response.iter() {
+                swap_responses.push_back(item);
             }
+            total_swapped += swap_amount;
         }
-
+    
         event::swap(&e, amount, distribution, to);
-        Ok(total_swapped)
+        Ok(swap_responses)
     }
-
+    
     /*  *** Read only functions: *** */
 
-    fn get_admin(e: &Env) -> Result<Address, CombinedAggregatorError> {
+    fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
         check_initialized(&e)?;
         Ok(get_admin(&e))
     }
 
-    fn get_protocols(e: &Env) -> Result<Vec<ProtocolAddressPair>, CombinedAggregatorError> {
+    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError> {
         check_initialized(&e)?;
-        let protocols = vec![
-            e,
-            dex_constants::SOROSWAP,
-            dex_constants::PHOENIX,
-        ];
-    
+
+        let protocol_ids = get_protocol_ids(e);
         let mut addresses = Vec::new(e);
     
-        for protocol_id in protocols.iter() {
-            if has_protocol_address(e, protocol_id) {
-                let address = get_protocol_address(e, protocol_id);
-                addresses.push_back(ProtocolAddressPair { protocol_id, address });
+        // Iterate over each protocol ID and collect their proxy addresses
+        for protocol_id in protocol_ids.iter() {
+            if has_proxy_address(e, protocol_id.clone()) {
+                let address = get_proxy_address(e, protocol_id.clone());
+                addresses.push_back(ProxyAddressPair {
+                    protocol_id: protocol_id,
+                    address,
+                });
             }
         }
     
         Ok(addresses)
-    }    
+    }   
+
+    fn is_protocol_paused(
+        e: &Env,
+        protocol_id: String,
+    ) -> bool {
+        let result = is_protocol_paused(&e, protocol_id);
+        result
+    }
 
 }
