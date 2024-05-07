@@ -12,12 +12,10 @@ use soroban_sdk::{
         Ledger,
     },
 };
-use crate::{SoroswapAggregator, SoroswapAggregatorClient};
-use crate::models::{ProxyAddressPair};
 
 // Token Contract
-mod token {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
+pub mod token {
+    soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
     pub type TokenClient<'a> = Client<'a>;
 }
 use token::TokenClient;
@@ -27,8 +25,8 @@ pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> TokenClient<'a> {
 }
 
 // Pair Contract
-mod pair {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
+pub mod pair {
+    soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
    pub type SoroswapPairClient<'a> = Client<'a>;
 }
 use pair::SoroswapPairClient;
@@ -36,14 +34,14 @@ use pair::SoroswapPairClient;
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm"
+        file = "../../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm"
     );
     e.deployer().upload_contract_wasm(WASM)
 }
 
 // SoroswapFactory Contract
-mod factory {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/factory/target/wasm32-unknown-unknown/release/soroswap_factory.wasm");
+pub mod factory {
+    soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/factory/target/wasm32-unknown-unknown/release/soroswap_factory.wasm");
     pub type SoroswapFactoryClient<'a> = Client<'a>;
 }
 use factory::SoroswapFactoryClient;
@@ -57,8 +55,8 @@ fn create_soroswap_factory<'a>(e: & Env, setter: & Address) -> SoroswapFactoryCl
 }
 
 // SoroswapRouter Contract
-mod router {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm");
+pub mod router {
+    soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm");
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 use router::SoroswapRouterClient;
@@ -69,91 +67,23 @@ fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
     let router = SoroswapRouterClient::new(e, router_address); 
     router
 }
-// SoroswapAggregatorProxy Contract
-// For Soroswap
-mod soroswap_proxy {
-    soroban_sdk::contractimport!(file = "../proxies/soroswap/target/wasm32-unknown-unknown/release/soroswap_proxy.optimized.wasm");
-    pub type SoroswapAggregatorProxyForSoroswapClient<'a> = Client<'a>;
-}
-use soroswap_proxy::SoroswapAggregatorProxyForSoroswapClient;
 
-// Proxy for Soroswap
-fn create_soroswap_proxy<'a>(e: &Env) -> SoroswapAggregatorProxyForSoroswapClient<'a> {
-    let proxy_address = &e.register_contract_wasm(None, soroswap_proxy::WASM);
-    let proxy = SoroswapAggregatorProxyForSoroswapClient::new(e, proxy_address); 
-    proxy
+pub struct SoroswapTest<'a> {
+    pub env: Env,
+    pub router_contract: SoroswapRouterClient<'a>,
+    pub factory_contract: SoroswapFactoryClient<'a>,
+    pub token_0: TokenClient<'a>,
+    pub token_1: TokenClient<'a>,
+    pub token_2: TokenClient<'a>,
+    pub user: Address,
+    pub admin: Address
 }
 
-// SoroswapAggregatorProxy Contract
-// For Phoenix
-mod phoenix_proxy {
-    soroban_sdk::contractimport!(file = "../proxies/phoenix/target/wasm32-unknown-unknown/release/phoenix_proxy.optimized.wasm");
-    pub type SoroswapAggregatorProxyForPhoenixClient<'a> = Client<'a>;
-}
-use phoenix_proxy::SoroswapAggregatorProxyForPhoenixClient;
-
-// Proxy for phoenix
-fn create_phoenix_proxy<'a>(e: &Env) -> SoroswapAggregatorProxyForPhoenixClient<'a> {
-    let proxy_address = &e.register_contract_wasm(None, phoenix_proxy::WASM);
-    let proxy = SoroswapAggregatorProxyForPhoenixClient::new(e, proxy_address); 
-    proxy
-}
-
-// SoroswapAggregator Contract
-fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
-    SoroswapAggregatorClient::new(e, &e.register_contract(None, SoroswapAggregator {}))
-}
-
-// Helper function to initialize / update soroswap aggregator protocols
-pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
-    vec![&test.env,
-        ProxyAddressPair {
-            protocol_id: String::from_str(&test.env, "soroswap"),
-            address: test.soroswap_proxy_contract.address.clone(),
-        },
-    ]
-}
-
-// pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
-//     vec![&test.env,
-//         ProxyAddressPair {
-//             protocol_id: dex_constants::SOROSWAP,
-//             address: test.router_contract.address.clone(),
-//         },
-//     ]
-// }
-
-// pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
-//     vec![&test.env,
-//         ProxyAddressPair {
-//             protocol_id: dex_constants::PHOENIX,
-//             address: test.router_contract.address.clone(),
-//         },
-//     ]
-// }
-
-pub struct SoroswapAggregatorTest<'a> {
-    env: Env,
-    aggregator_contract: SoroswapAggregatorClient<'a>,
-    router_contract: SoroswapRouterClient<'a>,
-    factory_contract: SoroswapFactoryClient<'a>,
-    soroswap_proxy_contract: SoroswapAggregatorProxyForSoroswapClient<'a>,
-    phoenix_proxy_contract: SoroswapAggregatorProxyForPhoenixClient<'a>,
-    token_0: TokenClient<'a>,
-    token_1: TokenClient<'a>,
-    token_2: TokenClient<'a>,
-    user: Address,
-    admin: Address
-}
-
-impl<'a> SoroswapAggregatorTest<'a> {
-    fn setup() -> Self {
+impl<'a> SoroswapTest<'a> {
+    pub fn soroswap_setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
-        let aggregator_contract = create_soroswap_aggregator(&env);
         let router_contract = create_soroswap_router(&env);
-        let soroswap_proxy_contract = create_soroswap_proxy(&env);
-        let phoenix_proxy_contract = create_phoenix_proxy(&env);
 
         let initial_user_balance = 10_000_000_000_000_000_000;
 
@@ -241,16 +171,10 @@ impl<'a> SoroswapAggregatorTest<'a> {
         assert_eq!(token_1.balance(&user), 2_000_000_000_000_000_000);
         assert_eq!(token_2.balance(&user), 5_000_000_000_000_000_000);
 
-        // Initializing Soroswap Proxy Contract
-        soroswap_proxy_contract.initialize(&aggregator_contract.address, &router_contract.address);
-
-        SoroswapAggregatorTest {
+        SoroswapTest {
             env,
-            aggregator_contract,
             router_contract,
             factory_contract,
-            soroswap_proxy_contract,
-            phoenix_proxy_contract,
             token_0,
             token_1,
             token_2,
@@ -259,7 +183,3 @@ impl<'a> SoroswapAggregatorTest<'a> {
         }
     }
 }
-
-pub mod initialize;
-pub mod protocols_actions;
-// pub mod swap;
