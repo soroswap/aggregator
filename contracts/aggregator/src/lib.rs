@@ -19,6 +19,11 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), CombinedAggregatorEr
     }
 }
 
+soroban_sdk::contractimport!(
+    file = "../proxies/soroswap/target/wasm32-unknown-unknown/release/soroswap_proxy.optimized.wasm"
+);
+pub type SoroswapAggregatorProxyClient<'a> = Client<'a>;
+
 /// Panics if the specified deadline has passed.
 ///
 /// # Arguments
@@ -194,11 +199,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let admin: Address = get_admin(&e);
         admin.require_auth();
         
-        //Should pause proxy contract
+        let proxy_contract_address = get_proxy_address(&e, protocol_id.clone());
+        let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
+    
+        let response = proxy_client.pause();
     
         event::protocol_paused(&e, protocol_id);
         extend_instance_ttl(&e);
-        Ok(())
+        Ok(response)
     }
 
     fn unpause_protocol(
@@ -209,11 +217,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let admin: Address = get_admin(&e);
         admin.require_auth();
         
-        //Should unpause proxy contract
+        let proxy_contract_address = get_proxy_address(&e, protocol_id.clone());
+        let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
+    
+        let response = proxy_client.unpause();
     
         event::protocol_unpaused(&e, protocol_id);
         extend_instance_ttl(&e);
-        Ok(())
+        Ok(response)
     }
 
     fn swap(
@@ -300,8 +311,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         e: &Env,
         protocol_id: String,
     ) -> Result<bool, CombinedAggregatorError> {
-        //should get proxy status
-        Ok(true)
+
+        let proxy_contract_address = get_proxy_address(e, protocol_id.clone());
+        let proxy_client = SoroswapAggregatorProxyClient::new(e, &proxy_contract_address);
+    
+        let response = proxy_client.is_paused();
+    
+        Ok(response)
     }
 
 }
