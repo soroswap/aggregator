@@ -102,10 +102,10 @@ pub trait AggregatorProxyTrait {
 }
 
 #[contract]
-struct SoroswapAggregatorProxyForPhoenix;
+struct SoroswapAggregatorProxy;
 
 #[contractimpl]
-impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
+impl AggregatorProxyTrait for SoroswapAggregatorProxy {
     /// Initializes the contract and sets the phoenix multihop address
     fn initialize(
         e: Env,
@@ -119,7 +119,6 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         set_admin(&e, admin);
         put_protocol_address(&e, protocol_address.clone());
     
-        // Mark the contract as initialized
         set_initialized(&e);
         event::initialized(&e, true, protocol_address);
         extend_instance_ttl(&e);
@@ -133,7 +132,6 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         check_initialized(&e)?;
         let admin: Address = get_admin(&e);
         admin.require_auth();
-        // Check if the sender is the admin
         
         put_protocol_address(&e, protocol_address.clone());
     
@@ -151,6 +149,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         admin.require_auth();
 
         set_paused(&e, true);
+
         event::protocol_paused(&e, true);
         extend_instance_ttl(&e);
         Ok(())
@@ -164,6 +163,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForPhoenix {
         admin.require_auth();
 
         set_paused(&e, false);
+        
         event::protocol_paused(&e, false);
         extend_instance_ttl(&e);
         Ok(())

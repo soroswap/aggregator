@@ -5,7 +5,7 @@ mod error;
 mod event;
 mod storage;
 mod protocol_interface;
-// mod test;
+mod test;
 
 use storage::{
     put_protocol_address, 
@@ -102,10 +102,10 @@ pub trait AggregatorProxyTrait {
 }
 
 #[contract]
-struct SoroswapAggregatorProxyForSoroswap;
+struct SoroswapAggregatorProxy;
 
 #[contractimpl]
-impl AggregatorProxyTrait for SoroswapAggregatorProxyForSoroswap {
+impl AggregatorProxyTrait for SoroswapAggregatorProxy {
     /// Initializes the contract and sets the phoenix multihop address
     fn initialize(
         e: Env,
@@ -119,7 +119,6 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForSoroswap {
         set_admin(&e, admin);
         put_protocol_address(&e, protocol_address.clone());
     
-        // Mark the contract as initialized
         set_initialized(&e);
         event::initialized(&e, true, protocol_address);
         extend_instance_ttl(&e);
@@ -151,6 +150,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForSoroswap {
         admin.require_auth();
 
         set_paused(&e, true);
+
         event::protocol_paused(&e, true);
         extend_instance_ttl(&e);
         Ok(())
@@ -164,6 +164,7 @@ impl AggregatorProxyTrait for SoroswapAggregatorProxyForSoroswap {
         admin.require_auth();
 
         set_paused(&e, false);
+
         event::protocol_paused(&e, false);
         extend_instance_ttl(&e);
         Ok(())
