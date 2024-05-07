@@ -1,0 +1,12 @@
+[package]
+name = "soroswap-aggregator-proxy-interface"
+authors = ["coderipper <joaquin@paltalabs.io>"]
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+soroban-sdk = { version = "20.5.0" }
+
+[dev_dependencies]
+soroban-sdk = { version = "20.5.0", features = ["testutils"] }

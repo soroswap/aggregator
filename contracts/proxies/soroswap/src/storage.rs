@@ -1,13 +1,12 @@
-use soroban_sdk::{contracttype, Env, Address};
+use soroban_sdk::{contracttype, Env, Address, String};
 
 #[derive(Clone)]
 #[contracttype]
 
 enum DataKey {
-    ProtocolAddress,
     Initialized,
-    Admin,
-    Paused(bool)
+    ProtocolId,
+    ProtocolAddress,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -28,7 +27,15 @@ pub fn is_initialized(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Initialized)
 }
 
-pub fn put_protocol_address(e: &Env, address: Address) {
+pub fn set_protocol_id(e: &Env, protocol_id: String) {
+    e.storage().instance().set(&DataKey::ProtocolId, &protocol_id);
+}
+
+pub fn get_protocol_id(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::ProtocolId).unwrap()
+}
+
+pub fn set_protocol_address(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::ProtocolAddress, &address);
 }
 
@@ -40,18 +47,3 @@ pub fn get_protocol_address(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::ProtocolAddress).unwrap()
 }
 
-pub fn set_admin(e: &Env, address: Address) {
-    e.storage().instance().set(&DataKey::Admin, &address)
-}
-
-pub fn get_admin(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::Admin).unwrap()
-}
-
-pub fn set_paused(e: &Env, paused: bool) {
-    e.storage().instance().set(&DataKey::Paused(true), &paused);
-}
-
-pub fn is_paused(e: &Env) -> bool {
-    e.storage().instance().get(&DataKey::Paused(true)).unwrap_or(false)
-}

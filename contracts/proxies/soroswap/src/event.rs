@@ -1,21 +1,23 @@
 //! Definition of the Events used in the contract
-use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec};
+use soroban_sdk::{contracttype, symbol_short, Env, Address, Vec, String};
 
 // INITIALIZED
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
     pub state: bool,
+    pub protocol_id: String,
     pub protocol_address: Address
 }
 
-pub(crate) fn initialized(e: &Env, state: bool, protocol_address: Address) {
+pub(crate) fn initialized(e: &Env, state: bool, protocol_id: String, protocol_address: Address) {
     
     let event: InitializedEvent = InitializedEvent {
         state: state,
+        protocol_id,
         protocol_address,
     };
-    e.events().publish(("SoroswapAggregatorProxyForSoroswap", symbol_short!("init")), event);
+    e.events().publish(("SoroswapAggregatorProxy", symbol_short!("init")), event);
 }
 
 // SWAP EVENT
@@ -27,15 +29,6 @@ pub struct SwapEvent {
     pub to: Address
 }
 
-/// Publishes an `SwapEvent` to the event stream.
-/// 
-/// # Arguments
-/// 
-/// * `e` - An instance of the `Env` struct.
-/// * `path` - A vector representing the trading route, where the first element is the input token 
-///            and the last is the output token. Intermediate elements represent pairs to trade through.
-/// * `amounts` - A vector containing the amounts of tokens traded at each step of the trading route.
-/// * `to` - The address where the output tokens will be sent to.
 pub(crate) fn swap(
     e: &Env,
     amount_in: i128,
@@ -48,30 +41,5 @@ pub(crate) fn swap(
         to,
     };
 
-    e.events().publish(("SoroswapAggregatorProxyForSoroswap", symbol_short!("swap")), event);
-}
-// UPDATE PROTOCOL EVENT
-#[contracttype] 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct UpdateProtocolEvent {
-    pub protocol_address: Address
-}
-
-/// Publishes an `UpdateProtocolEvent` to the event stream.
-pub(crate) fn protocol_updated(
-    e: &Env,
-    protocol_address: Address
-) {
-    let event = UpdateProtocolEvent {
-        protocol_address,
-    };
-
-    e.events().publish(("SoroswapAggregatorProxyForSoroswap", symbol_short!("update")), event);
-}
-
-pub(crate) fn protocol_paused(
-    e: &Env,
-    status: bool
-) {
-    e.events().publish(("SoroswapAggregatorProxyForSoroswap", symbol_short!("paused")), status);
+    e.events().publish(("SoroswapAggregatorProxy", symbol_short!("swap")), event);
 }
