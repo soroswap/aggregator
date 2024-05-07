@@ -5,6 +5,7 @@ use crate::models::{ProxyAddressPair};
 #[contracttype]
 enum DataKey {
     ProxyAddress(String),
+    ProtocolPaused(String),
     Initialized,
     Admin,
     ProtocolList,
@@ -82,4 +83,12 @@ pub fn remove_protocol_id(e: &Env, protocol_id: String) {
     }
 
     e.storage().instance().set(&DataKey::ProtocolList, &new_protocols);
+}
+
+pub fn set_pause_protocol(e: &Env, protocol_id: String, paused: bool) {
+    e.storage().instance().set(&DataKey::ProtocolPaused(protocol_id), &paused);
+}
+
+pub fn is_protocol_paused(e: &Env, protocol_id: String) -> bool {
+    e.storage().instance().get(&DataKey::ProtocolPaused(protocol_id)).unwrap_or(false)
 }
