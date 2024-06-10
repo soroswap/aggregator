@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, testutils::Address as _};
 
-use crate::error::CombinedAggregatorError;
+use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
 
 
@@ -22,7 +22,7 @@ fn test_get_admin_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test.aggregator_contract.try_get_admin();
 
-    assert_eq!(result, Err(Ok(CombinedAggregatorError::AggregatorNotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
 }
 
 #[test]
@@ -36,6 +36,6 @@ fn test_initialize_twice() {
     let result_second_init = test.aggregator_contract.try_initialize(&test.admin, &initialize_aggregator_addresses);
     assert_eq!(
         result_second_init,
-        (Err(Ok(CombinedAggregatorError::AggregatorInitializeAlreadyInitialized)))
+        (Err(Ok(AggregatorError::AlreadyInitialized)))
     );
 }

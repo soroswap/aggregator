@@ -1,7 +1,6 @@
-import { Address, xdr } from 'stellar-sdk';
-import { deployAndInitPhoenix } from './protocols/phoenix/phoenix_deploy.js';
+import { Address, xdr } from '@stellar/stellar-sdk';
 import { AddressBook } from './utils/address_book.js';
-import { airdropAccount, bumpContractCode, bumpContractInstance, deployContract, installContract, invokeContract } from './utils/contract.js';
+import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
 
@@ -17,13 +16,13 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   console.log('Deploying and Initializing Soroswap Aggregator');
   console.log('-------------------------------------------------------');
   await deployContract('aggregator', 'aggregator', addressBook, loadedConfig.admin);
-  await bumpContractInstance('aggregator', addressBook, loadedConfig.admin);
+  // await bumpContractInstance('aggregator', addressBook, loadedConfig.admin);
 
-  const routerAddress = soroswapAddressBook.getContractId('router');
+  const routerAddress = "CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO" //soroswapAddressBook.getContractId('router');
   console.log("Soroswap Router Address", routerAddress)
   const protocolAddressPair = [
     {
-      protocol_id: 0,
+      protocol_id: "soroswap",
       address: new Address(routerAddress),
     },
   ];
@@ -36,7 +35,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: xdr.ScVal.scvI32(pair.protocol_id),
+        val: xdr.ScVal.scvString(pair.protocol_id),
       }),
     ]);
   });
@@ -44,8 +43,8 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   const aggregatorProtocolAddressesScVal = xdr.ScVal.scvVec(protocolAddressPairScVal);
 
   const aggregatorInitParams: xdr.ScVal[] = [
-    new Address(loadedConfig.admin.publicKey()).toScVal(),
-    aggregatorProtocolAddressesScVal,
+    new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
+    aggregatorProtocolAddressesScVal, // proxy_addresses: Vec<ProxyAddressPair>,
   ];
 
   console.log("Initializing Aggregator")
@@ -57,20 +56,20 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     loadedConfig.admin
   );
 
-  if (network != 'mainnet') {
-    // mocks
-    console.log('Installing and deploying: Phoenix Mocked Contracts');
-    const phoenixAdmin = loadedConfig.getUser('PHOENIX')
-    await airdropAccount(phoenixAdmin);
+  // if (network != 'mainnet') {
+  //   // mocks
+  //   console.log('Installing and deploying: Phoenix Mocked Contracts');
+  //   const phoenixAdmin = loadedConfig.getUser('PHOENIX')
+  //   await airdropAccount(phoenixAdmin);
 
-    const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
-    await airdropAccount(tokensAdminAccount);
+  //   const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
+  //   await airdropAccount(tokensAdminAccount);
 
-    await deployAndInitPhoenix(addressBook, phoenixAdmin)
-    // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
-    // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
-    // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
-  }
+  //   await deployAndInitPhoenix(addressBook, phoenixAdmin)
+  //   // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
+  //   // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
+  //   // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+  // }
 }
 
 const network = process.argv[2];
@@ -89,3 +88,7 @@ const loadedConfig = config(network);
 
 await deployAndInitAggregator(addressBook);
 addressBook.writeToFile();
+
+
+// soroban contract invoke --id CA7QOHC7FFME2E7LYN675MHW4TKTEDXILQ5KRUBB2AMRVU3GN75KR2SX --source-account admin --network testnet -- initialize --admin GAZZFSUQVDVKAMQ2QTJY4DLC7HVZ37MM5SFD6CWSLE4Z3CAU4U5LC5DE --proxy_addresses '[{"address":"CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO","protocol_id":"soroswap"}]'
+// CA7QOHC7FFME2E7LYN675MHW4TKTEDXILQ5KRUBB2AMRVU3GN75KR2SX

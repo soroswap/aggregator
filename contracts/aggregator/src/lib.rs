@@ -260,9 +260,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let mut total_swapped: i128 = 0;
     
         for (index, dist) in distribution.iter().enumerate() {
-            let swap_amount = if index == (distribution.len() - 1).try_into().unwrap() {
+            let swap_amount = if index == (distribution.len() - 1) as usize {
                 // For the last iteration, swap whatever remains
-                amount - total_swapped
+                amount.checked_sub(total_swapped).ok_or(AggregatorError::ArithmeticError)?
             } else {
                 // Calculate part of the total amount based on distribution parts
                 amount.checked_mul(dist.parts)
@@ -273,12 +273,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone());
             let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
             let response = proxy_client.swap(&to, &dist.path, &swap_amount, &amount_out_min, &deadline, &dist.is_exact_in);
-    
+        
             // Store the response from the swap
             for item in response.iter() {
                 swap_responses.push_back(item);
             }
-            total_swapped += swap_amount;
+            total_swapped = total_swapped.checked_add(swap_amount).ok_or(AggregatorError::ArithmeticError)?;
         }
     
         event::swap(&e, amount, distribution, to);

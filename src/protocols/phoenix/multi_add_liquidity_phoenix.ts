@@ -1,4 +1,4 @@
-import { Address, Keypair, nativeToScVal, xdr } from 'stellar-sdk';
+import { Address, Keypair, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { mintToken } from '../../mint_token.js';
 import { AddressBook } from '../../utils/address_book.js';
 import { getTokenBalance, invokeContract } from '../../utils/contract.js';

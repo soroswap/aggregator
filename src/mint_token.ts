@@ -1,4 +1,4 @@
-import { Address, Keypair, nativeToScVal, xdr } from 'stellar-sdk';
+import { Address, Keypair, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { invokeCustomContract } from './utils/contract.js';
 
 export async function mintToken(contractId: string, amount: number, to: string, admin: Keypair) {

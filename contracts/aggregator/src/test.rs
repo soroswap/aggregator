@@ -242,7 +242,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         assert_eq!(token_2.balance(&user), 5_000_000_000_000_000_000);
 
         // Initializing Soroswap Proxy Contract
-        soroswap_proxy_contract.initialize(&aggregator_contract.address, &router_contract.address);
+        soroswap_proxy_contract.initialize(&String::from_str(&env, "soroswap"), &router_contract.address);
 
         SoroswapAggregatorTest {
             env,

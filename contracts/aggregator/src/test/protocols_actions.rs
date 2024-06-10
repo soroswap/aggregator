@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, Vec, vec, String, testutils::Address as _};
 
-use crate::error::CombinedAggregatorError;
+use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
 use crate::models::{ProxyAddressPair};
 
@@ -39,7 +39,7 @@ fn test_update_protocols_not_yet_initialized() {
     let update_aggregator_addresses = create_protocols_addresses(&test);
     let result = test.aggregator_contract.try_update_protocols(&update_aggregator_addresses);
 
-    assert_eq!(result, Err(Ok(CombinedAggregatorError::AggregatorNotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn test_get_protocols_not_yet_initialized() {
     let update_aggregator_addresses = create_protocols_addresses(&test);
     let result = test.aggregator_contract.try_update_protocols(&update_aggregator_addresses);
 
-    assert_eq!(result, Err(Ok(CombinedAggregatorError::AggregatorNotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
 }
 
 #[test]
@@ -115,5 +115,5 @@ fn test_is_protocol_paused() {
 
     let result = test.aggregator_contract.is_protocol_paused(&String::from_str(&test.env, "soroswap"));
 
-    assert!(result);
+    assert!(!result);
 }
