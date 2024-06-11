@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "deploy": "tsc && node dist/deploy.js"
+    "deploy": "tsc && node dist/deploy.js",
+    "test": "tsc && node dist/test.js"
   },
   "license": "MIT",
   "devDependencies": {

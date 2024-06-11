@@ -1,14 +1,14 @@
 // import { randomBytes } from 'crypto';
 import {
-    Address,
-    Asset,
-    Contract,
-    Keypair,
-    Operation,
-    StrKey,
-    hash,
-    scValToNative,
-    xdr,
+  Address,
+  Asset,
+  Contract,
+  Keypair,
+  Operation,
+  StrKey,
+  hash,
+  scValToNative,
+  xdr,
 } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 import { readFileSync } from 'fs';
@@ -22,6 +22,8 @@ import { createTxBuilder, invoke, invokeTransaction } from './tx.js';
 const CONTRACT_REL_PATH: object = {
   aggregator:
     '../../contracts/aggregator/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
+  soroswap_adapter: '../../contracts/proxies/soroswap/target/wasm32-unknown-unknown/release/soroswap_proxy.optimized.wasm',
+  phoenix_adapter: '../../contracts/proxies/phoenix/target/wasm32-unknown-unknown/release/phoenix_proxy.optimized.wasm',
   phoenix_factory: '../../protocols/phoenix/target/wasm32-unknown-unknown/release/phoenix_factory.wasm',
   phoenix_multihop: '../../protocols/phoenix/target/wasm32-unknown-unknown/release/phoenix_multihop.wasm',
   phoenix_token: '../../protocols/phoenix/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm',
@@ -99,14 +101,16 @@ export async function invokeContract(
   addressBook: AddressBook,
   method: string,
   params: xdr.ScVal[],
-  source: Keypair
+  source: Keypair,
+  simulation?: boolean
 ) {
   console.log('Invoking contract: ', contractKey, ' with method: ', method);
   const contractAddress = addressBook.getContractId(contractKey);
+  console.log('🚀 « contractAddress:', contractAddress);
   const contractInstance = new Contract(contractAddress);
 
   const contractOperation = contractInstance.call(method, ...params);
-  return await invoke(contractOperation, source, false);
+  return await invoke(contractOperation, source, simulation??false);
 }
 
 export async function invokeCustomContract(

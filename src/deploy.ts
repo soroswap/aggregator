@@ -1,4 +1,4 @@
-import { Address, xdr } from '@stellar/stellar-sdk';
+import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -8,22 +8,42 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   await airdropAccount(loadedConfig.admin);
 
+  console.log('-------------------------------------------------------');
+  console.log('Deploying Adapters');
+  console.log('-------------------------------------------------------');
+  console.log("Soroswap Adapter");
+  console.log('Installing Aggregator Contract');
+  await installContract('soroswap_adapter', addressBook, loadedConfig.admin);
+  await deployContract('soroswap_adapter', 'soroswap_adapter', addressBook, loadedConfig.admin);
+
+  const routerAddress = "CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO" //soroswapAddressBook.getContractId('router');
+  const soroswapAdapterInitParams: xdr.ScVal[] = [
+    nativeToScVal("soroswap"), // protocol_id
+    new Address(routerAddress).toScVal(), // protocol_address (soroswap router)
+  ];
+
+  console.log("Initializing Soroswap Adapter")
+  await invokeContract(
+    'soroswap_adapter',
+    addressBook,
+    'initialize',
+    soroswapAdapterInitParams,
+    loadedConfig.admin
+  );
+
+  console.log('-------------------------------------------------------');
+  console.log('Deploying Aggregator');
+  console.log('-------------------------------------------------------');
   console.log('Installing Aggregator Contract');
   await installContract('aggregator', addressBook, loadedConfig.admin);
   await bumpContractCode('aggregator', addressBook, loadedConfig.admin);
-
-  console.log('-------------------------------------------------------');
-  console.log('Deploying and Initializing Soroswap Aggregator');
-  console.log('-------------------------------------------------------');
+  
   await deployContract('aggregator', 'aggregator', addressBook, loadedConfig.admin);
-  // await bumpContractInstance('aggregator', addressBook, loadedConfig.admin);
-
-  const routerAddress = "CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO" //soroswapAddressBook.getContractId('router');
-  console.log("Soroswap Router Address", routerAddress)
+  
   const protocolAddressPair = [
     {
       protocol_id: "soroswap",
-      address: new Address(routerAddress),
+      address: new Address(addressBook.getContractId('soroswap_adapter')),
     },
   ];
 
