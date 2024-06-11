@@ -87,6 +87,27 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     await airdropAccount(tokensAdminAccount);
 
     await deployAndInitPhoenix(addressBook, phoenixAdmin)
+    
+    console.log("Phoenix Adapter");
+    console.log('Installing Phoenix Adapter Contract');
+    await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
+    await deployContract('phoenix_adapter', 'phoenix_adapter', addressBook, loadedConfig.admin);
+  
+    const multihopAddress = addressBook.getContractId('phoenix_multihop');
+    const phoenixAdapterInitParams: xdr.ScVal[] = [
+      nativeToScVal("phoenix"), // protocol_id
+      new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
+    ];
+  
+    console.log("Initializing Soroswap Adapter")
+    await invokeContract(
+      'phoenix_adapter',
+      addressBook,
+      'initialize',
+      phoenixAdapterInitParams,
+      loadedConfig.admin
+    );
+
     // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
     // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
     // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
