@@ -33,6 +33,7 @@ export async function invoke(
 
 export async function invokeTransaction(tx: Transaction, source: Keypair, sim: boolean) {
   // simulate the TX
+  console.log(tx.toXDR())
   const simulation_resp = await loadedConfig.rpc.simulateTransaction(tx);
   if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter

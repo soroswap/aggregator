@@ -117,13 +117,14 @@ export async function invokeCustomContract(
   contractId: string,
   method: string,
   params: xdr.ScVal[],
-  source: Keypair
+  source: Keypair,
+  simulation?: boolean,
 ) {
   console.log('Invoking contract: ', contractId, ' with method: ', method);
   const contractInstance = new Contract(contractId);
 
   const contractOperation = contractInstance.call(method, ...params);
-  return await invoke(contractOperation, source, false);
+  return await invoke(contractOperation, source, simulation ?? false);
 }
 
 export async function deployStellarAsset(asset: Asset, source: Keypair) {

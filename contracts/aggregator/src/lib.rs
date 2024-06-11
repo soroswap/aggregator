@@ -272,7 +272,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             
             let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone());
             let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
-            let response = proxy_client.swap(&to, &dist.path, &swap_amount, &amount_out_min, &deadline, &dist.is_exact_in);
+            let response = proxy_client.swap(
+                &to, 
+                &dist.path, 
+                &swap_amount, 
+                &amount_out_min, 
+                &deadline, 
+                &dist.is_exact_in
+            );
         
             // Store the response from the swap
             for item in response.iter() {
