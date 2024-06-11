@@ -52,11 +52,13 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
     new Address(phoenixAdmin.publicKey()).toScVal(), //admin
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_multihop'), 'hex')),
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_pool'), 'hex')),
+    // stable_wasm
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stake'), 'hex')),
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_token'), 'hex')),
     nativeToScVal([{address: new Address(phoenixAdmin.publicKey())}]),
     nativeToScVal(7, { type: 'u32' })
   ];
+
   await invokeContract('phoenix_factory', addressBook, 'initialize', factoryInitParams, phoenixAdmin);
 }
 

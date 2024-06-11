@@ -3,7 +3,7 @@ use crate::storage::{get_protocol_address, has_protocol_address};
 use soroswap_aggregator_proxy_interface::{ProxyError};
 
 soroban_sdk::contractimport!(
-    file = "../../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm"
+    file = "./contracts/soroswap_router.optimized.wasm"
 );
 pub type SoroswapRouterClient<'a> = Client<'a>;
 

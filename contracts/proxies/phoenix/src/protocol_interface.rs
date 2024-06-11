@@ -3,7 +3,7 @@ use crate::storage::{get_protocol_address, has_protocol_address};
 use soroswap_aggregator_proxy_interface::{ProxyError};
 
 soroban_sdk::contractimport!(
-    file = "../../../protocols/phoenix/target/wasm32-unknown-unknown/release/phoenix_multihop.wasm"
+    file = "./contracts/phoenix_multihop.wasm"
 );
 pub type PhoenixMultihopClient<'a> = Client<'a>;
 
