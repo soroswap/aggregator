@@ -1,4 +1,5 @@
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
+import { deployAndInitPhoenix } from './protocols/phoenix/phoenix_deploy.js';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -76,20 +77,20 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     loadedConfig.admin
   );
 
-  // if (network != 'mainnet') {
-  //   // mocks
-  //   console.log('Installing and deploying: Phoenix Mocked Contracts');
-  //   const phoenixAdmin = loadedConfig.getUser('PHOENIX')
-  //   await airdropAccount(phoenixAdmin);
+  if (network != 'mainnet') {
+    // mocks
+    console.log('Installing and deploying: Phoenix Mocked Contracts');
+    const phoenixAdmin = loadedConfig.getUser('PHOENIX')
+    await airdropAccount(phoenixAdmin);
 
-  //   const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
-  //   await airdropAccount(tokensAdminAccount);
+    const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
+    await airdropAccount(tokensAdminAccount);
 
-  //   await deployAndInitPhoenix(addressBook, phoenixAdmin)
-  //   // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
-  //   // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
-  //   // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
-  // }
+    await deployAndInitPhoenix(addressBook, phoenixAdmin)
+    // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
+    // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
+    // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+  }
 }
 
 const network = process.argv[2];
