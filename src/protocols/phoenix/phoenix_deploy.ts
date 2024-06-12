@@ -55,7 +55,7 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
     // stable_wasm
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stake'), 'hex')),
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_token'), 'hex')),
-    nativeToScVal([{address: new Address(phoenixAdmin.publicKey())}]),
+    nativeToScVal([new Address(phoenixAdmin.publicKey())]),
     nativeToScVal(7, { type: 'u32' })
   ];
 

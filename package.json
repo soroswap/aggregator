@@ -8,7 +8,6 @@
     "deploy": "tsc && node dist/deploy.js",
     "test": "tsc && node dist/test.js",
     "test_adapter": "tsc && node dist/test_soroswap_adapter.js"
-    
   },
   "license": "MIT",
   "devDependencies": {

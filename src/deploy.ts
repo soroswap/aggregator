@@ -1,5 +1,5 @@
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
-import { deployAndInitPhoenix } from './protocols/phoenix/phoenix_deploy.js';
+import { phoenixSetup } from './protocols/phoenix/phoenix_setup.js';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -79,38 +79,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   if (network != 'mainnet') {
     // mocks
-    console.log('Installing and deploying: Phoenix Mocked Contracts');
-    const phoenixAdmin = loadedConfig.getUser('PHOENIX')
-    await airdropAccount(phoenixAdmin);
-
-    const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
-    await airdropAccount(tokensAdminAccount);
-
-    await deployAndInitPhoenix(addressBook, phoenixAdmin)
-    
-    console.log("Phoenix Adapter");
-    console.log('Installing Phoenix Adapter Contract');
-    await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
-    await deployContract('phoenix_adapter', 'phoenix_adapter', addressBook, loadedConfig.admin);
-  
-    const multihopAddress = addressBook.getContractId('phoenix_multihop');
-    const phoenixAdapterInitParams: xdr.ScVal[] = [
-      nativeToScVal("phoenix"), // protocol_id
-      new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
-    ];
-  
-    console.log("Initializing Soroswap Adapter")
-    await invokeContract(
-      'phoenix_adapter',
-      addressBook,
-      'initialize',
-      phoenixAdapterInitParams,
-      loadedConfig.admin
-    );
-
-    // TODO: Set phoenix multihop contract address to the aggregator with the update_protocols method
-    // TODO: Fix phoenixMultiAddLiquidity currently is giving a scval error when trying to create the pool
-    // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+    await phoenixSetup();
   }
 }
 
@@ -120,10 +89,10 @@ const addressBook = AddressBook.loadFromFile(network);
 const soroswapDir = network === 'standalone' ? '.soroban' : 'public';
 const soroswapAddressBook = AddressBook.loadFromFile(
   network,
-  `../../contracts/protocols/soroswap/${soroswapDir}`
+  `../protocols/soroswap/${soroswapDir}`
 );
 const soroswapTokensBook = TokensBook.loadFromFile(
-  `../../contracts/protocols/soroswap/${soroswapDir}`
+  `../protocols/soroswap/${soroswapDir}`
 );
 
 const loadedConfig = config(network);
