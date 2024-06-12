@@ -9,7 +9,7 @@ export async function testSoroswapAdapter(addressBook: AddressBook) {
   console.log('Testing Soroswap Adapter');
   console.log('-------------------------------------------------------');
 
-  const pathRaw = ["CAPCD5BA3VYK4YWTXUBBXKXXIETXU2GGZZIQ4KDFI4WWTVZHV6OBIUNO", "CCKW6SMINDG6TUWJROIZ535EW2ZUJQEDGSKNIK3FBK26PAMBZDVK2BZA"];
+  const pathRaw = ["CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS", "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"];
 
   const aggregatorSwapParams: xdr.ScVal[] = [
     new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,

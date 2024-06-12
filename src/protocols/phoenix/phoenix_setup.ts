@@ -57,5 +57,5 @@ const soroswapTokensBook = TokensBook.loadFromFile(
 
 const loadedConfig = config(network);
 
-await phoenixSetup();
+// await phoenixSetup();
 addressBook.writeToFile();

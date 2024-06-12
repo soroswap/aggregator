@@ -50,7 +50,13 @@ export async function testAggregator(addressBook: AddressBook) {
     {
       protocol_id: "soroswap",
       path: [xtar_address, usdc_address],
-      parts: 1,
+      parts: 60,
+      is_exact_in: true,
+    },
+    {
+      protocol_id: "phoenix",
+      path: [xtar_address, usdc_address],
+      parts: 40,
       is_exact_in: true,
     },
   ];

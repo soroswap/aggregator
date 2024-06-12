@@ -1,5 +1,6 @@
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { phoenixSetup } from './protocols/phoenix/phoenix_setup.js';
+import { updateAggregatorProtocols } from './update_protocols.js';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -17,7 +18,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   await installContract('soroswap_adapter', addressBook, loadedConfig.admin);
   await deployContract('soroswap_adapter', 'soroswap_adapter', addressBook, loadedConfig.admin);
 
-  const routerAddress = "CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO" //soroswapAddressBook.getContractId('router');
+  const routerAddress = soroswapAddressBook.getContractId('router');
   const soroswapAdapterInitParams: xdr.ScVal[] = [
     nativeToScVal("soroswap"), // protocol_id
     new Address(routerAddress).toScVal(), // protocol_address (soroswap router)
@@ -80,6 +81,8 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   if (network != 'mainnet') {
     // mocks
     await phoenixSetup();
+    console.log("Updating protocols on aggregator")
+    await updateAggregatorProtocols(addressBook);
   }
 }
 
@@ -89,17 +92,13 @@ const addressBook = AddressBook.loadFromFile(network);
 const soroswapDir = network === 'standalone' ? '.soroban' : 'public';
 const soroswapAddressBook = AddressBook.loadFromFile(
   network,
-  `../protocols/soroswap/${soroswapDir}`
+  `../../protocols/soroswap/${soroswapDir}`
 );
 const soroswapTokensBook = TokensBook.loadFromFile(
-  `../protocols/soroswap/${soroswapDir}`
+  `./protocols/soroswap/${soroswapDir}`
 );
 
 const loadedConfig = config(network);
 
 await deployAndInitAggregator(addressBook);
 addressBook.writeToFile();
-
-
-// soroban contract invoke --id CA7QOHC7FFME2E7LYN675MHW4TKTEDXILQ5KRUBB2AMRVU3GN75KR2SX --source-account admin --network testnet -- initialize --admin GAZZFSUQVDVKAMQ2QTJY4DLC7HVZ37MM5SFD6CWSLE4Z3CAU4U5LC5DE --proxy_addresses '[{"address":"CB74KXQXEGKGPU5C5FI22X64AGQ63NANVLRZBS22SSCMLJDXNHED72MO","protocol_id":"soroswap"}]'
-// CA7QOHC7FFME2E7LYN675MHW4TKTEDXILQ5KRUBB2AMRVU3GN75KR2SX
