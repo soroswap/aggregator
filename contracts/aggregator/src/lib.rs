@@ -67,8 +67,7 @@ fn check_admin(e: &Env) {
 
 pub trait SoroswapAggregatorTrait {
 
-    /// Returns the version of the contract (important for upgrades)
-    fn version() -> u32;
+    /* ADMIN FUNCTIONS */
 
     /// Initializes the contract and sets the soroswap_router address
     fn initialize(e: Env, admin: Address, proxy_addresses: Vec<ProxyAddressPair>) -> Result<(), AggregatorError>;
@@ -98,6 +97,20 @@ pub trait SoroswapAggregatorTrait {
     ) -> Result<(), AggregatorError>;
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
+
+    /// Sets the `admin` address.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `e` - An instance of the `Env` struct.
+    /// * `new_admin` - The address to set as the new `admin`.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the Aggregator is not yet initialized or if the caller is not the existing `admin`.
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError>;
+
+    /* SWAP FUNCTION */
 
     /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
     /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
@@ -131,23 +144,12 @@ pub trait SoroswapAggregatorTrait {
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError>;
 
-    /// Sets the `admin` address.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `e` - An instance of the `Env` struct.
-    /// * `new_admin` - The address to set as the new `admin`.
-    /// 
-    /// # Errors
-    /// 
-    /// Returns an error if the Aggregator is not yet initialized or if the caller is not the existing `admin`.
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError>;
-
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
     fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError>;
     fn is_protocol_paused(e: &Env, protocol_id: String) -> bool;
+    fn get_version() -> u32;
 
 }
 
@@ -157,10 +159,7 @@ struct SoroswapAggregator;
 #[contractimpl]
 impl SoroswapAggregatorTrait for SoroswapAggregator {
 
-    /// this is the firs version of the contract   
-    fn version() -> u32 {
-        1
-    }
+    /* ADMIN FUNCTIONS */
 
     /// Initializes the contract and sets the soroswap_router address
     fn initialize(
@@ -184,8 +183,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         Ok(())
     }
-
-    // ** ADMIN FUNCTIONS ** //
     
     fn update_protocols(
         e: Env,
@@ -264,6 +261,8 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         e.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())
     }
+
+    // ** SWAP FUNCTIONS ** //
 
     fn swap(
         e: Env,
@@ -364,6 +363,11 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ) -> bool {
         let result = is_protocol_paused(&e, protocol_id);
         result
+    }
+
+    /// this is the firs version of the contract   
+    fn get_version() -> u32 {
+        1
     }
 
 }
