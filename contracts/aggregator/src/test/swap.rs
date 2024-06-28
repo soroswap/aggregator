@@ -79,3 +79,37 @@ fn test_soroswap_swap_no_protocol_address() {
 }
 
 // TODO Test that swaps fails if protocol id does not exist
+#[test]
+fn test_false_protocol_id() {
+    let test = SoroswapAggregatorTest::setup();
+
+    //Initialize aggregator
+    let initialize_aggregator_addresses = create_only_soroswap_protocol_address(&test);
+    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+
+    let from_token = &test.token_0.address;
+    let dest_token = &test.token_1.address;
+    let amount = 500_000_000_000_000_000;
+    let amount_out_min = 90i128;
+    let distribution = vec![&test.env,
+    DexDistribution {
+        index: 999, //false index
+        path: vec![&test.env, test.token_0.address.clone(), test.token_1.address.clone(), test.token_2.address.clone()],
+        parts: 3,
+    },
+    DexDistribution {
+        index: dex_constants::SOROSWAP,
+        path: vec![&test.env, test.token_0.address.clone(), test.token_2.address.clone()],
+        parts: 2,
+    },
+]
+    let to = &test.user;
+    let deadline = test.env.ledger().timestamp() + 100; // Deadline in the future
+
+    let result = test.aggregator_contract.try_swap(&from_token, &dest_token, &amount, &amount_out_min, &distribution, &to, &deadline);
+
+    assert_eq!(
+        result,
+        (Err(Ok(CombinedAggregatorError::AggregatorProtocolIdNotFound)))
+    );
+}
