@@ -121,6 +121,18 @@ pub trait SoroswapAggregatorTrait {
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError>;
 
+    /// Sets the `admin` address.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `e` - An instance of the `Env` struct.
+    /// * `new_admin` - The address to set as the new `admin`.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the Aggregator is not yet initialized or if the caller is not the existing `admin`.
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError>;
+
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
@@ -282,6 +294,18 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     
         event::swap(&e, amount, distribution, to);
         Ok(swap_responses)
+    }
+
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        
+        let admin: Address = get_admin(&e);
+        admin.require_auth();
+
+        set_admin(&e, new_admin.clone());
+
+        event::new_admin(&e, admin, new_admin);
+        Ok(())
     }
     
     /*  *** Read only functions: *** */

@@ -109,3 +109,22 @@ pub(crate) fn protocol_unpaused(
 
     e.events().publish(("SoroswapAggregator", symbol_short!("unpaused")), event);
 }
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NewAdminEvent {
+    pub old: Address,
+    pub new: Address
+}
+
+pub(crate) fn new_admin(
+    e: &Env,
+    old: Address,
+    new: Address) {
+    
+    let event: NewAdminEvent = NewAdminEvent {
+        old: old,
+        new: new
+    };
+    e.events().publish(("SoroswapAggregator", symbol_short!("new_admin")), event);
+}
