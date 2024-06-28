@@ -121,16 +121,6 @@ pub trait SoroswapAggregatorTrait {
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError>;
 
-
-    /// Returns the expected return amount for a given input amount and distribution
-    // fn getExpectedReturn(
-    //     e: Env,
-    //     from_token: Address,
-    //     dest_token: Address,
-    //     amount: i128,
-    //     parts: i128,
-    // ) -> Result<i128, AggregatorError>;
-
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
