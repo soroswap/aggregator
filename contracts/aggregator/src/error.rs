@@ -4,18 +4,18 @@ use soroban_sdk::{self, contracterror};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum AggregatorError {
-    NotInitialized = 501,
-    AlreadyInitialized = 502,
-    NegativeNotAllowed = 503,
-    ProtocolAddressNotFound = 504,
-    DeadlineExpired = 505,
-
-    InsufficientAAmount = 405,
-    InsufficientBAmount = 406,
-    InsufficientOutputAmount = 407,
-    ExcessiveInputAmount = 408,
-    UnsupportedProtocol = 409,
-    DistributionLengthExceeded = 417,
-    InvalidTotalParts = 418,
-    ArithmeticError = 419,
+    NotInitialized = 601,
+    AlreadyInitialized = 602,
+    NegativeNotAllowed = 603,
+    ProtocolAddressNotFound = 604,
+    DeadlineExpired = 605,
+    InsufficientAAmount = 606,
+    InsufficientBAmount = 607,
+    InsufficientOutputAmount = 608,
+    ExcessiveInputAmount = 609,
+    UnsupportedProtocol = 610,
+    DistributionLengthExceeded = 611,
+    InvalidTotalParts = 612,
+    ArithmeticError = 613,
+    InvalidProtocolId = 614,
 }

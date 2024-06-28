@@ -1,5 +1,6 @@
 use soroban_sdk::{contracttype, Env, Address, String, Vec};
-use crate::models::{ProxyAddressPair};
+use crate::{models::{ProxyAddressPair}, error::AggregatorError};
+
 
 #[derive(Clone)]
 #[contracttype]
@@ -46,8 +47,11 @@ pub fn has_proxy_address(e: &Env, protocol_id: String) -> bool {
     e.storage().instance().has(&DataKey::ProxyAddress(protocol_id))
 }
 
-pub fn get_proxy_address(e: &Env, protocol_id: String) -> Address {
-    e.storage().instance().get(&DataKey::ProxyAddress(protocol_id)).unwrap()
+pub fn get_proxy_address(e: &Env, protocol_id: String) -> Result<Address, AggregatorError> {
+    match e.storage().instance().get(&DataKey::ProxyAddress(protocol_id)) {
+        Some(address) => Ok(address),
+        None => Err(AggregatorError::InvalidProtocolId),
+    }
 }
 
 pub fn remove_proxy_address(e: &Env, protocol_id: String) {

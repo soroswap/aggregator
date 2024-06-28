@@ -23,7 +23,7 @@ use storage::{
     is_protocol_paused,
 };
 use models::{DexDistribution, ProxyAddressPair, MAX_DISTRIBUTION_LENGTH};
-pub use error::{AggregatorError};
+use error::{AggregatorError};
 use proxy::SoroswapAggregatorProxyClient;
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
@@ -272,7 +272,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     .ok_or(AggregatorError::ArithmeticError)?
             };
             
-            let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone());
+            let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone())?;
             let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
             let response = proxy_client.swap(
                 &to, 
@@ -310,7 +310,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         // Iterate over each protocol ID and collect their proxy addresses
         for protocol_id in protocol_ids.iter() {
             if has_proxy_address(e, protocol_id.clone()) {
-                let address = get_proxy_address(e, protocol_id.clone());
+                let address = get_proxy_address(e, protocol_id.clone())?;
                 addresses.push_back(ProxyAddressPair {
                     protocol_id: protocol_id,
                     address,
