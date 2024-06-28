@@ -18,4 +18,5 @@ pub enum AggregatorError {
     InvalidTotalParts = 612,
     ArithmeticError = 613,
     InvalidProtocolId = 614,
+    Unauthorized = 615,
 }

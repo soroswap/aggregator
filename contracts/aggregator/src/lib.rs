@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String, BytesN};
 
 mod models;
 mod error;
@@ -56,11 +56,19 @@ fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     }
 }
 
+fn check_admin(e: &Env) {
+    let admin: Address = get_admin(&e);
+    admin.require_auth();
+}
+
 /*
     SOROSWAP AGGREGATOR SMART CONTRACT INTERFACE:
 */
 
 pub trait SoroswapAggregatorTrait {
+
+    /// Returns the version of the contract (important for upgrades)
+    fn version() -> u32;
 
     /// Initializes the contract and sets the soroswap_router address
     fn initialize(e: Env, admin: Address, proxy_addresses: Vec<ProxyAddressPair>) -> Result<(), AggregatorError>;
@@ -88,6 +96,8 @@ pub trait SoroswapAggregatorTrait {
         e: Env,
         protocol_id: String,
     ) -> Result<(), AggregatorError>;
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
 
     /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
     /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
@@ -146,6 +156,12 @@ struct SoroswapAggregator;
 
 #[contractimpl]
 impl SoroswapAggregatorTrait for SoroswapAggregator {
+
+    /// this is the firs version of the contract   
+    fn version() -> u32 {
+        1
+    }
+
     /// Initializes the contract and sets the soroswap_router address
     fn initialize(
         e: Env,
@@ -168,16 +184,16 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         Ok(())
     }
+
+    // ** ADMIN FUNCTIONS ** //
     
     fn update_protocols(
         e: Env,
         proxy_addresses: Vec<ProxyAddressPair>,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        let admin: Address = get_admin(&e);
-        admin.require_auth();
-        // Check if the sender is the admin
-        
+        check_admin(&e);
+
         for pair in proxy_addresses.iter() {
             put_proxy_address(&e, pair);
         }
@@ -192,8 +208,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         protocol_id: String,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        let admin: Address = get_admin(&e);
-        admin.require_auth();
+        check_admin(&e);
         
         remove_proxy_address(&e, protocol_id.clone());
     
@@ -207,8 +222,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         protocol_id: String,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        let admin: Address = get_admin(&e);
-        admin.require_auth();
+        check_admin(&e);
         
         set_pause_protocol(&e, protocol_id.clone(), true);
     
@@ -222,13 +236,32 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         protocol_id: String,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        let admin: Address = get_admin(&e);
-        admin.require_auth();
+        check_admin(&e);
         
         set_pause_protocol(&e, protocol_id.clone(), false);
     
         event::protocol_unpaused(&e, protocol_id);
         extend_instance_ttl(&e);
+        
+        Ok(())
+    }
+
+    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        check_admin(&e);
+
+        let admin: Address = get_admin(&e);
+        set_admin(&e, new_admin.clone());
+
+        event::new_admin(&e, admin, new_admin);
+        Ok(())
+    }
+
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError> {
+        check_initialized(&e)?;
+        check_admin(&e);
+
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())
     }
 
@@ -296,17 +329,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(swap_responses)
     }
 
-    fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
-        
-        let admin: Address = get_admin(&e);
-        admin.require_auth();
-
-        set_admin(&e, new_admin.clone());
-
-        event::new_admin(&e, admin, new_admin);
-        Ok(())
-    }
+    
     
     /*  *** Read only functions: *** */
 
