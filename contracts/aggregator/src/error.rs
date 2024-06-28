@@ -17,4 +17,5 @@ pub enum AggregatorError {
     DistributionLengthExceeded = 611,
     InvalidTotalParts = 612,
     ArithmeticError = 613,
+    InvalidProtocolId = 614,
 }
