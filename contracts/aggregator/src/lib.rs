@@ -88,37 +88,39 @@ pub trait SoroswapAggregatorTrait {
         e: Env,
         protocol_id: String,
     ) -> Result<(), AggregatorError>;
+
     /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
     /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
-    /// for swap (if applicable), and the portion of the total `amount` to swap through that DEX. This 
+    /// for swap (if applicable), and the portion of the total `amount_in` to swap through that DEX. This 
     /// function aims to optimize the swap by leveraging different DEX protocols based on the distribution
     /// strategy to minimize slippage and maximize output.
     ///
     /// # Arguments
     /// * `e` - The runtime environment.
-    /// * `from_token` - The address of the input token to swap.
-    /// * `dest_token` - The address of the destination token to receive.
-    /// * `amount` - The total amount of `from_token` to be swapped.
-    /// * `amount_out_min` - The minimum amount of `dest_token` expected to receive, ensuring the swap 
+    /// * `input_token` - The address of the input token to swap.
+    /// * `output_token` - The address of the destination token to receive.
+    /// * `amount_in` - The total amount of `input_token` to be swapped.
+    /// * `amount_out_min` - The minimum amount of `output_token` expected to receive, ensuring the swap 
     ///   does not proceed under unfavorable conditions.
     /// * `distribution` - A vector of `DexDistribution` specifying how the total swap amount is distributed 
     ///   across different DEX protocols, including the swap path for each (if required by the DEX).
-    /// * `to` - The recipient address for the `dest_token`.
+    /// * `to` - The recipient address for the `output_token`.
     /// * `deadline` - A Unix timestamp marking the deadline by which the swap must be completed.
     ///
     /// # Returns
-    /// The total amount of `dest_token` received from the swap if successful, encapsulated in a `Result`.
+    /// The total amount of `output_token` received from the swap if successful, encapsulated in a `Result`.
     /// On failure, returns a `AggregatorError` detailing the cause of the error.
     fn swap(
         e: Env,
-        from_token: Address,
-        dest_token: Address,
-        amount: i128,
+        input_token: Address,
+        output_token: Address,
+        amount_in: i128,
         amount_out_min: i128,
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError>;
+
 
     /// Returns the expected return amount for a given input amount and distribution
     // fn getExpectedReturn(
@@ -299,7 +301,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(get_admin(&e))
     }
 
-    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError> {
+    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError> { 
         check_initialized(&e)?;
 
         let protocol_ids = get_protocol_ids(e);
