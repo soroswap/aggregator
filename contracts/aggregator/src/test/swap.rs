@@ -77,3 +77,5 @@ fn test_soroswap_swap_no_protocol_address() {
         (Err(Ok(CombinedAggregatorError::AggregatorProtocolAddressNotFound)))
     );
 }
+
+// TODO Test that swaps fails if protocol id does not exist
