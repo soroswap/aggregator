@@ -64,7 +64,7 @@ mod router {
 use router::SoroswapRouterClient;
 
 // SoroswapRouter Contract
-fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
+pub fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
     let router_address = &e.register_contract_wasm(None, router::WASM);
     let router = SoroswapRouterClient::new(e, router_address); 
     router
