@@ -5,16 +5,20 @@ use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
 
 
 #[test]
-fn test_initialize_and_get_admin() {
+fn test_initialize_and_get_values() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-
     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
 
+    // get admin
     let admin = test.aggregator_contract.get_admin();
     assert_eq!(admin, test.admin);
+
+    // get protocols
+    let protocols = test.aggregator_contract.get_protocols();
+    assert_eq!(protocols, initialize_aggregator_addresses);
 }
 
 #[test]
