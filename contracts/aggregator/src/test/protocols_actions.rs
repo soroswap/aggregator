@@ -37,9 +37,12 @@ fn test_update_protocols_add_new() {
 
     //Update aggregator
     let update_aggregator_addresses = new_update_protocols_addresses(&test);
-    let result = test.aggregator_contract.update_protocols(&update_aggregator_addresses);
-
-    assert_eq!(result, ());
+    test.aggregator_contract.update_protocols(&update_aggregator_addresses);
+    
+    // test that now we have 2 protocols
+    let updated_protocols = test.aggregator_contract.get_protocols();
+    assert_eq!(updated_protocols.get(0), initialize_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
 }
 
 // test that soroswaop protocol is indeed overwriten with new router addresws
@@ -69,6 +72,7 @@ fn test_update_protocols_overwrite() {
     test.aggregator_contract.update_protocols(&update_aggregator_addresses);
 
     // check that protocol values are updated
+    // but the other protocol is still the same
     let updated_protocols = test.aggregator_contract.get_protocols();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
     assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
