@@ -19,6 +19,13 @@ fn test_initialize_and_get_values() {
     // get protocols
     let protocols = test.aggregator_contract.get_protocols();
     assert_eq!(protocols, initialize_aggregator_addresses);
+
+    // get is protocol paused 
+    for protocol_address in initialize_aggregator_addresses {
+        let is_protocol_paused = test.aggregator_contract.is_protocol_paused(&protocol_address.protocol_id.clone());
+        assert_eq!(is_protocol_paused, false);
+    }
+
 }
 
 #[test]

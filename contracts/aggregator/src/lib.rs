@@ -183,7 +183,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         Ok(())
     }
-    
+        
     fn update_protocols(
         e: Env,
         proxy_addresses: Vec<ProxyAddressPair>,
@@ -361,8 +361,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         e: &Env,
         protocol_id: String,
     ) -> bool {
-        let result = is_protocol_paused(&e, protocol_id);
-        result
+        is_protocol_paused(&e, protocol_id)
     }
 
     /// this is the firs version of the contract   
