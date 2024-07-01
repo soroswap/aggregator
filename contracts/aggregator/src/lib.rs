@@ -183,7 +183,8 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         Ok(())
     }
-        
+    
+    /// this overwriotes the previous protocol address pair if existed 
     fn update_protocols(
         e: Env,
         proxy_addresses: Vec<ProxyAddressPair>,

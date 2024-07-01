@@ -19,7 +19,7 @@ pub fn update_overwrite_soroswap_protocols_addresses(test: &SoroswapAggregatorTe
     vec![&test.env,
         ProxyAddressPair {
             protocol_id: String::from_str(&test.env, "soroswap"),
-            address: new_router,
+            address: new_router.address,
         },
     ]
 }
@@ -56,16 +56,22 @@ fn test_update_protocols_overwrite() {
     let protocols = test.aggregator_contract.get_protocols();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
+    // if we add a new protocol, it wont be overwitten
+    let new_aggregator_addresses = new_update_protocols_addresses(&test);
+    test.aggregator_contract.update_protocols(&new_aggregator_addresses);
+
+
     // generate new router address and protocol addresses
     let update_aggregator_addresses = update_overwrite_soroswap_protocols_addresses(&test);
     // check that router address are different
-    assert_ne!(update_aggregator_addresses[0].address, initialize_aggregator_addresses[0].address);
+    assert_ne!(update_aggregator_addresses.get(0), initialize_aggregator_addresses.get(0));
 
     test.aggregator_contract.update_protocols(&update_aggregator_addresses);
 
     // check that protocol values are updated
     let updated_protocols = test.aggregator_contract.get_protocols();
-    assert_eq!(updated_protocols, update_aggregator_addresses);
+    assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
 }
 
 #[test]
