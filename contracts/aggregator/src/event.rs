@@ -6,14 +6,14 @@ use crate::models::{ProxyAddressPair, DexDistribution};
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
-    pub state: bool,
+    pub admin: Address,
     pub proxy_addresses: Vec<ProxyAddressPair>
 }
 
-pub(crate) fn initialized(e: &Env, state: bool, proxy_addresses: Vec<ProxyAddressPair>) {
+pub(crate) fn initialized(e: &Env, admin: Address, proxy_addresses: Vec<ProxyAddressPair>) {
     
     let event: InitializedEvent = InitializedEvent {
-        state: state,
+        admin: admin,
         proxy_addresses,
     };
     e.events().publish(("SoroswapAggregator", symbol_short!("init")), event);

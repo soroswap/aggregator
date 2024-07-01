@@ -175,11 +175,11 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             put_proxy_address(&e, pair);
         }
 
-        set_admin(&e, admin);
+        set_admin(&e, admin.clone());
     
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, true, proxy_addresses);
+        event::initialized(&e, admin, proxy_addresses);
         extend_instance_ttl(&e);
         Ok(())
     }
