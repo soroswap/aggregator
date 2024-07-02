@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::ProxyAddressPair;
+use crate::models::Proxy;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
 use soroban_sdk::{
@@ -8,12 +8,13 @@ use soroban_sdk::{
     IntoVal, Symbol,
 };
 
-pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "some_protocol"),
             address: test.router_contract.address.clone(),
+            paused: false,
         },
     ]
 }
@@ -21,13 +22,14 @@ pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Prox
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(
     test: &SoroswapAggregatorTest,
-) -> Vec<ProxyAddressPair> {
+) -> Vec<Proxy> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "soroswap"),
             address: new_router.address,
+            paused: false,
         },
     ]
 }

@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::ProxyAddressPair;
+use crate::models::Proxy;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
 use soroban_sdk::{
@@ -11,13 +11,14 @@ use soroban_sdk::{
 pub fn new_protocol_vec(
     test: &SoroswapAggregatorTest,
     protocol_id: &String,
-) -> Vec<ProxyAddressPair> {
+) -> Vec<Proxy> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: protocol_id.clone(),
             address: new_router.address,
+            paused: false,
         },
     ]
 }
@@ -38,12 +39,26 @@ fn test_remove_protocol() {
     let expected_empty_vec = vec![&test.env];
     assert_eq!(updated_protocols, expected_empty_vec);
 
+    // test that the protocol is paused
+    let is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, true);
+
     //add new protocol
     let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
     test.aggregator_contract.update_protocols(&new_protocol_0);
 
     updated_protocols = test.aggregator_contract.get_protocols();
     assert_eq!(updated_protocols, new_protocol_0);
+
+    // // test both are not paused
+    // for protocol_address in updated_protocols {
+    //     let is_protocol_paused = test
+    //         .aggregator_contract
+    //         .get_paused(&protocol_address.protocol_id.clone());
+    //     assert_eq!(is_protocol_paused, false);
+    // }
 
     // add new protoco 1
     let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));

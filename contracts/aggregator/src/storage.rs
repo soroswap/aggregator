@@ -1,10 +1,10 @@
-use crate::{error::AggregatorError, models::ProxyAddressPair};
+use crate::{error::AggregatorError, models::Proxy};
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    ProxyAddress(String),
+    Proxy(String),
     ProtocolPaused(String),
     Initialized,
     Admin,
@@ -37,27 +37,27 @@ pub fn get_admin(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Admin).unwrap()
 }
 
-pub fn put_proxy_address(e: &Env, pair: ProxyAddressPair) {
+pub fn put_proxy_address(e: &Env, proxy: Proxy) {
     e.storage().instance().set(
-        &DataKey::ProxyAddress(pair.protocol_id.clone()),
-        &pair.address,
+        &DataKey::Proxy(proxy.protocol_id.clone()),
+        &proxy,
     );
-    add_protocol_id(e, pair.protocol_id);
+    add_protocol_id(e, proxy.protocol_id);
 }
 
 pub fn has_proxy_address(e: &Env, protocol_id: String) -> bool {
     e.storage()
         .instance()
-        .has(&DataKey::ProxyAddress(protocol_id))
+        .has(&DataKey::Proxy(protocol_id))
 }
 
-pub fn get_proxy_address(e: &Env, protocol_id: String) -> Result<Address, AggregatorError> {
+pub fn get_proxy(e: &Env, protocol_id: String) -> Result<Proxy, AggregatorError> {
     match e
         .storage()
         .instance()
-        .get(&DataKey::ProxyAddress(protocol_id))
+        .get(&DataKey::Proxy(protocol_id))
     {
-        Some(address) => Ok(address),
+        Some(proxy) => Ok(proxy),
         None => Err(AggregatorError::InvalidProtocolId),
     }
 }
@@ -66,7 +66,7 @@ pub fn remove_proxy_address(e: &Env, protocol_id: String) {
     if has_proxy_address(e, protocol_id.clone()) {
         e.storage()
             .instance()
-            .remove(&DataKey::ProxyAddress(protocol_id.clone()));
+            .remove(&DataKey::Proxy(protocol_id.clone()));
         remove_protocol_id(e, protocol_id);
     }
 }

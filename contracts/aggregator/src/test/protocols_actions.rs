@@ -12,24 +12,26 @@ use soroban_sdk::{
 };
 use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses, create_soroswap_router};
-use crate::models::{ProxyAddressPair};
+use crate::models::{Proxy};
 
-pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     vec![&test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "some_protocol"),
             address: test.router_contract.address.clone(),
+            paused: false,
         },
     ]
 }
 
 // Create new soroswap router to overwrite the porevious
-pub fn update_overwrite_soroswap_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+pub fn update_overwrite_soroswap_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     let new_router = create_soroswap_router(&test.env);
     vec![&test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "soroswap"),
             address: new_router.address,
+            paused: false,
         },
     ]
 }
