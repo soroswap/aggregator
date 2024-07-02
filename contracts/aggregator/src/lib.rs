@@ -75,11 +75,16 @@ pub trait SoroswapAggregatorTrait {
     /// Removes the protocol from the aggregator
     fn remove_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
 
-    /// Pauses the protocol from the aggregator
-    fn pause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
-
-    /// Unpause the protocol from the aggregator
-    fn unpause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
+    /// Sets the `admin` address.
+    ///
+    /// # Argumentsnts
+    /// * `e` - The runtime environment.t.
+    /// * `protocol_id` - The ID of the protocol to set the paused state for.
+    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
+    ///
+    /// # Returns
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
+    fn set_paused(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>;
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
 
@@ -195,26 +200,23 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(())
     }
 
-    fn pause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
+    /// Sets the paused state of the protocol in the aggregator.
+    ///
+    /// # Argumentsnts
+    /// * `e` - The runtime environment.t.
+    /// * `protocol_id` - The ID of the protocol to set the paused state for.
+    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
+    ///
+    /// # Returns
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
+    fn set_paused(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        set_pause_protocol(&e, protocol_id.clone(), true);
-
-        event::protocol_paused(&e, protocol_id);
+        set_pause_protocol(&e, protocol_id.clone(), paused);
+        
+        event::protocol_paused(&e, protocol_id, paused);
         extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    fn unpause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
-        check_admin(&e);
-
-        set_pause_protocol(&e, protocol_id.clone(), false);
-
-        event::protocol_unpaused(&e, protocol_id);
-        extend_instance_ttl(&e);
-
         Ok(())
     }
 

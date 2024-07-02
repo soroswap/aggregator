@@ -19,34 +19,7 @@ pub(crate) fn initialized(e: &Env, admin: Address, proxy_addresses: Vec<ProxyAdd
         .publish(("SoroswapAggregator", symbol_short!("init")), event);
 }
 
-// SWAP EVENT
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SwapEvent {
-    pub amount_in: i128,
-    pub distribution: Vec<DexDistribution>,
-    pub to: Address,
-}
 
-/// Publishes an `SwapEvent` to the event stream.
-///
-/// # Arguments
-///
-/// * `e` - An instance of the `Env` struct.
-/// * `path` - A vector representing the trading route, where the first element is the input token
-///            and the last is the output token. Intermediate elements represent pairs to trade through.
-/// * `amounts` - A vector containing the amounts of tokens traded at each step of the trading route.
-/// * `to` - The address where the output tokens will be sent to.
-pub(crate) fn swap(e: &Env, amount_in: i128, distribution: Vec<DexDistribution>, to: Address) {
-    let event = SwapEvent {
-        amount_in,
-        distribution,
-        to,
-    };
-
-    e.events()
-        .publish(("SoroswapAggregator", symbol_short!("swap")), event);
-}
 // UPDATE PROTOCOL EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -76,19 +49,24 @@ pub(crate) fn protocol_removed(e: &Env, protocol_id: String) {
         .publish(("SoroswapAggregator", symbol_short!("removed")), event);
 }
 
-pub(crate) fn protocol_paused(e: &Env, protocol_id: String) {
-    let event = UpdateProtocolEvent { protocol_id };
+// PAUSE/UNPAUSE PROTOCOL EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PausedProtocolEvent {
+    pub protocol_id: String,
+    pub paused: bool,
+}
 
+pub(crate) fn protocol_paused(e: &Env, protocol_id: String, paused: bool) {
+    let event = PausedProtocolEvent { protocol_id, paused};
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("paused")), event);
 }
 
-pub(crate) fn protocol_unpaused(e: &Env, protocol_id: String) {
-    let event = UpdateProtocolEvent { protocol_id };
 
-    e.events()
-        .publish(("SoroswapAggregator", symbol_short!("unpaused")), event);
-}
+
+
+
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -101,4 +79,35 @@ pub(crate) fn new_admin(e: &Env, old: Address, new: Address) {
     let event: NewAdminEvent = NewAdminEvent { old: old, new: new };
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("new_admin")), event);
+}
+
+
+
+// SWAP EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SwapEvent {
+    pub amount_in: i128,
+    pub distribution: Vec<DexDistribution>,
+    pub to: Address,
+}
+
+/// Publishes an `SwapEvent` to the event stream.
+///
+/// # Arguments
+///
+/// * `e` - An instance of the `Env` struct.
+/// * `path` - A vector representing the trading route, where the first element is the input token
+///            and the last is the output token. Intermediate elements represent pairs to trade through.
+/// * `amounts` - A vector containing the amounts of tokens traded at each step of the trading route.
+/// * `to` - The address where the output tokens will be sent to.
+pub(crate) fn swap(e: &Env, amount_in: i128, distribution: Vec<DexDistribution>, to: Address) {
+    let event = SwapEvent {
+        amount_in,
+        distribution,
+        to,
+    };
+
+    e.events()
+        .publish(("SoroswapAggregator", symbol_short!("swap")), event);
 }
