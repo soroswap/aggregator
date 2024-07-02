@@ -84,7 +84,7 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_paused(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>;
+    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>;
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
 
@@ -138,7 +138,7 @@ pub trait SoroswapAggregatorTrait {
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
     fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError>;
-    fn is_protocol_paused(e: &Env, protocol_id: String) -> bool;
+    fn get_paused(e: &Env, protocol_id: String) -> bool;
     fn get_version() -> u32;
 }
 
@@ -209,12 +209,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_paused(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
+    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
         set_pause_protocol(&e, protocol_id.clone(), paused);
-        
+
         event::protocol_paused(&e, protocol_id, paused);
         extend_instance_ttl(&e);
         Ok(())
@@ -337,7 +337,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(addresses)
     }
 
-    fn is_protocol_paused(e: &Env, protocol_id: String) -> bool {
+    fn get_paused(e: &Env, protocol_id: String) -> bool {
         is_protocol_paused(&e, protocol_id)
     }
 
