@@ -38,12 +38,12 @@ pub(crate) fn protocols_updated(e: &Env, proxy_addresses: Vec<Proxy>) {
 // REMOVE PROTOCOL EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct UpdateProtocolEvent {
+pub struct RemovedProtocolEvent {
     pub protocol_id: String,
 }
 
 pub(crate) fn protocol_removed(e: &Env, protocol_id: String) {
-    let event = UpdateProtocolEvent { protocol_id };
+    let event = RemovedProtocolEvent { protocol_id };
 
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("removed")), event);
