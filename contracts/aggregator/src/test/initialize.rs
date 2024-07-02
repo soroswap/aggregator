@@ -1,8 +1,7 @@
-use soroban_sdk::{Address, testutils::Address as _};
+use soroban_sdk::{testutils::Address as _, Address};
 
 use crate::error::AggregatorError;
-use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-
+use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
 
 #[test]
 fn test_initialize_and_get_values() {
@@ -10,7 +9,8 @@ fn test_initialize_and_get_values() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // get admin
     let admin = test.aggregator_contract.get_admin();
@@ -20,12 +20,13 @@ fn test_initialize_and_get_values() {
     let protocols = test.aggregator_contract.get_protocols();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
-    // get is protocol paused 
+    // get is protocol paused
     for protocol_address in initialize_aggregator_addresses {
-        let is_protocol_paused = test.aggregator_contract.is_protocol_paused(&protocol_address.protocol_id.clone());
+        let is_protocol_paused = test
+            .aggregator_contract
+            .is_protocol_paused(&protocol_address.protocol_id.clone());
         assert_eq!(is_protocol_paused, false);
     }
-
 }
 
 #[test]
@@ -39,12 +40,15 @@ fn test_get_admin_not_yet_initialized() {
 #[test]
 fn test_initialize_twice() {
     let test = SoroswapAggregatorTest::setup();
-    
+
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let result_second_init = test.aggregator_contract.try_initialize(&test.admin, &initialize_aggregator_addresses);
+    let result_second_init = test
+        .aggregator_contract
+        .try_initialize(&test.admin, &initialize_aggregator_addresses);
     assert_eq!(
         result_second_init,
         (Err(Ok(AggregatorError::AlreadyInitialized)))
