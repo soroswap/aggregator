@@ -80,51 +80,6 @@ fn initialized_event() {
 
 }
 
-// test protocol_updated
-// // UPDATE PROTOCOL EVENT
-// #[contracttype] 
-// #[derive(Clone, Debug, Eq, PartialEq)]
-// pub struct UpdateProtocolsEvent {
-//     pub proxy_addresses: Vec<ProxyAddressPair>
-// }
-
-// /// Publishes an `UpdateProtocolsEvent` to the event stream.
-// pub(crate) fn protocols_updated(
-//     e: &Env,
-//     proxy_addresses: Vec<ProxyAddressPair>
-// ) {
-//     let event = UpdateProtocolsEvent {
-    //         proxy_addresses,
-    //     };
-    
-    //     e.events().publish(("SoroswapAggregator", symbol_short!("update")), event);
-    // }
-
-    // the function that will generate this event  is 
-
-/* update_protocols  */
-// #[test]
-// fn test_update_protocols_add_new() {
-//     let test = SoroswapAggregatorTest::setup();
-
-//     //Initialize aggregator
-//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
-
-//     let admin = test.aggregator_contract.get_admin();
-//     assert_eq!(admin, test.admin);
-
-//     //Update aggregator
-//     let update_aggregator_addresses = new_update_protocols_addresses(&test);
-//     test.aggregator_contract.update_protocols(&update_aggregator_addresses);
-    
-//     // test that now we have 2 protocols
-//     let updated_protocols = test.aggregator_contract.get_protocols();
-//     assert_eq!(updated_protocols.get(0), initialize_aggregator_addresses.get(0));
-//     assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
-// }
-
-// create the test
 #[test]
 fn update_protocols_event() {
     let test = SoroswapAggregatorTest::setup();
