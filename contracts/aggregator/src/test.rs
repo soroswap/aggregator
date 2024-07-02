@@ -261,6 +261,8 @@ impl<'a> SoroswapAggregatorTest<'a> {
 }
 
 pub mod initialize;
+pub mod update_protocols;
+pub mod remove_protocol;
 pub mod protocols_actions;
 pub mod events;
 // pub mod swap;
