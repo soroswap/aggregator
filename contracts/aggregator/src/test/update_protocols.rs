@@ -57,6 +57,13 @@ fn test_update_protocols_add_new() {
         initialize_aggregator_addresses.get(0)
     );
     assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
+    // test both are not paused
+    for protocol_address in updated_protocols {
+        let is_protocol_paused = test
+            .aggregator_contract
+            .get_paused(&protocol_address.protocol_id.clone());
+        assert_eq!(is_protocol_paused, false);
+    }
 }
 
 // test that soroswaop protocol is indeed overwriten with new router addresws
@@ -94,6 +101,14 @@ fn test_update_protocols_overwrite() {
     let updated_protocols = test.aggregator_contract.get_protocols();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
     assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
+
+    // test both are not paused
+    for protocol_address in updated_protocols {
+        let is_protocol_paused = test
+            .aggregator_contract
+            .get_paused(&protocol_address.protocol_id.clone());
+        assert_eq!(is_protocol_paused, false);
+    }
 }
 
 #[test]
