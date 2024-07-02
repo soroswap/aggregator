@@ -32,6 +32,12 @@ fn test_remove_protocol() {
     test.aggregator_contract
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
+    // check that protocol is not paused
+    let mut is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, false);
+
     test.aggregator_contract
         .remove_protocol(&String::from_str(&test.env, "soroswap"));
 
@@ -39,11 +45,11 @@ fn test_remove_protocol() {
     let expected_empty_vec = vec![&test.env];
     assert_eq!(updated_protocols, expected_empty_vec);
 
-    // test that the protocol is paused
+    // when removing protocol, paused return error
     let is_protocol_paused = test
         .aggregator_contract
-        .get_paused(&String::from_str(&test.env, "soroswap"));
-    assert_eq!(is_protocol_paused, true);
+        .try_get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, Err(Ok(AggregatorError::InvalidProtocolId)));
 
     //add new protocol
     let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
