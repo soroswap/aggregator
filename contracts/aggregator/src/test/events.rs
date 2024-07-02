@@ -1,19 +1,17 @@
-use soroban_sdk::{testutils::{Events}, vec, IntoVal, symbol_short}; 
-use soroban_sdk::{Address, testutils::Address as _};
 use crate::error::AggregatorError;
-use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
 use crate::test::protocols_actions::new_update_protocols_addresses;
+use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use soroban_sdk::{symbol_short, testutils::Events, vec, IntoVal};
+use soroban_sdk::{testutils::Address as _, Address};
 
-use crate::event::{
-    InitializedEvent,
-    UpdateProtocolsEvent};
-
+use crate::event::{InitializedEvent, UpdateProtocolsEvent};
 
 #[test]
 fn initialized_event() {
     let test = SoroswapAggregatorTest::setup();
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let initialized_event = test.env.events().all().last().unwrap();
 
@@ -51,7 +49,6 @@ fn initialized_event() {
         ]
     );
 
-
     // Wront symbol_short
     assert_ne!(
         vec![&test.env, initialized_event.clone()],
@@ -77,7 +74,6 @@ fn initialized_event() {
             ),
         ]
     );
-
 }
 
 #[test]
@@ -86,14 +82,16 @@ fn update_protocols_event() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let admin = test.aggregator_contract.get_admin();
     assert_eq!(admin, test.admin);
 
     //Update aggregator
     let update_aggregator_addresses = new_update_protocols_addresses(&test);
-    test.aggregator_contract.update_protocols(&update_aggregator_addresses);
+    test.aggregator_contract
+        .update_protocols(&update_aggregator_addresses);
 
     let updated_event = test.env.events().all().last().unwrap();
 
@@ -154,5 +152,4 @@ fn update_protocols_event() {
             ),
         ]
     );
-
 }

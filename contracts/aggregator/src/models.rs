@@ -25,7 +25,7 @@
 /// This approach allows for dynamic and flexible distribution of swap amounts across various
 /// DEX protocols, accommodating complex swapping strategies that may involve multi-hop paths
 /// and varying liquidity sources.
-use soroban_sdk::{contracttype, Vec, Address, String};
+use soroban_sdk::{contracttype, Address, String, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
