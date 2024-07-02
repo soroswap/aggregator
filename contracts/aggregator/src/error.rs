@@ -7,7 +7,7 @@ pub enum AggregatorError {
     NotInitialized = 601,
     AlreadyInitialized = 602,
     NegativeNotAllowed = 603,
-    ProtocolAddressNotFound = 604,
+    ProtocolNotFound = 604,
     DeadlineExpired = 605,
     InsufficientAAmount = 606,
     InsufficientBAmount = 607,
@@ -17,6 +17,5 @@ pub enum AggregatorError {
     DistributionLengthExceeded = 611,
     InvalidTotalParts = 612,
     ArithmeticError = 613,
-    InvalidProtocolId = 614,
-    Unauthorized = 615,
+    Unauthorized = 614,
 }

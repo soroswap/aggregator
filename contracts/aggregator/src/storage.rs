@@ -58,7 +58,7 @@ pub fn get_proxy(e: &Env, protocol_id: String) -> Result<Proxy, AggregatorError>
         .get(&DataKey::Proxy(protocol_id))
     {
         Some(proxy) => Ok(proxy),
-        None => Err(AggregatorError::InvalidProtocolId),
+        None => Err(AggregatorError::ProtocolNotFound),
     }
 }
 

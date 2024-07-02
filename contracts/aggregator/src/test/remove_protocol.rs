@@ -49,7 +49,7 @@ fn test_remove_protocol() {
     let is_protocol_paused = test
         .aggregator_contract
         .try_get_paused(&String::from_str(&test.env, "soroswap"));
-    assert_eq!(is_protocol_paused, Err(Ok(AggregatorError::InvalidProtocolId)));
+    assert_eq!(is_protocol_paused, Err(Ok(AggregatorError::ProtocolNotFound)));
 
     //add new protocol
     let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
