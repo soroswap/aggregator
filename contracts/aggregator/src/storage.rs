@@ -4,10 +4,10 @@ use soroban_sdk::{contracttype, Address, Env, String, Vec};
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
+    ProtocolList,
     Proxy(String),
     Initialized,
     Admin,
-    ProtocolList,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;

@@ -273,5 +273,6 @@ pub mod initialize;
 pub mod protocols_actions;
 pub mod remove_protocol;
 pub mod update_protocols;
+pub mod set_pause;
 // pub mod swap;
 // pub mod admin;
