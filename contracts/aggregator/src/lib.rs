@@ -13,7 +13,7 @@ use models::{DexDistribution, Proxy, MAX_DISTRIBUTION_LENGTH};
 use proxy::SoroswapAggregatorProxyClient;
 use storage::{
     extend_instance_ttl, get_admin, get_protocol_ids, get_proxy, has_proxy,
-    is_initialized, put_proxy, remove_proxy_address, set_admin,
+    is_initialized, put_proxy, remove_proxy, set_admin,
     set_initialized, set_pause_protocol,
 };
 
@@ -63,17 +63,17 @@ pub trait SoroswapAggregatorTrait {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_addresses: Vec<Proxy>,
+        proxy_vec: Vec<Proxy>,
     ) -> Result<(), AggregatorError>;
 
     /// Updates the protocol addresses for the aggregator
-    fn update_protocols(
+    fn update_proxies(
         e: Env,
-        proxy_addresses: Vec<Proxy>,
+        proxy_vec: Vec<Proxy>,
     ) -> Result<(), AggregatorError>;
 
     /// Removes the protocol from the aggregator
-    fn remove_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
+    fn remove_proxy(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
 
     /// Sets the `admin` address.
     ///
@@ -137,7 +137,7 @@ pub trait SoroswapAggregatorTrait {
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
-    fn get_protocols(e: &Env) -> Result<Vec<Proxy>, AggregatorError>;
+    fn get_proxies(e: &Env) -> Result<Vec<Proxy>, AggregatorError>;
     fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError>;
     fn get_version() -> u32;
 }
@@ -153,47 +153,47 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_addresses: Vec<Proxy>,
+        proxy_vec: Vec<Proxy>,
     ) -> Result<(), AggregatorError> {
         if is_initialized(&e) {
             return Err(AggregatorError::AlreadyInitialized);
         }
 
-        for pair in proxy_addresses.iter() {
-            put_proxy(&e, pair);
+        for proxy in proxy_vec.iter() {
+            put_proxy(&e, proxy);
         }
 
         set_admin(&e, admin.clone());
 
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, admin, proxy_addresses);
+        event::initialized(&e, admin, proxy_vec);
         extend_instance_ttl(&e);
         Ok(())
     }
 
     /// this overwriotes the previous protocol address pair if existed
-    fn update_protocols(
+    fn update_proxies(
         e: Env,
-        proxy_addresses: Vec<Proxy>,
+        proxy_vec: Vec<Proxy>,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        for pair in proxy_addresses.iter() {
-            put_proxy(&e, pair);
+        for proxy in proxy_vec.iter() {
+            put_proxy(&e, proxy);
         }
 
-        event::protocols_updated(&e, proxy_addresses);
+        event::protocols_updated(&e, proxy_vec);
         extend_instance_ttl(&e);
         Ok(())
     }
 
-    fn remove_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
+    fn remove_proxy(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        remove_proxy_address(&e, protocol_id.clone());
+        remove_proxy(&e, protocol_id.clone());
 
         event::protocol_removed(&e, protocol_id);
         extend_instance_ttl(&e);
@@ -321,7 +321,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(get_admin(&e))
     }
 
-    fn get_protocols(e: &Env) -> Result<Vec<Proxy>, AggregatorError> {
+    fn get_proxies(e: &Env) -> Result<Vec<Proxy>, AggregatorError> {
         check_initialized(&e)?;
 
         let protocol_ids = get_protocol_ids(e);

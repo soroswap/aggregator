@@ -48,5 +48,5 @@ impl<'a> SoroswapAggregatorProxyTest<'a> {
 
 pub mod initialize;
 // pub mod swap;
-// pub mod update_protocols;
-// pub mod get_protocols;
+// pub mod update_proxies;
+// pub mod get_proxies;
