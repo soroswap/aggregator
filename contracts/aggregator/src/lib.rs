@@ -12,8 +12,8 @@ use error::AggregatorError;
 use models::{DexDistribution, Proxy, MAX_DISTRIBUTION_LENGTH};
 use proxy::SoroswapAggregatorProxyClient;
 use storage::{
-    extend_instance_ttl, get_admin, get_protocol_ids, get_proxy, has_proxy_address,
-    is_initialized, is_protocol_paused, put_proxy_address, remove_proxy_address, set_admin,
+    extend_instance_ttl, get_admin, get_protocol_ids, get_proxy, has_proxy,
+    is_initialized, put_proxy, remove_proxy_address, set_admin,
     set_initialized, set_pause_protocol,
 };
 
@@ -160,7 +160,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         }
 
         for pair in proxy_addresses.iter() {
-            put_proxy_address(&e, pair);
+            put_proxy(&e, pair);
         }
 
         set_admin(&e, admin.clone());
@@ -181,7 +181,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         check_admin(&e);
 
         for pair in proxy_addresses.iter() {
-            put_proxy_address(&e, pair);
+            put_proxy(&e, pair);
         }
 
         event::protocols_updated(&e, proxy_addresses);
@@ -213,7 +213,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         check_initialized(&e)?;
         check_admin(&e);
 
-        set_pause_protocol(&e, protocol_id.clone(), paused);
+        set_pause_protocol(&e, protocol_id.clone(), paused)?;
 
         event::protocol_paused(&e, protocol_id, paused);
         extend_instance_ttl(&e);
@@ -325,7 +325,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
         // Iterate over each protocol ID and collect their proxy proxy_vec
         for protocol_id in protocol_ids.iter() {
-            if has_proxy_address(e, protocol_id.clone()) {
+            if has_proxy(e, protocol_id.clone()) {
                 let proxy = get_proxy(e, protocol_id.clone())?;
                 let address = 
                 proxy_vec.push_back(proxy);
