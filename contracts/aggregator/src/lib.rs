@@ -289,7 +289,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             let proxy = get_proxy(&e, dist.protocol_id.clone())?;
             // if paused return error
             if proxy.paused {
-                return Err(AggregatorError::ProtocolPaused);
+                return Err(AggregatorError::ProtocolPaused );
             }
             let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy.address);
             let response = proxy_client.swap(
@@ -327,7 +327,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let protocol_ids = get_protocol_ids(e);
         let mut proxy_vec = Vec::new(e);
 
-        // Iterate over each protocol ID and collect their proxy proxy_vec
+        // Iterate over each protocol ID and collect their proxy object
         for protocol_id in protocol_ids.iter() {
             if has_proxy(e, protocol_id.clone()) {
                 let proxy = get_proxy(e, protocol_id.clone())?;

@@ -2,7 +2,7 @@ use soroban_sdk::{testutils::{Events}, vec, IntoVal, symbol_short, String};
 use soroban_sdk::{Address, testutils::Address as _};
 use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-use crate::test::protocols_actions::new_update_protocols_addresses;
+use crate::test::get_protocols::new_update_protocols_addresses;
 
 use crate::event::{
     InitializedEvent,
