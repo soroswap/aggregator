@@ -36,8 +36,6 @@ pub fn update_overwrite_soroswap_protocols_addresses(test: &SoroswapAggregatorTe
     ]
 }
 
-
-
 #[test]
 fn test_get_protocols() {
     let test = SoroswapAggregatorTest::setup();
@@ -57,47 +55,7 @@ fn test_get_protocols_not_yet_initialized() {
 
     //Update aggregator
     let update_aggregator_addresses = create_protocols_addresses(&test);
-    let result = test.aggregator_contract.try_update_protocols(&update_aggregator_addresses);
+    let result = test.aggregator_contract.try_get_protocols();
 
     assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
-}
-
-
-// #[test]
-// fn test_pause_protocol() {
-//     let test = SoroswapAggregatorTest::setup();
-
-//     //Initialize aggregator
-//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
-
-//     let result = test.aggregator_contract.pause_protocol(&String::from_str(&test.env, "soroswap"));
-
-//     assert_eq!(result, ());
-// }
-
-// #[test]
-// fn test_unpause_protocol() {
-//     let test = SoroswapAggregatorTest::setup();
-
-//     //Initialize aggregator
-//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
-
-//     let result = test.aggregator_contract.unpause_protocol(&String::from_str(&test.env, "soroswap"));
-
-//     assert_eq!(result, ());
-// }
-
-#[test]
-fn test_is_protocol_paused() {
-    let test = SoroswapAggregatorTest::setup();
-
-    //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
-
-    let result = test.aggregator_contract.get_paused(&String::from_str(&test.env, "soroswap"));
-
-    assert!(!result);
 }

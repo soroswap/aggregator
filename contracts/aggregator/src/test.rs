@@ -270,7 +270,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
 pub mod events;
 pub mod initialize;
-pub mod protocols_actions;
+pub mod get_protocols;
 pub mod remove_protocol;
 pub mod update_protocols;
 pub mod set_pause;
