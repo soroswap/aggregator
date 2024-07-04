@@ -7,7 +7,8 @@ use crate::test::protocols_actions::new_update_protocols_addresses;
 use crate::event::{
     InitializedEvent,
     UpdateProtocolsEvent,
-    RemovedProtocolEvent};
+    RemovedProtocolEvent,
+    PausedProtocolEvent};
 
 
 #[test]
@@ -222,4 +223,80 @@ fn remove_protocol_event() {
             ),
         ]
     );
+}
+
+
+#[test]
+fn set_pause_event() {
+    let test = SoroswapAggregatorTest::setup();
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    
+    // Remove protocol
+    let protocol_id = String::from_str(&test.env, "soroswap");
+    let true_false_vec = vec![&test.env, true, false];
+
+    for my_bool in true_false_vec.iter(){
+
+        test.aggregator_contract.set_pause(&protocol_id, &my_bool);
+    
+        let set_pause = test.env.events().all().last().unwrap();
+        let expected_set_pause: PausedProtocolEvent = PausedProtocolEvent {
+            protocol_id: protocol_id.clone(),
+            paused: my_bool
+        };
+        assert_eq!(
+            vec![&test.env, set_pause.clone()],
+            vec![
+                &test.env,
+                (
+                    test.aggregator_contract.address.clone(),
+                    ("SoroswapAggregator", symbol_short!("paused")).into_val(&test.env),
+                    (expected_set_pause).into_val(&test.env)
+                ),
+            ]
+        );
+        let false_set_pause: PausedProtocolEvent = PausedProtocolEvent {
+            protocol_id: String::from_str(&test.env, "uniswap"),
+            paused: my_bool
+        };
+        assert_ne!(
+            vec![&test.env, set_pause.clone()],
+            vec![
+                &test.env,
+                (
+                    test.aggregator_contract.address.clone(),
+                    ("SoroswapAggregator", symbol_short!("paused")).into_val(&test.env),
+                    (false_set_pause).into_val(&test.env)
+                ),
+            ]
+        );
+        // Wrong symbol_short
+        assert_ne!(
+            vec![&test.env, set_pause.clone()],
+            vec![
+                &test.env,
+                (
+                    test.aggregator_contract.address.clone(),
+                    ("SoroswapAggregator", symbol_short!("pp")).into_val(&test.env),
+                    (expected_set_pause).into_val(&test.env)
+                ),
+            ]
+        );
+        // Wrong string
+        assert_ne!(
+            vec![&test.env, set_pause.clone()],
+            vec![
+                &test.env,
+                (
+                    test.aggregator_contract.address.clone(),
+                    ("SoroswapAggregatorr", symbol_short!("paused")).into_val(&test.env),
+                    (expected_set_pause).into_val(&test.env)
+                ),
+            ]
+        );
+
+    }
+    
 }
