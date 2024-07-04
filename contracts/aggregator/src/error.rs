@@ -13,7 +13,7 @@ pub enum AggregatorError {
     InsufficientBAmount = 607,
     InsufficientOutputAmount = 608,
     ExcessiveInputAmount = 609,
-    UnsupportedProtocol = 610,
+    ProtocolPaused = 610,
     DistributionLengthExceeded = 611,
     InvalidTotalParts = 612,
     ArithmeticError = 613,

@@ -287,6 +287,10 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             };
 
             let proxy = get_proxy(&e, dist.protocol_id.clone())?;
+            // if paused return error
+            if proxy.paused {
+                return Err(AggregatorError::ProtocolPaused);
+            }
             let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy.address);
             let response = proxy_client.swap(
                 &to,
