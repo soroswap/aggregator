@@ -2,11 +2,7 @@
     use crate::error::AggregatorError;
     use crate::models::Proxy;
     use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
-    use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
-    use soroban_sdk::{
-        testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
-        IntoVal, Symbol,
-    };
+    use soroban_sdk::{vec, String, Vec};
 
     pub fn new_protocol_vec(
         test: &SoroswapAggregatorTest,

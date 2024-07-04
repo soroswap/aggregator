@@ -1,5 +1,3 @@
-use soroban_sdk::{testutils::Address as _, Address};
-
 use crate::error::AggregatorError;
 use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
 

@@ -2,7 +2,7 @@ extern crate std;
 use crate::error::AggregatorError;
 use crate::models::Proxy;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
-use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
+use soroban_sdk::{vec, String, Vec};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
@@ -33,7 +33,7 @@ fn test_remove_proxy() {
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check that protocol is not paused
-    let mut is_protocol_paused = test
+    let is_protocol_paused = test
         .aggregator_contract
         .get_paused(&String::from_str(&test.env, "soroswap"));
     assert_eq!(is_protocol_paused, false);

@@ -1,23 +1,12 @@
 extern crate std;
 use crate::error::AggregatorError;
 use crate::models::Proxy;
-use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
-use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
+use crate::test::{create_protocols_addresses, create_soroswap_router, new_update_proxies_addresses, SoroswapAggregatorTest};
+use soroban_sdk::{vec, String, Vec};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
-
-pub fn new_update_proxies_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
-    vec![
-        &test.env,
-        Proxy {
-            protocol_id: String::from_str(&test.env, "some_protocol"),
-            address: test.router_contract.address.clone(),
-            paused: false,
-        },
-    ]
-}
 
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(

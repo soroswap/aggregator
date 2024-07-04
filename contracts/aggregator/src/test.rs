@@ -18,12 +18,12 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
     TokenClient::new(&e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
-// Pair Contract
-mod pair {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
-    pub type SoroswapPairClient<'a> = Client<'a>;
-}
-use pair::SoroswapPairClient;
+// // Pair Contract
+// mod pair {
+//     soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
+//     pub type SoroswapPairClient<'a> = Client<'a>;
+// }
+// use pair::SoroswapPairClient;
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
@@ -110,6 +110,16 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     ]
 }
 
+pub fn new_update_proxies_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
+    vec![&test.env,
+        Proxy {
+            protocol_id: String::from_str(&test.env, "some_protocol"),
+            address: test.router_contract.address.clone(),
+            paused: false,
+        },
+    ]
+}
+
 // pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
 //     vec![&test.env,
 //         Proxy {
@@ -159,7 +169,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
         let mut token_0 = create_token_contract(&env, &admin);
         let mut token_1 = create_token_contract(&env, &admin);
-        let mut token_2 = create_token_contract(&env, &admin);
+        let token_2 = create_token_contract(&env, &admin);
         if &token_1.address < &token_0.address {
             std::mem::swap(&mut token_0, &mut token_1);
         }
@@ -205,7 +215,8 @@ impl<'a> SoroswapAggregatorTest<'a> {
             &desired_deadline, //     deadline: u64,
         );
 
-        let (added_token_2, added_token_3, added_liquidity_2) = router_contract.add_liquidity(
+        // let (added_token_2, added_token_3, added_liquidity_2) = 
+        router_contract.add_liquidity(
             &token_1.address,  //     token_a: Address,
             &token_2.address,  //     token_b: Address,
             &amount_1,         //     amount_a_desired: i128,

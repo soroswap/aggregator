@@ -331,7 +331,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         for protocol_id in protocol_ids.iter() {
             if has_proxy(e, protocol_id.clone()) {
                 let proxy = get_proxy(e, protocol_id.clone())?;
-                let address = 
                 proxy_vec.push_back(proxy);
             }
         }
