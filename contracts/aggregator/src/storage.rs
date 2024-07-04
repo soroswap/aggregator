@@ -64,12 +64,12 @@ pub fn get_proxy(e: &Env, protocol_id: String) -> Result<Proxy, AggregatorError>
 }
 
 // TODO, THIS SHOULD FAIL IF PROXY DOES NOT EXIST
-pub fn remove_proxy_address(e: &Env, protocol_id: String) {
+pub fn remove_proxy(e: &Env, protocol_id: String) {
     if has_proxy(e, protocol_id.clone()) {
         e.storage()
             .instance()
             .remove(&DataKey::Proxy(protocol_id.clone()));
-        remove_protocol_id(e, protocol_id);
+        remove_proxy_id(e, protocol_id);
     }
 }
 
@@ -90,7 +90,7 @@ pub fn get_protocol_ids(e: &Env) -> Vec<String> {
     }
 }
 
-pub fn remove_protocol_id(e: &Env, protocol_id: String) {
+pub fn remove_proxy_id(e: &Env, protocol_id: String) {
     let protocols = get_protocol_ids(e);
     let mut new_protocols = Vec::new(e);
 
