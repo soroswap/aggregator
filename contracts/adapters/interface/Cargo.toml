@@ -1,5 +1,5 @@
 [package]
-name = "soroswap-aggregator-proxy-interface"
+name = "soroswap-aggregator-adapter-interface"
 authors = ["coderipper <joaquin@paltalabs.io>"]
 version = "0.1.0"
 edition = "2021"

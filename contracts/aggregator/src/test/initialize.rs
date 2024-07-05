@@ -1,5 +1,3 @@
-use soroban_sdk::{testutils::Address as _, Address};
-
 use crate::error::AggregatorError;
 use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
 
@@ -17,7 +15,7 @@ fn test_initialize_and_get_values() {
     assert_eq!(admin, test.admin);
 
     // get protocols
-    let protocols = test.aggregator_contract.get_proxies();
+    let protocols = test.aggregator_contract.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     // get is protocol paused

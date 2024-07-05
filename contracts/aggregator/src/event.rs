@@ -1,5 +1,5 @@
 //! Definition of the Events used in the contract
-use crate::models::{DexDistribution, Proxy};
+use crate::models::{DexDistribution, Adapter};
 use soroban_sdk::{contracttype, symbol_short, Address, Env, String, Vec};
 
 // INITIALIZED
@@ -7,13 +7,13 @@ use soroban_sdk::{contracttype, symbol_short, Address, Env, String, Vec};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedEvent {
     pub admin: Address,
-    pub proxy_addresses: Vec<Proxy>,
+    pub adapter_addresses: Vec<Adapter>,
 }
 
-pub(crate) fn initialized(e: &Env, admin: Address, proxy_addresses: Vec<Proxy>) {
+pub(crate) fn initialized(e: &Env, admin: Address, adapter_addresses: Vec<Adapter>) {
     let event: InitializedEvent = InitializedEvent {
         admin: admin,
-        proxy_addresses,
+        adapter_addresses,
     };
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("init")), event);
@@ -24,12 +24,12 @@ pub(crate) fn initialized(e: &Env, admin: Address, proxy_addresses: Vec<Proxy>) 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateProtocolsEvent {
-    pub proxy_addresses: Vec<Proxy>,
+    pub adapter_addresses: Vec<Adapter>,
 }
 
 /// Publishes an `UpdateProtocolsEvent` to the event stream.
-pub(crate) fn protocols_updated(e: &Env, proxy_addresses: Vec<Proxy>) {
-    let event = UpdateProtocolsEvent { proxy_addresses };
+pub(crate) fn protocols_updated(e: &Env, adapter_addresses: Vec<Adapter>) {
+    let event = UpdateProtocolsEvent { adapter_addresses };
 
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("update")), event);

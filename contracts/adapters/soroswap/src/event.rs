@@ -17,7 +17,7 @@ pub(crate) fn initialized(e: &Env, state: bool, protocol_id: String, protocol_ad
         protocol_id,
         protocol_address,
     };
-    e.events().publish(("SoroswapAggregatorPhoenixProxy", symbol_short!("init")), event);
+    e.events().publish(("SoroswapAggregatorAdapter", symbol_short!("init")), event);
 }
 
 // SWAP EVENT
@@ -41,5 +41,5 @@ pub(crate) fn swap(
         to,
     };
 
-    e.events().publish(("SoroswapAggregatorPhoenixProxy", symbol_short!("swap")), event);
+    e.events().publish(("SoroswapAggregatorAdapter", symbol_short!("swap")), event);
 }

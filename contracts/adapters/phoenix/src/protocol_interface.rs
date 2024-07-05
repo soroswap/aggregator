@@ -1,6 +1,6 @@
 use soroban_sdk::{Env, Address, Vec, vec};
 use crate::storage::{get_protocol_address, has_protocol_address};
-use soroswap_aggregator_proxy_interface::{ProxyError};
+use soroswap_aggregator_adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
     file = "./contracts/phoenix_multihop.wasm"
@@ -34,10 +34,10 @@ pub fn protocol_swap(
     path: Vec<Address>,
     to: Address,
     deadline: u64,
-    is_exact_in: bool,
-) -> Result<Vec<i128>, ProxyError> {
+    is_exact_in: bool, 
+) -> Result<Vec<i128>, AdapterError> {
     if !has_protocol_address(e) {
-        return Err(ProxyError::ProtocolAddressNotFound);
+        return Err(AdapterError::ProtocolAddressNotFound);
     }
 
     let phoenix_multihop_address = get_protocol_address(e);

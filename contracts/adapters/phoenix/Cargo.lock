@@ -718,12 +718,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
-name = "phoenix-proxy"
+name = "phoenix-adapter"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 20.5.0",
  "soroban-sdk 21.1.1",
- "soroswap-aggregator-proxy-interface",
+ "soroswap-aggregator-adapter-interface",
 ]
 
 [[package]]
@@ -1314,7 +1314,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "soroswap-aggregator-proxy-interface"
+name = "soroswap-aggregator-adapter-interface"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 21.1.1",

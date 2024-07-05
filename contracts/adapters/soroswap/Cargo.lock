@@ -1305,19 +1305,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "soroswap-aggregator-proxy-interface"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk 21.1.1",
-]
-
-[[package]]
-name = "soroswap-proxy"
+name = "soroswap-adapter"
 version = "0.1.0"
 dependencies = [
  "soroban-sdk 20.5.0",
  "soroban-sdk 21.1.1",
- "soroswap-aggregator-proxy-interface",
+ "soroswap-aggregator-adapter-interface",
+]
+
+[[package]]
+name = "soroswap-aggregator-adapter-interface"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk 21.1.1",
 ]
 
 [[package]]
