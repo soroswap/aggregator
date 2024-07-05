@@ -57,6 +57,7 @@ pub mod router {
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 use router::SoroswapRouterClient;
+pub use router::SoroswapRouterError;
 
 // SoroswapRouter Contract
 fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
@@ -68,7 +69,7 @@ fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
 pub struct SoroswapTest<'a> {
     pub env: Env,
     pub router_contract: SoroswapRouterClient<'a>,
-    pub factory_contract: SoroswapFactoryClient<'a>,
+    // pub factory_contract: SoroswapFactoryClient<'a>,
     pub token_0: TokenClient<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
@@ -82,7 +83,7 @@ impl<'a> SoroswapTest<'a> {
         env.mock_all_auths();
         let router_contract = create_soroswap_router(&env);
 
-        let initial_user_balance = 10_000_000_000_000_000_000;
+        let initial_user_balance = 20_000_000_000_000_000_000;
 
         let admin = Address::generate(&env);
         let user = Address::generate(&env);
@@ -110,6 +111,7 @@ impl<'a> SoroswapTest<'a> {
     
         let amount_0: i128 = 1_000_000_000_000_000_000;
         let amount_1: i128 = 4_000_000_000_000_000_000;
+        let amount_2: i128 = 8_000_000_000_000_000_000;
         let expected_liquidity: i128 = 2_000_000_000_000_000_000;
     
         // Check initial user value of every token:
@@ -120,7 +122,7 @@ impl<'a> SoroswapTest<'a> {
         router_contract.initialize(&factory_contract.address);
 
         assert_eq!(factory_contract.pair_exists(&token_0.address, &token_1.address), false);
-        let (added_token_0_0, added_token_1_0, added_liquidity_0) = router_contract.add_liquidity(
+        let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = router_contract.add_liquidity(
             &token_0.address, //     token_a: Address,
             &token_1.address, //     token_b: Address,
             &amount_0, //     amount_a_desired: i128,
@@ -131,18 +133,18 @@ impl<'a> SoroswapTest<'a> {
             &desired_deadline//     deadline: u64,
         );
 
-        let (added_token_1_1, added_token_2_0, added_liquidity_1) = router_contract.add_liquidity(
+        let (added_token_1_1, added_token_2_0, added_liquidity_1_2) = router_contract.add_liquidity(
             &token_1.address, //     token_a: Address,
             &token_2.address, //     token_b: Address,
             &amount_1, //     amount_a_desired: i128,
-            &amount_0, //     amount_b_desired: i128,
+            &amount_2, //     amount_b_desired: i128,
             &0, //     amount_a_min: i128,
             &0 , //     amount_b_min: i128,
             &user, //     to: Address,
             &desired_deadline//     deadline: u64,
         );
 
-        let (added_token_0_1, added_token_2_1, added_liquidity_2) = router_contract.add_liquidity(
+        let (added_token_0_1, added_token_2_1, added_liquidity_0_2) = router_contract.add_liquidity(
             &token_0.address, //     token_a: Address,
             &token_2.address, //     token_b: Address,
             &amount_0, //     amount_a_desired: i128,
@@ -158,22 +160,22 @@ impl<'a> SoroswapTest<'a> {
         assert_eq!(added_token_0_0, amount_0);
         assert_eq!(added_token_1_0, amount_1);
         assert_eq!(added_token_1_1, amount_1);
-        assert_eq!(added_token_2_0, amount_0);
+        assert_eq!(added_token_2_0, amount_2);
         assert_eq!(added_token_0_1, amount_0);
         assert_eq!(added_token_2_1, amount_1);
 
-        assert_eq!(added_liquidity_0, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
-        assert_eq!(added_liquidity_1, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
-        assert_eq!(added_liquidity_2, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        assert_eq!(added_liquidity_0_1, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        assert_eq!(added_liquidity_1_2, 5656854249492379195);
+        assert_eq!(added_liquidity_0_2, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
     
-        assert_eq!(token_0.balance(&user), 8_000_000_000_000_000_000);
-        assert_eq!(token_1.balance(&user), 2_000_000_000_000_000_000);
-        assert_eq!(token_2.balance(&user), 5_000_000_000_000_000_000);
+        assert_eq!(token_0.balance(&user), 18_000_000_000_000_000_000);
+        assert_eq!(token_1.balance(&user), 12_000_000_000_000_000_000);
+        assert_eq!(token_2.balance(&user), 8_000_000_000_000_000_000);
 
         SoroswapTest {
             env,
             router_contract,
-            factory_contract,
+            // factory_contract,
             token_0,
             token_1,
             token_2,

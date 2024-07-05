@@ -7826,10 +7826,34 @@
                 "bytes": "0000000000000000000000000000000000000000000000000000000000000008"
               },
               {
-                "symbol": "get_protocol_id"
+                "symbol": "swap_exact_tokens_for_tokens"
               }
             ],
-            "data": "void"
+            "data": {
+              "vec": [
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 0
+                  }
+                },
+                {
+                  "i128": {
+                    "hi": 0,
+                    "lo": 0
+                  }
+                },
+                {
+                  "vec": []
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                },
+                {
+                  "u64": 0
+                }
+              ]
+            }
           }
         }
       },
@@ -7847,7 +7871,7 @@
                 "symbol": "fn_return"
               },
               {
-                "symbol": "get_protocol_id"
+                "symbol": "swap_exact_tokens_for_tokens"
               }
             ],
             "data": {
@@ -7908,10 +7932,32 @@
                   "string": "contract try_call failed"
                 },
                 {
-                  "symbol": "get_protocol_id"
+                  "symbol": "swap_exact_tokens_for_tokens"
                 },
                 {
-                  "vec": []
+                  "vec": [
+                    {
+                      "i128": {
+                        "hi": 0,
+                        "lo": 0
+                      }
+                    },
+                    {
+                      "i128": {
+                        "hi": 0,
+                        "lo": 0
+                      }
+                    },
+                    {
+                      "vec": []
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                    },
+                    {
+                      "u64": 0
+                    }
+                  ]
                 }
               ]
             }
