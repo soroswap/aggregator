@@ -38,9 +38,10 @@ pub struct DexDistribution {
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ProxyAddressPair {
+pub struct Proxy {
     pub protocol_id: String,
     pub address: Address,
+    pub paused: bool,
 }
 
 pub const MAX_DISTRIBUTION_LENGTH: u32 = 15;

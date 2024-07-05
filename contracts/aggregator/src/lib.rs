@@ -9,11 +9,11 @@ mod storage;
 mod test;
 
 use error::AggregatorError;
-use models::{DexDistribution, ProxyAddressPair, MAX_DISTRIBUTION_LENGTH};
+use models::{DexDistribution, Proxy, MAX_DISTRIBUTION_LENGTH};
 use proxy::SoroswapAggregatorProxyClient;
 use storage::{
-    extend_instance_ttl, get_admin, get_protocol_ids, get_proxy_address, has_proxy_address,
-    is_initialized, is_protocol_paused, put_proxy_address, remove_proxy_address, set_admin,
+    extend_instance_ttl, get_admin, get_protocol_ids, get_proxy, has_proxy,
+    is_initialized, put_proxy, remove_proxy_address, set_admin,
     set_initialized, set_pause_protocol,
 };
 
@@ -63,23 +63,28 @@ pub trait SoroswapAggregatorTrait {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_addresses: Vec<ProxyAddressPair>,
+        proxy_addresses: Vec<Proxy>,
     ) -> Result<(), AggregatorError>;
 
     /// Updates the protocol addresses for the aggregator
     fn update_protocols(
         e: Env,
-        proxy_addresses: Vec<ProxyAddressPair>,
+        proxy_addresses: Vec<Proxy>,
     ) -> Result<(), AggregatorError>;
 
     /// Removes the protocol from the aggregator
     fn remove_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
 
-    /// Pauses the protocol from the aggregator
-    fn pause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
-
-    /// Unpause the protocol from the aggregator
-    fn unpause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
+    /// Sets the `admin` address.
+    ///
+    /// # Argumentsnts
+    /// * `e` - The runtime environment.t.
+    /// * `protocol_id` - The ID of the protocol to set the paused state for.
+    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
+    ///
+    /// # Returns
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
+    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>;
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError>;
 
@@ -132,8 +137,8 @@ pub trait SoroswapAggregatorTrait {
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
-    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError>;
-    fn is_protocol_paused(e: &Env, protocol_id: String) -> bool;
+    fn get_protocols(e: &Env) -> Result<Vec<Proxy>, AggregatorError>;
+    fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError>;
     fn get_version() -> u32;
 }
 
@@ -148,14 +153,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_addresses: Vec<ProxyAddressPair>,
+        proxy_addresses: Vec<Proxy>,
     ) -> Result<(), AggregatorError> {
         if is_initialized(&e) {
             return Err(AggregatorError::AlreadyInitialized);
         }
 
         for pair in proxy_addresses.iter() {
-            put_proxy_address(&e, pair);
+            put_proxy(&e, pair);
         }
 
         set_admin(&e, admin.clone());
@@ -170,13 +175,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// this overwriotes the previous protocol address pair if existed
     fn update_protocols(
         e: Env,
-        proxy_addresses: Vec<ProxyAddressPair>,
+        proxy_addresses: Vec<Proxy>,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
         for pair in proxy_addresses.iter() {
-            put_proxy_address(&e, pair);
+            put_proxy(&e, pair);
         }
 
         event::protocols_updated(&e, proxy_addresses);
@@ -195,26 +200,23 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(())
     }
 
-    fn pause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
+    /// Sets the paused state of the protocol in the aggregator.
+    ///
+    /// # Argumentsnts
+    /// * `e` - The runtime environment.t.
+    /// * `protocol_id` - The ID of the protocol to set the paused state for.
+    /// * `paused` - The boolean value indicating whether the protocol should be paused or not.
+    ///
+    /// # Returns
+    /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
+    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        set_pause_protocol(&e, protocol_id.clone(), true);
+        set_pause_protocol(&e, protocol_id.clone(), paused)?;
 
-        event::protocol_paused(&e, protocol_id);
+        event::protocol_paused(&e, protocol_id, paused);
         extend_instance_ttl(&e);
-        Ok(())
-    }
-
-    fn unpause_protocol(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
-        check_admin(&e);
-
-        set_pause_protocol(&e, protocol_id.clone(), false);
-
-        event::protocol_unpaused(&e, protocol_id);
-        extend_instance_ttl(&e);
-
         Ok(())
     }
 
@@ -284,8 +286,12 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     .ok_or(AggregatorError::ArithmeticError)?
             };
 
-            let proxy_contract_address = get_proxy_address(&e, dist.protocol_id.clone())?;
-            let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy_contract_address);
+            let proxy = get_proxy(&e, dist.protocol_id.clone())?;
+            // if paused return error
+            if proxy.paused {
+                return Err(AggregatorError::ProtocolPaused);
+            }
+            let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy.address);
             let response = proxy_client.swap(
                 &to,
                 &dist.path,
@@ -315,28 +321,27 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(get_admin(&e))
     }
 
-    fn get_protocols(e: &Env) -> Result<Vec<ProxyAddressPair>, AggregatorError> {
+    fn get_protocols(e: &Env) -> Result<Vec<Proxy>, AggregatorError> {
         check_initialized(&e)?;
 
         let protocol_ids = get_protocol_ids(e);
-        let mut addresses = Vec::new(e);
+        let mut proxy_vec = Vec::new(e);
 
-        // Iterate over each protocol ID and collect their proxy addresses
+        // Iterate over each protocol ID and collect their proxy proxy_vec
         for protocol_id in protocol_ids.iter() {
-            if has_proxy_address(e, protocol_id.clone()) {
-                let address = get_proxy_address(e, protocol_id.clone())?;
-                addresses.push_back(ProxyAddressPair {
-                    protocol_id: protocol_id,
-                    address,
-                });
+            if has_proxy(e, protocol_id.clone()) {
+                let proxy = get_proxy(e, protocol_id.clone())?;
+                let address = 
+                proxy_vec.push_back(proxy);
             }
         }
 
-        Ok(addresses)
+        Ok(proxy_vec)
     }
 
-    fn is_protocol_paused(e: &Env, protocol_id: String) -> bool {
-        is_protocol_paused(&e, protocol_id)
+    fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError> {
+        let proxy = get_proxy(e, protocol_id)?;
+        Ok(proxy.paused)
     }
 
     /// this is the firs version of the contract   

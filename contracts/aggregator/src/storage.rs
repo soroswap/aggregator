@@ -1,14 +1,13 @@
-use crate::{error::AggregatorError, models::ProxyAddressPair};
+use crate::{error::AggregatorError, models::Proxy};
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    ProxyAddress(String),
-    ProtocolPaused(String),
+    ProtocolList,
+    Proxy(String),
     Initialized,
     Admin,
-    ProtocolList,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -21,6 +20,7 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
+/* INITIALIZE */
 pub fn set_initialized(e: &Env) {
     e.storage().instance().set(&DataKey::Initialized, &true);
 }
@@ -29,6 +29,7 @@ pub fn is_initialized(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Initialized)
 }
 
+/* ADMIN */
 pub fn set_admin(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::Admin, &address)
 }
@@ -37,36 +38,37 @@ pub fn get_admin(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Admin).unwrap()
 }
 
-pub fn put_proxy_address(e: &Env, pair: ProxyAddressPair) {
+pub fn put_proxy(e: &Env, proxy: Proxy) {
     e.storage().instance().set(
-        &DataKey::ProxyAddress(pair.protocol_id.clone()),
-        &pair.address,
+        &DataKey::Proxy(proxy.protocol_id.clone()),
+        &proxy,
     );
-    add_protocol_id(e, pair.protocol_id);
+    add_protocol_id(e, proxy.protocol_id);
 }
 
-pub fn has_proxy_address(e: &Env, protocol_id: String) -> bool {
+pub fn has_proxy(e: &Env, protocol_id: String) -> bool {
     e.storage()
         .instance()
-        .has(&DataKey::ProxyAddress(protocol_id))
+        .has(&DataKey::Proxy(protocol_id))
 }
 
-pub fn get_proxy_address(e: &Env, protocol_id: String) -> Result<Address, AggregatorError> {
+pub fn get_proxy(e: &Env, protocol_id: String) -> Result<Proxy, AggregatorError> {
     match e
         .storage()
         .instance()
-        .get(&DataKey::ProxyAddress(protocol_id))
+        .get(&DataKey::Proxy(protocol_id))
     {
-        Some(address) => Ok(address),
-        None => Err(AggregatorError::InvalidProtocolId),
+        Some(proxy) => Ok(proxy),
+        None => Err(AggregatorError::ProtocolNotFound),
     }
 }
 
+// TODO, THIS SHOULD FAIL IF PROXY DOES NOT EXIST
 pub fn remove_proxy_address(e: &Env, protocol_id: String) {
-    if has_proxy_address(e, protocol_id.clone()) {
+    if has_proxy(e, protocol_id.clone()) {
         e.storage()
             .instance()
-            .remove(&DataKey::ProxyAddress(protocol_id.clone()));
+            .remove(&DataKey::Proxy(protocol_id.clone()));
         remove_protocol_id(e, protocol_id);
     }
 }
@@ -103,15 +105,9 @@ pub fn remove_protocol_id(e: &Env, protocol_id: String) {
         .set(&DataKey::ProtocolList, &new_protocols);
 }
 
-pub fn set_pause_protocol(e: &Env, protocol_id: String, paused: bool) {
-    e.storage()
-        .instance()
-        .set(&DataKey::ProtocolPaused(protocol_id), &paused);
-}
-
-pub fn is_protocol_paused(e: &Env, protocol_id: String) -> bool {
-    e.storage()
-        .instance()
-        .get(&DataKey::ProtocolPaused(protocol_id))
-        .unwrap_or(false)
+pub fn set_pause_protocol(e: &Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>{
+    let mut protocol = get_proxy(&e, protocol_id)?;
+    protocol.paused = paused;
+    put_proxy(&e, protocol);
+    Ok(())
 }

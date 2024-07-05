@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::ProxyAddressPair;
+use crate::models::Proxy;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{testutils::Address as _, vec, Address, String, Vec};
 use soroban_sdk::{
@@ -8,12 +8,13 @@ use soroban_sdk::{
     IntoVal, Symbol,
 };
 
-pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "some_protocol"),
             address: test.router_contract.address.clone(),
+            paused: false,
         },
     ]
 }
@@ -21,13 +22,14 @@ pub fn new_update_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Prox
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(
     test: &SoroswapAggregatorTest,
-) -> Vec<ProxyAddressPair> {
+) -> Vec<Proxy> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "soroswap"),
             address: new_router.address,
+            paused: false,
         },
     ]
 }
@@ -57,6 +59,13 @@ fn test_update_protocols_add_new() {
         initialize_aggregator_addresses.get(0)
     );
     assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
+    // test both are not paused
+    for protocol_address in updated_protocols {
+        let is_protocol_paused = test
+            .aggregator_contract
+            .get_paused(&protocol_address.protocol_id.clone());
+        assert_eq!(is_protocol_paused, false);
+    }
 }
 
 // test that soroswaop protocol is indeed overwriten with new router addresws
@@ -94,6 +103,14 @@ fn test_update_protocols_overwrite() {
     let updated_protocols = test.aggregator_contract.get_protocols();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
     assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
+
+    // test both are not paused
+    for protocol_address in updated_protocols {
+        let is_protocol_paused = test
+            .aggregator_contract
+            .get_paused(&protocol_address.protocol_id.clone());
+        assert_eq!(is_protocol_paused, false);
+    }
 }
 
 #[test]

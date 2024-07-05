@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::models::ProxyAddressPair;
+use crate::models::Proxy;
 use crate::{SoroswapAggregator, SoroswapAggregatorClient};
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
@@ -99,28 +99,29 @@ fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
 }
 
 // Helper function to initialize / update soroswap aggregator protocols
-pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
     vec![
         &test.env,
-        ProxyAddressPair {
+        Proxy {
             protocol_id: String::from_str(&test.env, "soroswap"),
             address: test.soroswap_proxy_contract.address.clone(),
+            paused: false
         },
     ]
 }
 
-// pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+// pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
 //     vec![&test.env,
-//         ProxyAddressPair {
+//         Proxy {
 //             protocol_id: dex_constants::SOROSWAP,
 //             address: test.router_contract.address.clone(),
 //         },
 //     ]
 // }
 
-// pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<ProxyAddressPair> {
+// pub fn create_only_phoenix_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Proxy> {
 //     vec![&test.env,
-//         ProxyAddressPair {
+//         Proxy {
 //             protocol_id: dex_constants::PHOENIX,
 //             address: test.router_contract.address.clone(),
 //         },
@@ -272,5 +273,6 @@ pub mod initialize;
 pub mod protocols_actions;
 pub mod remove_protocol;
 pub mod update_protocols;
+pub mod set_pause;
 // pub mod swap;
 // pub mod admin;
