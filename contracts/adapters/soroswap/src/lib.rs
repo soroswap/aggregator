@@ -13,7 +13,6 @@ use storage::{
     set_protocol_id,
     get_protocol_id,
     set_protocol_address, 
-    has_protocol_address,
     get_protocol_address, 
 };
 use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
@@ -77,10 +76,10 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AdapterError> {
+        check_initialized(&e)?;
         extend_instance_ttl(&e);
         to.require_auth();
 
-        check_initialized(&e)?;
         check_nonnegative_amount(amount_in)?;
         check_nonnegative_amount(amount_out_min)?;
         ensure_deadline(&e, deadline)?;
@@ -106,10 +105,10 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AdapterError> {
+        check_initialized(&e)?;
         extend_instance_ttl(&e);
         to.require_auth();
 
-        check_initialized(&e)?;
         check_nonnegative_amount(amount_out)?;
         check_nonnegative_amount(amount_in_max)?;
         ensure_deadline(&e, deadline)?;
@@ -128,21 +127,13 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
     }
 
     /*  *** Read only functions: *** */
-    fn get_protocol_id(e: &Env) -> Result<Address, AdapterError> {
+    fn get_protocol_id(e: &Env) -> Result<String, AdapterError> {
         check_initialized(&e)?;
-        
-        let address = get_protocol_address(e);
-        Ok(address)
+        Ok(get_protocol_id(e)?)
     }    
     
     fn get_protocol_address(e: &Env) -> Result<Address, AdapterError> {
         check_initialized(&e)?;
-        
-        if !has_protocol_address(e) {
-            return Err(AdapterError::ProtocolAddressNotFound);
-        }
-
-        let address = get_protocol_id(e);
-        Ok(address)
+        Ok(get_protocol_address(e)?)
     }    
 }

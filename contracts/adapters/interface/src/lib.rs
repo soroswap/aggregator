@@ -63,6 +63,6 @@ pub trait SoroswapAggregatorAdapterTrait {
     ) -> Result<Vec<i128>, AdapterError>;
 
     /*  *** Read only functions: *** */
-    fn get_protocol_id(e: &Env) -> Result<Address, AdapterError>;
+    fn get_protocol_id(e: &Env) -> Result<String, AdapterError>;
     fn get_protocol_address(e: &Env) -> Result<Address, AdapterError>;
 }

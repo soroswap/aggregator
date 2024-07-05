@@ -1,5 +1,5 @@
 use soroban_sdk::{Env, Address, Vec};
-use crate::storage::{get_protocol_address, has_protocol_address};
+use crate::storage::{get_protocol_address};
 use soroswap_aggregator_adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
@@ -16,11 +16,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
-    if !has_protocol_address(&e) {
-        return Err(AdapterError::ProtocolAddressNotFound);
-    }
-    
-    let soroswap_router_address = get_protocol_address(&e);
+    let soroswap_router_address = get_protocol_address(&e)?;
     let soroswap_router_client = SoroswapRouterClient::new(&e, &soroswap_router_address);
 
     Ok(soroswap_router_client.swap_exact_tokens_for_tokens(
@@ -40,11 +36,8 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     to: &Address,
     deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
-    if !has_protocol_address(&e) {
-        return Err(AdapterError::ProtocolAddressNotFound);
-    }
-    
-    let soroswap_router_address = get_protocol_address(&e);
+
+    let soroswap_router_address = get_protocol_address(&e)?;
     let soroswap_router_client = SoroswapRouterClient::new(&e, &soroswap_router_address);
 
     Ok(soroswap_router_client.swap_tokens_for_exact_tokens(
