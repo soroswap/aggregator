@@ -17,7 +17,8 @@ use storage::{
     get_protocol_address, 
 };
 use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
-use protocol_interface::{protocol_swap};
+use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
+    protocol_swap_tokens_for_exact_tokens};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
@@ -68,34 +69,61 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
         Ok(())
     }
     
-    fn swap(
+    fn swap_exact_tokens_for_tokens(
         e: Env,
-        to: Address,
-        path: Vec<Address>,
         amount_in: i128,
-        amount_out_min_or_max: i128,
+        amount_out_min: i128,
+        path: Vec<Address>,
+        to: Address,
         deadline: u64,
-        is_exact_in: bool,
     ) -> Result<Vec<i128>, AdapterError> {
-        check_initialized(&e)?;
-        check_nonnegative_amount(amount_in)?;
-        check_nonnegative_amount(amount_out_min_or_max)?;
         extend_instance_ttl(&e);
         to.require_auth();
+
+        check_initialized(&e)?;
+        check_nonnegative_amount(amount_in)?;
+        check_nonnegative_amount(amount_out_min)?;
         ensure_deadline(&e, deadline)?;
 
-        let swap_result = protocol_swap(
+        let swap_result = protocol_swap_exact_tokens_for_tokens(
             &e, 
             &amount_in, 
-            &amount_out_min_or_max, 
-            path.clone(), 
-            to.clone(), 
-            deadline, 
-            is_exact_in
+            &amount_out_min, 
+            &path, 
+            &to, 
+            &deadline, 
         )?;
 
-
         event::swap(&e, amount_in, path, to);
+        Ok(swap_result)
+    }
+
+    fn swap_tokens_for_exact_tokens(
+        e: Env,
+        amount_out: i128,
+        amount_in_max: i128,
+        path: Vec<Address>,
+        to: Address,
+        deadline: u64,
+    ) -> Result<Vec<i128>, AdapterError> {
+        extend_instance_ttl(&e);
+        to.require_auth();
+
+        check_initialized(&e)?;
+        check_nonnegative_amount(amount_out)?;
+        check_nonnegative_amount(amount_in_max)?;
+        ensure_deadline(&e, deadline)?;
+
+        let swap_result = protocol_swap_tokens_for_exact_tokens(
+            &e, 
+            &amount_out, 
+            &amount_in_max, 
+            &path, 
+            &to, 
+            &deadline, 
+        )?;
+
+        event::swap(&e, amount_in_max, path, to);
         Ok(swap_result)
     }
 
