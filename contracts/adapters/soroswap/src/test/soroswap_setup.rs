@@ -2,11 +2,8 @@
 extern crate std;
 use soroban_sdk::{
     Env, 
-    vec,
-    Vec,
     BytesN, 
     Address, 
-    String,
     testutils::{
         Address as _,
         Ledger,
@@ -29,7 +26,7 @@ pub mod pair {
     soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
    pub type SoroswapPairClient<'a> = Client<'a>;
 }
-use pair::SoroswapPairClient;
+// use pair::SoroswapPairClient;
 
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
@@ -91,12 +88,10 @@ impl<'a> SoroswapTest<'a> {
         let user = Address::generate(&env);
         assert_ne!(admin, user);
 
-        let mut token_0 = create_token_contract(&env, &admin);
-        let mut token_1 = create_token_contract(&env, &admin);
-        let mut token_2 = create_token_contract(&env, &admin);
-        if &token_1.address < &token_0.address {
-            std::mem::swap(&mut token_0, &mut token_1);
-        }
+        let token_0 = create_token_contract(&env, &admin);
+        let token_1 = create_token_contract(&env, &admin);
+        let token_2 = create_token_contract(&env, &admin);
+    
         token_0.mint(&user, &initial_user_balance);
         token_1.mint(&user, &initial_user_balance);
         token_2.mint(&user, &initial_user_balance);
@@ -125,7 +120,7 @@ impl<'a> SoroswapTest<'a> {
         router_contract.initialize(&factory_contract.address);
 
         assert_eq!(factory_contract.pair_exists(&token_0.address, &token_1.address), false);
-        let (added_token_0, added_token_1, added_liquidity) = router_contract.add_liquidity(
+        let (added_token_0_0, added_token_1_0, added_liquidity_0) = router_contract.add_liquidity(
             &token_0.address, //     token_a: Address,
             &token_1.address, //     token_b: Address,
             &amount_0, //     amount_a_desired: i128,
@@ -136,7 +131,7 @@ impl<'a> SoroswapTest<'a> {
             &desired_deadline//     deadline: u64,
         );
 
-        let (added_token_2, added_token_3, added_liquidity_2) = router_contract.add_liquidity(
+        let (added_token_1_1, added_token_2_0, added_liquidity_1) = router_contract.add_liquidity(
             &token_1.address, //     token_a: Address,
             &token_2.address, //     token_b: Address,
             &amount_1, //     amount_a_desired: i128,
@@ -147,7 +142,7 @@ impl<'a> SoroswapTest<'a> {
             &desired_deadline//     deadline: u64,
         );
 
-        let (added_token_2, added_token_3, added_liquidity_2) = router_contract.add_liquidity(
+        let (added_token_0_1, added_token_2_1, added_liquidity_2) = router_contract.add_liquidity(
             &token_0.address, //     token_a: Address,
             &token_2.address, //     token_b: Address,
             &amount_0, //     amount_a_desired: i128,
@@ -160,11 +155,15 @@ impl<'a> SoroswapTest<'a> {
 
         static MINIMUM_LIQUIDITY: i128 = 1000;
     
-        assert_eq!(added_token_0, amount_0);
-        assert_eq!(added_token_1, amount_1);
-        assert_eq!(added_token_2, amount_0);
-        assert_eq!(added_token_3, amount_1);
-        assert_eq!(added_liquidity, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        assert_eq!(added_token_0_0, amount_0);
+        assert_eq!(added_token_1_0, amount_1);
+        assert_eq!(added_token_1_1, amount_1);
+        assert_eq!(added_token_2_0, amount_0);
+        assert_eq!(added_token_0_1, amount_0);
+        assert_eq!(added_token_2_1, amount_1);
+
+        assert_eq!(added_liquidity_0, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        assert_eq!(added_liquidity_1, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
         assert_eq!(added_liquidity_2, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
     
         assert_eq!(token_0.balance(&user), 8_000_000_000_000_000_000);
