@@ -2,8 +2,8 @@
 contracts/*/target
 contracts/adapters/*/target
 contracts/*/test_snapshots
-contracts/proxies/*/target
-contracts/proxies/*/test_snapshots
+contracts/adapters/*/target
+contracts/adapters/*/test_snapshots
 /target/
 /.sccache/
 .DS_Store
