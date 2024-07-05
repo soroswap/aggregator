@@ -2,7 +2,7 @@ use soroban_sdk::{testutils::{Events}, vec, IntoVal, symbol_short, String};
 use soroban_sdk::{Address, testutils::Address as _};
 use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-use crate::test::protocols_actions::new_update_protocols_addresses;
+use crate::test::get_proxies::new_update_proxies_addresses;
 
 use crate::event::{
     InitializedEvent,
@@ -83,7 +83,7 @@ fn initialized_event() {
 }
 
 #[test]
-fn update_protocols_event() {
+fn update_proxies_event() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
@@ -94,8 +94,8 @@ fn update_protocols_event() {
     assert_eq!(admin, test.admin);
 
     //Update aggregator
-    let update_aggregator_addresses = new_update_protocols_addresses(&test);
-    test.aggregator_contract.update_protocols(&update_aggregator_addresses);
+    let update_aggregator_addresses = new_update_proxies_addresses(&test);
+    test.aggregator_contract.update_proxies(&update_aggregator_addresses);
 
     let updated_event = test.env.events().all().last().unwrap();
 
@@ -160,7 +160,7 @@ fn update_protocols_event() {
 }
 
 #[test]
-fn remove_protocol_event() {
+fn remove_proxy_event() {
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -168,7 +168,7 @@ fn remove_protocol_event() {
     
     // Remove protocol
     let protocol_id = String::from_str(&test.env, "soroswap");
-    test.aggregator_contract.remove_protocol(&protocol_id);
+    test.aggregator_contract.remove_proxy(&protocol_id);
     
     let removed_event = test.env.events().all().last().unwrap();
     let expected_removed_event: RemovedProtocolEvent = RemovedProtocolEvent {
