@@ -38,7 +38,7 @@ pub struct DexDistribution {
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Proxy {
+pub struct Adapter {
     pub protocol_id: String,
     pub address: Address,
     pub paused: bool,
