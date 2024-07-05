@@ -1,5 +1,5 @@
 use soroban_sdk::{testutils::{Events}, vec, IntoVal, symbol_short, String}; 
-use crate::test::{SoroswapAggregatorTest, create_protocols_addresses, new_update_proxies_addresses};
+use crate::test::{SoroswapAggregatorTest, create_protocols_addresses, new_update_adapters_addresses};
 
 use crate::event::{
     InitializedEvent,
@@ -18,7 +18,7 @@ fn initialized_event() {
 
     let expected_initialized_event: InitializedEvent = InitializedEvent {
         admin: test.admin.clone(),
-        proxy_addresses: initialize_aggregator_addresses.clone(),
+        adapter_addresses: initialize_aggregator_addresses.clone(),
     };
 
     assert_eq!(
@@ -35,7 +35,7 @@ fn initialized_event() {
 
     let false_initialized_event: InitializedEvent = InitializedEvent {
         admin: test.user,
-        proxy_addresses: initialize_aggregator_addresses.clone(),
+        adapter_addresses: initialize_aggregator_addresses.clone(),
     };
 
     assert_ne!(
@@ -80,7 +80,7 @@ fn initialized_event() {
 }
 
 #[test]
-fn update_proxies_event() {
+fn update_adapters_event() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
@@ -91,13 +91,13 @@ fn update_proxies_event() {
     assert_eq!(admin, test.admin);
 
     //Update aggregator
-    let update_aggregator_addresses = new_update_proxies_addresses(&test);
-    test.aggregator_contract.update_proxies(&update_aggregator_addresses);
+    let update_aggregator_addresses = new_update_adapters_addresses(&test);
+    test.aggregator_contract.update_adapters(&update_aggregator_addresses);
 
     let updated_event = test.env.events().all().last().unwrap();
 
     let expected_updated_event: UpdateProtocolsEvent = UpdateProtocolsEvent {
-        proxy_addresses: update_aggregator_addresses.clone(),
+        adapter_addresses: update_aggregator_addresses.clone(),
     };
 
     assert_eq!(
@@ -113,7 +113,7 @@ fn update_proxies_event() {
     );
 
     let false_updated_event: UpdateProtocolsEvent = UpdateProtocolsEvent {
-        proxy_addresses: initialize_aggregator_addresses.clone(),
+        adapter_addresses: initialize_aggregator_addresses.clone(),
     };
 
     assert_ne!(
@@ -157,7 +157,7 @@ fn update_proxies_event() {
 }
 
 #[test]
-fn remove_proxy_event() {
+fn remove_adapter_event() {
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
@@ -165,7 +165,7 @@ fn remove_proxy_event() {
     
     // Remove protocol
     let protocol_id = String::from_str(&test.env, "soroswap");
-    test.aggregator_contract.remove_proxy(&protocol_id);
+    test.aggregator_contract.remove_adapter(&protocol_id);
     
     let removed_event = test.env.events().all().last().unwrap();
     let expected_removed_event: RemovedProtocolEvent = RemovedProtocolEvent {

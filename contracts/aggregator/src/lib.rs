@@ -4,16 +4,16 @@ use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String, Vec};
 mod error;
 mod event;
 mod models;
-mod proxy;
+mod adapter;
 mod storage;
 mod test;
 
 use error::AggregatorError;
-use models::{DexDistribution, Proxy, MAX_DISTRIBUTION_LENGTH};
-use proxy::SoroswapAggregatorProxyClient;
+use models::{DexDistribution, Adapter, MAX_DISTRIBUTION_LENGTH};
+use adapter::SoroswapAggregatorAdapterClient;
 use storage::{
-    extend_instance_ttl, get_admin, get_protocol_ids, get_proxy, has_proxy,
-    is_initialized, put_proxy, remove_proxy, set_admin,
+    extend_instance_ttl, get_admin, get_protocol_ids, get_adapter, has_adapter,
+    is_initialized, put_adapter, remove_adapter, set_admin,
     set_initialized, set_pause_protocol,
 };
 
@@ -63,17 +63,17 @@ pub trait SoroswapAggregatorTrait {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_vec: Vec<Proxy>,
+        adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError>;
 
     /// Updates the protocol addresses for the aggregator
-    fn update_proxies(
+    fn update_adapters(
         e: Env,
-        proxy_vec: Vec<Proxy>,
+        adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError>;
 
     /// Removes the protocol from the aggregator
-    fn remove_proxy(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
+    fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
 
     /// Sets the `admin` address.
     ///
@@ -137,7 +137,7 @@ pub trait SoroswapAggregatorTrait {
     /*  *** Read only functions: *** */
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError>;
-    fn get_proxies(e: &Env) -> Result<Vec<Proxy>, AggregatorError>;
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError>;
     fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError>;
     fn get_version() -> u32;
 }
@@ -153,47 +153,47 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     fn initialize(
         e: Env,
         admin: Address,
-        proxy_vec: Vec<Proxy>,
+        adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError> {
         if is_initialized(&e) {
             return Err(AggregatorError::AlreadyInitialized);
         }
 
-        for proxy in proxy_vec.iter() {
-            put_proxy(&e, proxy);
+        for adapter in adapter_vec.iter() {
+            put_adapter(&e, adapter);
         }
 
         set_admin(&e, admin.clone());
 
         // Mark the contract as initialized
         set_initialized(&e);
-        event::initialized(&e, admin, proxy_vec);
+        event::initialized(&e, admin, adapter_vec);
         extend_instance_ttl(&e);
         Ok(())
     }
 
     /// this overwriotes the previous protocol address pair if existed
-    fn update_proxies(
+    fn update_adapters(
         e: Env,
-        proxy_vec: Vec<Proxy>,
+        adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        for proxy in proxy_vec.iter() {
-            put_proxy(&e, proxy);
+        for adapter in adapter_vec.iter() {
+            put_adapter(&e, adapter);
         }
 
-        event::protocols_updated(&e, proxy_vec);
+        event::protocols_updated(&e, adapter_vec);
         extend_instance_ttl(&e);
         Ok(())
     }
 
-    fn remove_proxy(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
+    fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
         check_admin(&e);
 
-        remove_proxy(&e, protocol_id.clone());
+        remove_adapter(&e, protocol_id.clone());
 
         event::protocol_removed(&e, protocol_id);
         extend_instance_ttl(&e);
@@ -287,13 +287,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     .ok_or(AggregatorError::ArithmeticError)?
             };
 
-            let proxy = get_proxy(&e, dist.protocol_id.clone())?;
+            let adapter = get_adapter(&e, dist.protocol_id.clone())?;
             // if paused return error
-            if proxy.paused {
+            if adapter.paused {
                 return Err(AggregatorError::ProtocolPaused );
             }
-            let proxy_client = SoroswapAggregatorProxyClient::new(&e, &proxy.address);
-            let response = proxy_client.swap(
+            let adapter_client = SoroswapAggregatorAdapterClient::new(&e, &adapter.address);
+            let response = adapter_client.swap(
                 &to,
                 &dist.path,
                 &swap_amount,
@@ -322,26 +322,26 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(get_admin(&e))
     }
 
-    fn get_proxies(e: &Env) -> Result<Vec<Proxy>, AggregatorError> {
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
         check_initialized(&e)?;
 
         let protocol_ids = get_protocol_ids(e);
-        let mut proxy_vec = Vec::new(e);
+        let mut adapter_vec = Vec::new(e);
 
-        // Iterate over each protocol ID and collect their proxy object
+        // Iterate over each protocol ID and collect their adapter object
         for protocol_id in protocol_ids.iter() {
-            if has_proxy(e, protocol_id.clone()) {
-                let proxy = get_proxy(e, protocol_id.clone())?;
-                proxy_vec.push_back(proxy);
+            if has_adapter(e, protocol_id.clone()) {
+                let adapter = get_adapter(e, protocol_id.clone())?;
+                adapter_vec.push_back(adapter);
             }
         }
 
-        Ok(proxy_vec)
+        Ok(adapter_vec)
     }
 
     fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError> {
-        let proxy = get_proxy(e, protocol_id)?;
-        Ok(proxy.paused)
+        let adapter = get_adapter(e, protocol_id)?;
+        Ok(adapter.paused)
     }
 
     /// this is the firs version of the contract   

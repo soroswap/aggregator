@@ -1,17 +1,17 @@
     extern crate std;
     use crate::error::AggregatorError;
-    use crate::models::Proxy;
+    use crate::models::Adapter;
     use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
     use soroban_sdk::{vec, String, Vec};
 
     pub fn new_protocol_vec(
         test: &SoroswapAggregatorTest,
         protocol_id: &String,
-    ) -> Vec<Proxy> {
+    ) -> Vec<Adapter> {
         let new_router = create_soroswap_router(&test.env);
         vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: protocol_id.clone(),
                 address: new_router.address,
                 paused: false,
@@ -38,14 +38,14 @@
         test.aggregator_contract
             .set_pause(&String::from_str(&test.env, "soroswap"), &true);
 
-        let mut updated_protocols = test.aggregator_contract.get_proxies();
+        let mut updated_protocols = test.aggregator_contract.get_adapters();
 
         // we should have the vec but with paused protocol
         let expected_protocols_vec = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: String::from_str(&test.env, "soroswap"),
-                address: test.soroswap_proxy_contract.address.clone(),
+                address: test.soroswap_adapter_contract.address.clone(),
                 paused: true,
             },
         ];
@@ -61,11 +61,11 @@
 
         //add new protocol
         let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
-        test.aggregator_contract.update_proxies(&new_protocol_0);
+        test.aggregator_contract.update_adapters(&new_protocol_0);
 
         let mut expected_new_protocols = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
                 address: initialize_aggregator_addresses.get(0).unwrap().address,
                 paused: true,
@@ -73,16 +73,16 @@
             new_protocol_0.get(0).unwrap()
         ];
 
-        updated_protocols = test.aggregator_contract.get_proxies();
+        updated_protocols = test.aggregator_contract.get_adapters();
         assert_eq!(updated_protocols, expected_new_protocols);
 
         // add new protoco 1
         let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));
-        test.aggregator_contract.update_proxies(&new_protocol_1);
+        test.aggregator_contract.update_adapters(&new_protocol_1);
 
         expected_new_protocols = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
                 address: initialize_aggregator_addresses.get(0).unwrap().address,
                 paused: true,
@@ -91,7 +91,7 @@
             new_protocol_1.get(0).unwrap()
         ];
 
-        updated_protocols = test.aggregator_contract.get_proxies();
+        updated_protocols = test.aggregator_contract.get_adapters();
         assert_eq!(updated_protocols, expected_new_protocols);
 
         // PAUSE PROTOCOL 1
@@ -100,20 +100,20 @@
 
         expected_new_protocols = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
                 address: initialize_aggregator_addresses.get(0).unwrap().address,
                 paused: true,
             },
             new_protocol_0.get(0).unwrap(),
-            Proxy {
+            Adapter {
                 protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
                 address: new_protocol_1.get(0).unwrap().address,
                 paused: true,
             },
         ];
 
-        updated_protocols = test.aggregator_contract.get_proxies();
+        updated_protocols = test.aggregator_contract.get_adapters();
         assert_eq!(updated_protocols, expected_new_protocols);
 
         is_protocol_paused = test
@@ -139,20 +139,20 @@
 
         expected_new_protocols = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
                 address: initialize_aggregator_addresses.get(0).unwrap().address,
                 paused: true,
             },
             new_protocol_0.get(0).unwrap(),
-            Proxy {
+            Adapter {
                 protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
                 address: new_protocol_1.get(0).unwrap().address,
                 paused: false,
             },
         ];
 
-        updated_protocols = test.aggregator_contract.get_proxies();
+        updated_protocols = test.aggregator_contract.get_adapters();
         assert_eq!(updated_protocols, expected_new_protocols);
 
         is_protocol_paused = test
@@ -178,20 +178,20 @@
 
         expected_new_protocols = vec![
             &test.env,
-            Proxy {
+            Adapter {
                 protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
                 address: initialize_aggregator_addresses.get(0).unwrap().address,
                 paused: false,
             },
             new_protocol_0.get(0).unwrap(),
-            Proxy {
+            Adapter {
                 protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
                 address: new_protocol_1.get(0).unwrap().address,
                 paused: false,
             },
         ];
 
-        updated_protocols = test.aggregator_contract.get_proxies();
+        updated_protocols = test.aggregator_contract.get_adapters();
         assert_eq!(updated_protocols, expected_new_protocols);
 
         is_protocol_paused = test

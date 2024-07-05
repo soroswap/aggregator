@@ -1,19 +1,19 @@
 use soroban_sdk::{Address, testutils::Address as _};
 
-use crate::error::CombinedProxyError;
-use crate::test::{SoroswapAggregatorProxyTest};
+use crate::error::CombinedAdapterError;
+use crate::test::{SoroswapAggregatorAdapterTest};
 
 
 #[test]
 fn test_initialize_and_get_admin() {
-    let test = SoroswapAggregatorProxyTest::setup();
+    let test = SoroswapAggregatorAdapterTest::setup();
 
-    //Initialize aggregator proxy
+    //Initialize aggregator adapter
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
-    test.proxy_contract.initialize(&test.admin, &test.router_contract.address);
+    test.adapter_contract.initialize(&test.admin, &test.router_contract.address);
 
-    let admin = test.proxy_contract.get_admin();
+    let admin = test.adapter_contract.get_admin();
     assert_eq!(admin, test.admin);
 }
 

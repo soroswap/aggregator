@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::Proxy;
+use crate::models::Adapter;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{vec, String, Vec};
 use soroban_sdk::{
@@ -11,11 +11,11 @@ use soroban_sdk::{
 pub fn new_protocol_vec(
     test: &SoroswapAggregatorTest,
     protocol_id: &String,
-) -> Vec<Proxy> {
+) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
-        Proxy {
+        Adapter {
             protocol_id: protocol_id.clone(),
             address: new_router.address,
             paused: false,
@@ -24,7 +24,7 @@ pub fn new_protocol_vec(
 }
 
 #[test]
-fn test_remove_proxy() {
+fn test_remove_adapter() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
@@ -39,9 +39,9 @@ fn test_remove_proxy() {
     assert_eq!(is_protocol_paused, false);
 
     test.aggregator_contract
-        .remove_proxy(&String::from_str(&test.env, "soroswap"));
+        .remove_adapter(&String::from_str(&test.env, "soroswap"));
 
-    let mut updated_protocols = test.aggregator_contract.get_proxies();
+    let mut updated_protocols = test.aggregator_contract.get_adapters();
     let expected_empty_vec = vec![&test.env];
     assert_eq!(updated_protocols, expected_empty_vec);
 
@@ -53,9 +53,9 @@ fn test_remove_proxy() {
 
     //add new protocol
     let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
-    test.aggregator_contract.update_proxies(&new_protocol_0);
+    test.aggregator_contract.update_adapters(&new_protocol_0);
 
-    updated_protocols = test.aggregator_contract.get_proxies();
+    updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols, new_protocol_0);
 
     // // test both are not paused
@@ -68,26 +68,26 @@ fn test_remove_proxy() {
 
     // add new protoco 1
     let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));
-    test.aggregator_contract.update_proxies(&new_protocol_1);
+    test.aggregator_contract.update_adapters(&new_protocol_1);
 
-    updated_protocols = test.aggregator_contract.get_proxies();
+    updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols.get(0), new_protocol_0.get(0));
     assert_eq!(updated_protocols.get(1), new_protocol_1.get(0));
 
     // remove new protocol 0
     test.aggregator_contract
-        .remove_proxy(&String::from_str(&test.env, "new_protocol_0"));
-    updated_protocols = test.aggregator_contract.get_proxies();
+        .remove_adapter(&String::from_str(&test.env, "new_protocol_0"));
+    updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols, new_protocol_1);
 }
 
 // test non initialized
 #[test]
-fn test_remove_proxy_not_yet_initialized() {
+fn test_remove_adapter_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test
         .aggregator_contract
-        .try_remove_proxy(&String::from_str(&test.env, "soroswap"));
+        .try_remove_adapter(&String::from_str(&test.env, "soroswap"));
 
     assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
 }
@@ -95,7 +95,7 @@ fn test_remove_proxy_not_yet_initialized() {
 // update protocols can only be called by admin
 
 #[test]
-fn test_update_proxies_with_mock_auth() {
+fn test_update_adapters_with_mock_auth() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
@@ -104,7 +104,7 @@ fn test_update_proxies_with_mock_auth() {
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check initial protocol values
-    let protocols = test.aggregator_contract.get_proxies();
+    let protocols = test.aggregator_contract.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     let protocol_id_to_remove = String::from_str(&test.env, "soroswap");
@@ -115,12 +115,12 @@ fn test_update_proxies_with_mock_auth() {
             address: &test.admin.clone(),
             invoke: &MockAuthInvoke {
                 contract: &test.aggregator_contract.address.clone(),
-                fn_name: "remove_proxy",
+                fn_name: "remove_adapter",
                 args: (protocol_id_to_remove.clone(),).into_val(&test.env),
                 sub_invokes: &[],
             },
         }])
-        .remove_proxy(&protocol_id_to_remove.clone());
+        .remove_adapter(&protocol_id_to_remove.clone());
 
     // CHECK THAT WE SAW IT IN THE PREVIOUS AUTORIZED TXS
     assert_eq!(
@@ -130,7 +130,7 @@ fn test_update_proxies_with_mock_auth() {
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
                     test.aggregator_contract.address.clone(),
-                    Symbol::new(&test.env, "remove_proxy"),
+                    Symbol::new(&test.env, "remove_adapter"),
                     (protocol_id_to_remove.clone(),).into_val(&test.env)
                 )),
                 sub_invocations: std::vec![]

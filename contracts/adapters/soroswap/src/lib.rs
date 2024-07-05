@@ -4,7 +4,7 @@ use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
 mod event;
 mod storage;
 mod protocol_interface;
-// mod test;
+mod test;
 
 use storage::{
     extend_instance_ttl, 
@@ -16,47 +16,47 @@ use storage::{
     has_protocol_address,
     get_protocol_address, 
 };
-use soroswap_aggregator_proxy_interface::{SoroswapAggregatorProxyTrait, ProxyError};
+use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
 use protocol_interface::{protocol_swap};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), ProxyError> {
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
-        Err(ProxyError::NegativeNotAllowed)
+        Err(AdapterError::NegativeNotAllowed)
     } else {
         Ok(())
     }
 }
 
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), ProxyError> {
+fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AdapterError> {
     let ledger_timestamp = e.ledger().timestamp();
     if ledger_timestamp >= timestamp {
-        Err(ProxyError::DeadlineExpired)
+        Err(AdapterError::DeadlineExpired)
     } else {
         Ok(())
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), ProxyError> {
+fn check_initialized(e: &Env) -> Result<(), AdapterError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(ProxyError::NotInitialized)
+        Err(AdapterError::NotInitialized)
     }
 }
 
 #[contract]
-struct SoroswapAggregatorPhoenixProxy;
+struct SoroswapAggregatorAdapter;
 
 #[contractimpl]
-impl SoroswapAggregatorProxyTrait for SoroswapAggregatorPhoenixProxy {
+impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
     /// Initializes the contract and sets the phoenix multihop address
     fn initialize(
         e: Env,
         protocol_id: String,
         protocol_address: Address,
-    ) -> Result<(), ProxyError> {
+    ) -> Result<(), AdapterError> {
         if is_initialized(&e) {
-            return Err(ProxyError::AlreadyInitialized);
+            return Err(AdapterError::AlreadyInitialized);
         }
     
         set_protocol_id(&e, protocol_id.clone());
@@ -76,7 +76,7 @@ impl SoroswapAggregatorProxyTrait for SoroswapAggregatorPhoenixProxy {
         amount_out_min_or_max: i128,
         deadline: u64,
         is_exact_in: bool,
-    ) -> Result<Vec<i128>, ProxyError> {
+    ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount_in)?;
         check_nonnegative_amount(amount_out_min_or_max)?;
@@ -100,18 +100,18 @@ impl SoroswapAggregatorProxyTrait for SoroswapAggregatorPhoenixProxy {
     }
 
     /*  *** Read only functions: *** */
-    fn get_protocol_id(e: &Env) -> Result<Address, ProxyError> {
+    fn get_protocol_id(e: &Env) -> Result<Address, AdapterError> {
         check_initialized(&e)?;
         
         let address = get_protocol_address(e);
         Ok(address)
     }    
     
-    fn get_protocol_address(e: &Env) -> Result<Address, ProxyError> {
+    fn get_protocol_address(e: &Env) -> Result<Address, AdapterError> {
         check_initialized(&e)?;
         
         if !has_protocol_address(e) {
-            return Err(ProxyError::ProtocolAddressNotFound);
+            return Err(AdapterError::ProtocolAddressNotFound);
         }
 
         let address = get_protocol_id(e);
