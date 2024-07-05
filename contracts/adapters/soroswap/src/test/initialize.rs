@@ -35,4 +35,20 @@ fn test_initialize_twice() {
     assert_eq!(result,Err(Ok(AdapterError::AlreadyInitialized)));
 }
 
+// test get protocol id not initialized
+#[test]
+fn test_get_protocol_id_not_initialized() {
+    let test = SoroswapAggregatorAdapterTest::setup();
 
+    let result = test.adapter_contract.try_get_protocol_id();
+    assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
+}
+
+// test get protocol address not initialized
+#[test]
+fn test_get_protocol_address_not_initialized() {
+    let test = SoroswapAggregatorAdapterTest::setup();
+
+    let result = test.adapter_contract.try_get_protocol_address();
+    assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
+}
