@@ -1,4 +1,4 @@
-*/Cargo.lock
+contracts/target
 contracts/*/target
 contracts/adapters/*/target
 contracts/*/*/test_snapshots

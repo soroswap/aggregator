@@ -4,18 +4,17 @@ use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String, Vec};
 mod error;
 mod event;
 mod models;
-mod adapter;
 mod storage;
 mod test;
 
 use error::AggregatorError;
 use models::{DexDistribution, Adapter, MAX_DISTRIBUTION_LENGTH};
-use adapter::SoroswapAggregatorAdapterClient;
 use storage::{
     extend_instance_ttl, get_admin, get_protocol_ids, get_adapter, has_adapter,
     is_initialized, put_adapter, remove_adapter, set_admin,
     set_initialized, set_pause_protocol,
 };
+use soroswap_aggregator_adapter_interface::SoroswapAggregatorAdapterClient;
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
     if amount < 0 {
