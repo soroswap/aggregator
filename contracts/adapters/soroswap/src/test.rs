@@ -4,18 +4,12 @@ pub mod soroswap_setup;
 
 use soroban_sdk::{
     Env, 
-    vec,
-    Vec,
-    BytesN, 
     Address, 
-    String,
-    testutils::{
-        Address as _,
-        Ledger,
-    },
+    
 };
 use crate::{SoroswapAggregatorAdapter, SoroswapAggregatorAdapterClient};
-use soroswap_setup::{SoroswapTest, router};
+use soroswap_setup::{SoroswapTest, router, factory, token::TokenClient};
+use factory::SoroswapFactoryClient;
 use router::SoroswapRouterClient;
 
 // SoroswapAggregatorAdapter Contract
@@ -27,7 +21,12 @@ pub struct SoroswapAggregatorAdapterTest<'a> {
     env: Env,
     adapter_contract: SoroswapAggregatorAdapterClient<'a>,
     router_contract: SoroswapRouterClient<'a>,
-    admin: Address,
+    factory_contract: SoroswapFactoryClient<'a>,
+    token_0: TokenClient<'a>,
+    token_1: TokenClient<'a>,
+    token_2: TokenClient<'a>,
+    user: Address,
+    admin: Address
 }
 
 impl<'a> SoroswapAggregatorAdapterTest<'a> {
@@ -35,18 +34,24 @@ impl<'a> SoroswapAggregatorAdapterTest<'a> {
         let test = SoroswapTest::soroswap_setup();
         
         let adapter_contract = create_soroswap_aggregator_adapter(&test.env);
-        let router_contract = test.router_contract;
 
         SoroswapAggregatorAdapterTest {
             env: test.env,
             adapter_contract,
-            router_contract,
-            admin: test.admin,
+            router_contract: test.router_contract,
+            factory_contract: test.factory_contract,
+            token_0: test.token_0,
+            token_1: test.token_1,
+            token_2: test.token_2,
+            user: test.user,
+            admin: test.admin
         }
     }
 }
 
 pub mod initialize;
+pub mod swap_exact_tokens_for_tokens;
+pub mod swap_tokens_for_exact_tokens;
 // pub mod swap;
 // pub mod update_adapters;
 // pub mod get_adapters;

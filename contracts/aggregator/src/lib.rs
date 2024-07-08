@@ -240,6 +240,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     }
 
     // ** SWAP FUNCTIONS ** //
+    // TODO: add checked functions by default
 
     fn swap(
         e: Env,

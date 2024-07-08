@@ -18,8 +18,13 @@ soroban-sdk = { version = "21.0.1-preview.3" }
 soroswap-aggregator-adapter-interface={ path="../interface", version="0.1.0", package="soroswap-aggregator-adapter-interface" }
 
 [dev-dependencies]
+<<<<<<< HEAD:contracts/proxies/soroswap/Cargo.toml
+soroban-sdk = { version = "21.0.1-preview.3", features = ["testutils"] }
+soroswap-aggregator-proxy-interface={path="../interface"}
+=======
 soroban-sdk = { version = "20.5.0", features = ["testutils"] }
 soroswap-aggregator-adapter-interface={path="../interface"}
+>>>>>>> main:contracts/adapters/phoenix/Cargo.toml
 
 [profile.release]
 opt-level = "z"
