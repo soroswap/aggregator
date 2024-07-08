@@ -52,6 +52,3 @@ impl<'a> SoroswapAggregatorAdapterTest<'a> {
 pub mod initialize;
 pub mod swap_exact_tokens_for_tokens;
 pub mod swap_tokens_for_exact_tokens;
-// pub mod swap;
-// pub mod update_adapters;
-// pub mod get_adapters;

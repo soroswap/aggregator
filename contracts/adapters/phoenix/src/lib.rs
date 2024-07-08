@@ -4,7 +4,7 @@ use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
 mod event;
 mod storage;
 mod protocol_interface;
-// mod test;
+mod test;
 
 use storage::{
     extend_instance_ttl, 
