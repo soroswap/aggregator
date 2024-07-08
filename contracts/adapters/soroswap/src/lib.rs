@@ -49,7 +49,6 @@ struct SoroswapAggregatorAdapter;
 
 #[contractimpl]
 impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
-    /// Initializes the contract and sets the phoenix multihop address
     fn initialize(
         e: Env,
         protocol_id: String,
@@ -129,11 +128,13 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
     /*  *** Read only functions: *** */
     fn get_protocol_id(e: &Env) -> Result<String, AdapterError> {
         check_initialized(&e)?;
+        extend_instance_ttl(&e);
         Ok(get_protocol_id(e)?)
     }    
     
     fn get_protocol_address(e: &Env) -> Result<Address, AdapterError> {
         check_initialized(&e)?;
+        extend_instance_ttl(&e);
         Ok(get_protocol_address(e)?)
     }    
 }

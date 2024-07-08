@@ -38,7 +38,7 @@ fn test_initialize_twice() {
 fn test_get_protocol_id_not_initialized() {
     let test = SoroswapAggregatorAdapterTest::setup();
 
-    let result = test.adapter_contract.try_get_protocol_id();
+    let result = test.adapter_contract.try_get_protocol_id(); 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
 }
 

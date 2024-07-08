@@ -8,7 +8,8 @@ use soroban_sdk::{
     
 };
 use crate::{SoroswapAggregatorAdapter, SoroswapAggregatorAdapterClient};
-use soroswap_setup::{SoroswapTest, router, token::TokenClient};
+use soroswap_setup::{SoroswapTest, router, factory, token::TokenClient};
+use factory::SoroswapFactoryClient;
 use router::SoroswapRouterClient;
 
 // SoroswapAggregatorAdapter Contract
@@ -20,6 +21,7 @@ pub struct SoroswapAggregatorAdapterTest<'a> {
     env: Env,
     adapter_contract: SoroswapAggregatorAdapterClient<'a>,
     router_contract: SoroswapRouterClient<'a>,
+    factory_contract: SoroswapFactoryClient<'a>,
     token_0: TokenClient<'a>,
     token_1: TokenClient<'a>,
     token_2: TokenClient<'a>,
@@ -37,6 +39,7 @@ impl<'a> SoroswapAggregatorAdapterTest<'a> {
             env: test.env,
             adapter_contract,
             router_contract: test.router_contract,
+            factory_contract: test.factory_contract,
             token_0: test.token_0,
             token_1: test.token_1,
             token_2: test.token_2,

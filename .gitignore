@@ -1,6 +1,7 @@
 */Cargo.lock
 contracts/*/target
 contracts/adapters/*/target
+contracts/*/*/test_snapshots
 contracts/*/test_snapshots
 contracts/adapters/*/target
 contracts/adapters/*/test_snapshots

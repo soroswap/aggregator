@@ -1,7 +1,6 @@
 use soroban_sdk::{Address, vec, Vec, String};
 use crate::test::{SoroswapAggregatorAdapterTest};
 use soroswap_aggregator_adapter_interface::{AdapterError};
-// use crate::test::router::CombinedRouterError;
 
 
 #[test]
@@ -258,8 +257,8 @@ fn swap_exact_tokens_for_tokens_2_hops() {
     assert_eq!(executed_amounts.get(1).unwrap(), first_out);
     assert_eq!(executed_amounts.get(2).unwrap(), expected_amount_out);
     
-    assert_eq!(test.token_0.balance(&test.user), initial_user_balance - amount_0*2 - amount_in);
+    assert_eq!(test.token_0.balance(&test.user), initial_user_balance - amount_0 - amount_in);
     assert_eq!(test.token_1.balance(&test.user), initial_user_balance - amount_1*2);
-    assert_eq!(test.token_2.balance(&test.user), initial_user_balance -amount_2-amount_1 + expected_amount_out);
+    assert_eq!(test.token_2.balance(&test.user), initial_user_balance -amount_2 + expected_amount_out);
 }
 
