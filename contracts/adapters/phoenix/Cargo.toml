@@ -1,10 +1,10 @@
 [package]
 name = "phoenix-adapter"
 version = "0.1.0"
-edition = "2021"
+edition = { workspace = true }
 description = "Phoenix-Adapter is a smart contract on the Soroban platform, tailored for use with the Soroswap-Aggregator. It facilitates efficient transaction routing through the Phoenix protocol."
-homepage = "https://github.com/soroswap/aggregator"
-repository = "https://github.com/soroswap/aggregator"
+homepage = { workspace = true }
+repository = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 readme = "README.md"
 keywords = ["no_std", "wasm", "soroswap", "amm", "soroban"]
@@ -14,22 +14,8 @@ publish = true
 crate-type = ["cdylib"]
 
 [dependencies]
-soroban-sdk = { version = "21.0.1-preview.3" }
-soroswap-aggregator-adapter-interface={ path="../interface", version="0.1.0", package="soroswap-aggregator-adapter-interface" }
+soroban-sdk = { workspace = true }
+soroswap-aggregator-adapter-interface = { workspace = true }
 
 [dev-dependencies]
-soroban-sdk = { version = "21.0.1-preview.3", features = ["testutils"] }
-soroswap-aggregator-adapter-interface={path="../interface"}
-
-[profile.release]
-opt-level = "z"
-debug = 0
-strip = "symbols"
-debug-assertions = false
-panic = "abort"
-codegen-units = 1
-lto = true
-
-[profile.release-with-logs]
-inherits = "release"
-debug-assertions = true
+soroban-sdk = { workspace = true, features = ["testutils"] }

@@ -1,5 +1,4 @@
-$MAKEFILES = $(shell find . -maxdepth 3 -type f -name Makefile)
-SUBDIRS = interface soroswap phoenix
+SUBDIRS = $(shell find . -maxdepth 1 -mindepth 1 -type d | grep -v ./interface | xargs echo)
 default: build
 
 all: test

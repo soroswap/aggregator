@@ -1,0 +1,28 @@
+[workspace]
+members = ["adapters/*", "aggregator"]
+resolver = "2"
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+license = "GPL-3.0"
+repository = "https://github.com/soroswap/aggregator"
+homepage = "https://github.com/soroswap/aggregator"
+
+[workspace.dependencies]
+soroban-sdk = "21.0.1-preview.3"
+soroswap-aggregator-adapter-interface={path="./adapters/interface", package="soroswap-aggregator-adapter-interface"}
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
