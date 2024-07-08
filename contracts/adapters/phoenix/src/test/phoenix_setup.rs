@@ -220,10 +220,10 @@ pub struct PhoenixTest<'a> {
     pub env: Env,
     pub multihop_client: MultihopClient<'a>,
     pub factory_client: PhoenixFactory<'a>,
+    pub token_0: TokenClient<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
     pub token_3: TokenClient<'a>,
-    pub token_4: TokenClient<'a>,
     pub user: Address,
     pub admin: Address
 }
@@ -239,14 +239,24 @@ impl<'a> PhoenixTest<'a> {
 
         let initial_admin_balance = 10_000_000i128;
 
+        let token_0 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
         let token_1 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
         let token_2 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
         let token_3 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
-        let token_4 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
 
         // 1. deploy factory
         let factory_client = deploy_and_initialize_factory(&env.clone(), admin.clone());
 
+        deploy_and_initialize_lp(
+            &env,
+            &factory_client,
+            admin.clone(),
+            token_0.address.clone(),
+            1_000_000,
+            token_1.address.clone(),
+            1_000_000,
+            None,
+        );
         deploy_and_initialize_lp(
             &env,
             &factory_client,
@@ -267,36 +277,26 @@ impl<'a> PhoenixTest<'a> {
             1_000_000,
             None,
         );
-        deploy_and_initialize_lp(
-            &env,
-            &factory_client,
-            admin.clone(),
-            token_3.address.clone(),
-            1_000_000,
-            token_4.address.clone(),
-            1_000_000,
-            None,
-        );
 
         // Setup multihop
         let multihop_client = deploy_multihop_contract(&env, admin.clone(), &factory_client.address);
-        token_1.mint(&user, &50i128);
+        token_0.mint(&user, &50i128);
 
         // Check initial user value of every token:
 
-        assert_eq!(token_1.balance(&user), 50i128);
+        assert_eq!(token_0.balance(&user), 50i128);
+        assert_eq!(token_1.balance(&user), 0i128);
         assert_eq!(token_2.balance(&user), 0i128);
         assert_eq!(token_3.balance(&user), 0i128);
-        assert_eq!(token_4.balance(&user), 0i128);
 
     PhoenixTest {
             env: env.clone(),
             multihop_client,
             factory_client,
+            token_0,
             token_1,
             token_2,
             token_3,
-            token_4,
             user,
             admin: admin.clone()
         }
