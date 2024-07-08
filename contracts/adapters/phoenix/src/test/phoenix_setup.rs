@@ -14,20 +14,7 @@ use soroban_sdk::{
     },
 };
 
-// use crate::contract::{Multihop, MultihopClient};
-
-
-// //Token Contract
-// pub mod token {
-//     soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
-//     pub type TokenClient<'a> = Client<'a>;
-// }
-// use token::TokenClient;
-
-// pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> TokenClient<'a> {
-//     TokenClient::new(&e, &e.register_stellar_asset_contract(admin.clone()))
-// }
-
+/* *************  PHOENIX FACTORY  *************  */
 
 #[allow(clippy::too_many_arguments)]
 pub mod factory {
@@ -37,6 +24,16 @@ pub mod factory {
 }
 use crate::test::phoenix_setup::factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
 
+pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
+    let factory_wasm = e.deployer().upload_contract_wasm(factory::WASM);
+    let salt = Bytes::new(&e.clone());
+    let salt = e.crypto().sha256(&salt);
+
+    e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
+}
+
+use factory::Client as PhoenixFactory;
+
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
 pub mod multihop {
@@ -45,6 +42,12 @@ pub mod multihop {
 }
 use multihop::MultihopClient; 
 
+pub fn install_multihop_wasm(env: &Env) -> BytesN<32> {
+    soroban_sdk::contractimport!(
+        file = "./contracts/phoenix_multihop.wasm"
+    );
+    env.deployer().upload_contract_wasm(WASM)
+}
 pub fn deploy_multihop_contract<'a>(
     env: &Env,
     admin: impl Into<Option<Address>>,
@@ -84,7 +87,19 @@ pub fn create_token_contract_with_metadata<'a>(
     token
 }
 
+pub fn install_token_wasm(env: &Env) -> BytesN<32> {
+    soroban_sdk::contractimport!(
+        file = "./contracts/soroban_token_contract.wasm"
+    );
+    env.deployer().upload_contract_wasm(WASM)
+}
 
+pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract::Client<'a> {
+    token_contract::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
+}
+
+
+/* *************  LP CONTRACT  *************  */
 
 #[allow(clippy::too_many_arguments)]
 pub mod lp_contract {
@@ -97,16 +112,8 @@ pub fn install_lp_contract(env: &Env) -> BytesN<32> {
     env.deployer().upload_contract_wasm(lp_contract::WASM)
 }
 
-pub fn install_token_wasm(env: &Env) -> BytesN<32> {
-    soroban_sdk::contractimport!(
-        file = "./contracts/soroban_token_contract.wasm"
-    );
-    env.deployer().upload_contract_wasm(WASM)
-}
 
-pub fn deploy_token_contract<'a>(env: &Env, admin: &Address) -> token_contract::Client<'a> {
-    token_contract::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
-}
+/* *************  STAKE  *************  */
 
 #[allow(clippy::too_many_arguments)]
 pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
@@ -116,35 +123,21 @@ pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
     env.deployer().upload_contract_wasm(WASM)
 }
 
-pub fn install_multihop_wasm(env: &Env) -> BytesN<32> {
-    soroban_sdk::contractimport!(
-        file = "./contracts/phoenix_multihop.wasm"
-    );
-    env.deployer().upload_contract_wasm(WASM)
-}
-
-pub fn deploy_factory_contract(e: &Env, admin: Address) -> Address {
-    let factory_wasm = e.deployer().upload_contract_wasm(factory::WASM);
-    let salt = Bytes::new(e);
-    let salt = e.crypto().sha256(&salt);
-
-    e.deployer().with_address(admin, salt).deploy(factory_wasm)
-}
-
 
 pub fn deploy_and_mint_tokens<'a>(
-    env: &'a Env,
-    admin: &'a Address,
+    env: & Env,
+    admin: & Address,
     amount: i128,
 ) -> token_contract::Client<'a> {
-    let token = deploy_token_contract(env, admin);
-    token.mint(admin, &amount);
+    let token = deploy_token_contract(&env, &admin);
+    token.mint(&admin, &amount);
     token
 }
 
-pub fn deploy_and_initialize_factory(env: &Env, admin: Address) -> factory::Client {
-    let factory_addr = deploy_factory_contract(env, admin.clone());
-    let factory_client = factory::Client::new(env, &factory_addr);
+
+pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFactory<'a> {
+    let factory_addr = deploy_factory_contract(&env, &admin.clone());
+    let factory_client = PhoenixFactory::new(env, &factory_addr);
     let multihop_wasm_hash = install_multihop_wasm(env);
     let whitelisted_accounts = vec![env, admin.clone()];
 
@@ -167,7 +160,7 @@ pub fn deploy_and_initialize_factory(env: &Env, admin: Address) -> factory::Clie
 #[allow(clippy::too_many_arguments)]
 pub fn deploy_and_initialize_lp(
     env: &Env,
-    factory: &factory::Client,
+    factory: &PhoenixFactory,
     admin: Address,
     mut token_a: Address,
     mut token_a_amount: i128,
@@ -225,119 +218,87 @@ pub fn deploy_and_initialize_lp(
 
 pub struct PhoenixTest<'a> {
     pub env: Env,
-    // pub router_contract: SoroswapRouterClient<'a>,
-    // pub factory_contract: SoroswapFactoryClient<'a>,
-    pub token_0: TokenClient<'a>,
+    pub multihop_client: MultihopClient<'a>,
+    pub factory_client: PhoenixFactory<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
+    pub token_3: TokenClient<'a>,
+    pub token_4: TokenClient<'a>,
     pub user: Address,
     pub admin: Address
 }
 
 impl<'a> PhoenixTest<'a> {
-    pub fn soroswap_setup() -> Self {
+    pub fn phoenix_setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
-        // let router_contract = create_soroswap_router(&env);
-
-        let initial_user_balance = 10_000_000;
+        env.budget().reset_unlimited();
 
         let admin = Address::generate(&env);
         let user = Address::generate(&env);
-        assert_ne!(admin, user);
 
-        let token_0 = deploy_token_contract(&env, &admin);
-        let token_1 = deploy_token_contract(&env, &admin);
-        let token_2 = deploy_token_contract(&env, &admin);
-    
-        // token_0.mint(&user, &initial_user_balance);
-        // token_1.mint(&user, &initial_user_balance);
-        // token_2.mint(&user, &initial_user_balance);
+        let initial_admin_balance = 10_000_000i128;
 
-        // let factory_contract = create_soroswap_factory(&env, &admin);
-        // env.budget().reset_unlimited();
+        let token_1 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
+        let token_2 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
+        let token_3 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
+        let token_4 = deploy_and_mint_tokens(&env, &admin, initial_admin_balance);
 
-        // let ledger_timestamp = 100;
-        // let desired_deadline = 1000;
-    
-        // assert!(desired_deadline > ledger_timestamp);
-    
-        // env.ledger().with_mut(|li| {
-        //     li.timestamp = ledger_timestamp;
-        // });
-    
-        // let amount_0: i128 = 1_000_000_000_000_000_000;
-        // let amount_1: i128 = 4_000_000_000_000_000_000;
-        // let amount_2: i128 = 8_000_000_000_000_000_000;
-        // let expected_liquidity: i128 = 2_000_000_000_000_000_000;
-    
-        // // Check initial user value of every token:
-        // assert_eq!(token_0.balance(&user), initial_user_balance);
-        // assert_eq!(token_1.balance(&user), initial_user_balance);
-        // assert_eq!(token_2.balance(&user), initial_user_balance);
-    
-        // router_contract.initialize(&factory_contract.address);
+        // 1. deploy factory
+        let factory_client = deploy_and_initialize_factory(&env.clone(), admin.clone());
 
-        // assert_eq!(factory_contract.pair_exists(&token_0.address, &token_1.address), false);
-        // let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = router_contract.add_liquidity(
-        //     &token_0.address, //     token_a: Address,
-        //     &token_1.address, //     token_b: Address,
-        //     &amount_0, //     amount_a_desired: i128,
-        //     &amount_1, //     amount_b_desired: i128,
-        //     &0, //     amount_a_min: i128,
-        //     &0 , //     amount_b_min: i128,
-        //     &user, //     to: Address,
-        //     &desired_deadline//     deadline: u64,
-        // );
+        deploy_and_initialize_lp(
+            &env,
+            &factory_client,
+            admin.clone(),
+            token_1.address.clone(),
+            1_000_000,
+            token_2.address.clone(),
+            1_000_000,
+            None,
+        );
+        deploy_and_initialize_lp(
+            &env,
+            &factory_client,
+            admin.clone(),
+            token_2.address.clone(),
+            1_000_000,
+            token_3.address.clone(),
+            1_000_000,
+            None,
+        );
+        deploy_and_initialize_lp(
+            &env,
+            &factory_client,
+            admin.clone(),
+            token_3.address.clone(),
+            1_000_000,
+            token_4.address.clone(),
+            1_000_000,
+            None,
+        );
 
-        // let (added_token_1_1, added_token_2_0, added_liquidity_1_2) = router_contract.add_liquidity(
-        //     &token_1.address, //     token_a: Address,
-        //     &token_2.address, //     token_b: Address,
-        //     &amount_1, //     amount_a_desired: i128,
-        //     &amount_2, //     amount_b_desired: i128,
-        //     &0, //     amount_a_min: i128,
-        //     &0 , //     amount_b_min: i128,
-        //     &user, //     to: Address,
-        //     &desired_deadline//     deadline: u64,
-        // );
+        // Setup multihop
+        let multihop_client = deploy_multihop_contract(&env, admin.clone(), &factory_client.address);
+        token_1.mint(&user, &50i128);
 
-        // // let (added_token_0_1, added_token_2_1, added_liquidity_0_2) = router_contract.add_liquidity(
-        // //     &token_0.address, //     token_a: Address,
-        // //     &token_2.address, //     token_b: Address,
-        // //     &amount_0, //     amount_a_desired: i128,
-        // //     &amount_1, //     amount_b_desired: i128,
-        // //     &0, //     amount_a_min: i128,
-        // //     &0 , //     amount_b_min: i128,
-        // //     &user, //     to: Address,
-        // //     &desired_deadline//     deadline: u64,
-        // // );
+        // Check initial user value of every token:
 
-        // static MINIMUM_LIQUIDITY: i128 = 1000;
-    
-        // assert_eq!(added_token_0_0, amount_0);
-        // assert_eq!(added_token_1_0, amount_1);
-        // assert_eq!(added_token_1_1, amount_1);
-        // assert_eq!(added_token_2_0, amount_2);
-        // // assert_eq!(added_token_0_1, amount_0);
-        // // assert_eq!(added_token_2_1, amount_1);
-
-        // assert_eq!(added_liquidity_0_1, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
-        // assert_eq!(added_liquidity_1_2, 5656854249492379195);
-        // // assert_eq!(added_liquidity_0_2, expected_liquidity.checked_sub(MINIMUM_LIQUIDITY).unwrap());
-    
-        // assert_eq!(token_0.balance(&user), 19_000_000_000_000_000_000);
-        // assert_eq!(token_1.balance(&user), 12_000_000_000_000_000_000);
-        // assert_eq!(token_2.balance(&user), 12_000_000_000_000_000_000);
+        assert_eq!(token_1.balance(&user), 50i128);
+        assert_eq!(token_2.balance(&user), 0i128);
+        assert_eq!(token_3.balance(&user), 0i128);
+        assert_eq!(token_4.balance(&user), 0i128);
 
     PhoenixTest {
-            env,
-            // router_contract,
-            // factory_contract,
-            token_0,
+            env: env.clone(),
+            multihop_client,
+            factory_client,
             token_1,
             token_2,
+            token_3,
+            token_4,
             user,
-            admin
+            admin: admin.clone()
         }
     }
 }

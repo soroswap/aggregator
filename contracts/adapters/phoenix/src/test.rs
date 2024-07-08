@@ -31,7 +31,7 @@ pub struct PhoenixAggregatorAdapterTest<'a> {
 
 impl<'a> PhoenixAggregatorAdapterTest<'a> {
     fn setup() -> Self {
-        let test = PhoenixTest::soroswap_setup();
+        let test = PhoenixTest::phoenix_setup();
         
         let adapter_contract = create_soroswap_aggregator_adapter(&test.env);
 
