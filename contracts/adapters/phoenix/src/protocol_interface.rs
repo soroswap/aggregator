@@ -1,11 +1,11 @@
-// based on https://github.com/Phoenix-Protocol-Group/phoenix-contracts/tree/v1.0.0
+// based on https://github.com/Phoenix-Protocol-Group/phoenix_contracts/tree/v1.0.0
 
 use soroban_sdk::{Env, Address, Vec, vec};
 use crate::storage::{get_protocol_address};
 use soroswap_aggregator_adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
-    file = "./contracts/phoenix_multihop.wasm"
+    file = "./phoenix_contracts/phoenix_multihop.wasm"
 );
 pub type PhoenixMultihopClient<'a> = Client<'a>;
 
