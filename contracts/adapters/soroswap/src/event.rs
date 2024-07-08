@@ -43,3 +43,5 @@ pub(crate) fn swap(
 
     e.events().publish(("SoroswapAggregatorAdapter", symbol_short!("swap")), event);
 }
+
+// TODO IMPROVE EVENTS

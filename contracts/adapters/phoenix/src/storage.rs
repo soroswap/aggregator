@@ -1,4 +1,5 @@
 use soroban_sdk::{contracttype, Env, Address, String};
+use soroswap_aggregator_adapter_interface::{AdapterError};
 
 #[derive(Clone)]
 #[contracttype]
@@ -19,6 +20,7 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
+/* INITIALIZED */
 pub fn set_initialized(e: &Env) {
     e.storage().instance().set(&DataKey::Initialized, &true);
 }
@@ -27,22 +29,23 @@ pub fn is_initialized(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Initialized)
 }
 
+
+/* PROTOCOL ID - STRING */
 pub fn set_protocol_id(e: &Env, protocol_id: String) {
     e.storage().instance().set(&DataKey::ProtocolId, &protocol_id);
 }
 
-pub fn get_protocol_id(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::ProtocolId).unwrap()
+pub fn get_protocol_id(e: &Env) -> Result<String, AdapterError> {
+    e.storage().instance().get(&DataKey::ProtocolId).ok_or(AdapterError::NotInitialized)
 }
 
+
+/* PROTOCOL ADDRESS */
 pub fn set_protocol_address(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::ProtocolAddress, &address);
 }
 
-pub fn has_protocol_address(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::ProtocolAddress)
+pub fn get_protocol_address(e: &Env) -> Result<Address, AdapterError> {
+    e.storage().instance().get(&DataKey::ProtocolAddress).ok_or(AdapterError::NotInitialized)
 }
 
-pub fn get_protocol_address(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::ProtocolAddress).unwrap()
-}
