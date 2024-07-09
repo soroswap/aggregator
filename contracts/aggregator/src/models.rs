@@ -33,7 +33,6 @@ pub struct DexDistribution {
     pub protocol_id: String,
     pub path: Vec<Address>,
     pub parts: i128,
-    pub is_exact_in: bool,
 }
 
 #[contracttype]

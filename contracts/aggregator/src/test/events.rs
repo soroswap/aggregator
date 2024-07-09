@@ -297,3 +297,15 @@ fn set_pause_event() {
     }
     
 }
+
+
+
+#[test]
+fn swap_exact_tokens_for_tokens_event() {
+    todo!();
+}
+
+#[test]
+fn swap_tokens_for_exact_tokens_event() {
+    todo!();
+}

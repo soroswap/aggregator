@@ -285,5 +285,7 @@ pub mod get_adapters;
 pub mod remove_adapter;
 pub mod update_adapters;
 pub mod set_pause_get_paused;
+pub mod swap_exact_tokens_for_tokens;
+pub mod swap_tokens_for_exact_tokens;
 // pub mod swap;
 // pub mod admin;
