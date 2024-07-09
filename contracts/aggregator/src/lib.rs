@@ -16,6 +16,53 @@ use storage::{
 };
 use soroswap_aggregator_adapter_interface::SoroswapAggregatorAdapterClient;
 
+pub enum SwapType {
+    ExactTokensForTokens,
+    TokensForExactTokens,
+}
+
+//fn swap_exact_tokens_for_tokens(
+    // env: Env,
+    // amount_in: i128,
+    // amount_out_min: i128,
+    // path: Vec<Address>,
+    // to: Address,
+    // deadline: u64,
+// create an object with all these fields
+pub struct SwapExactTokensForTokens {
+    amount_in: i128,
+    amount_out_min: i128,
+    path : Vec<Address>,
+    to: Address,
+    deadline: u64}
+pub struct SwapTokensForExactTokens {
+    amount_out: i128,
+    amount_in_max: i128,
+    path: Vec<Address>,
+    to: Address,
+    deadline: u64}
+// creata a function swap that receives either a SwapExactTokensForTokens or a SwapTokensForExactTokens
+// and returns a Result<Vec<i128>, AggregatorError>
+pub fn swap(
+    env: Env,
+    swap: SwapExactTokensForTokens,
+    adapter_client: SoroswapAggregatorAdapterClient,
+) -> Result<Vec<i128>, AggregatorError> {
+    let mut swap_responses: Vec<i128> = Vec::new(&env);
+
+
+    // let response = adapter_client.swap(
+    //     &swap.to,
+    //     &swap.path,
+    //     &swap.amount_in,
+    //     &swap.amount_out_min,
+    //     &swap.deadline,
+    //     &true,
+    // )?;
+
+    Ok(swap_responses)
+}
+
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
     if amount < 0 {
         Err(AggregatorError::NegativeNotAllowed)
@@ -50,6 +97,33 @@ fn check_admin(e: &Env) {
     let admin: Address = get_admin(&e);
     admin.require_auth();
 }
+
+fn check_parameters(
+    e: &Env,
+    amount_0: i128,
+    amount_1: i128,
+    to: Address,
+    deadline: u64,
+    distribution: Vec<DexDistribution>,
+    ) -> Result<(), AggregatorError> {
+
+    check_initialized(e)?;
+    check_nonnegative_amount(amount_0)?;
+    check_nonnegative_amount(amount_1)?;
+    to.require_auth();
+    ensure_deadline(e, deadline)?;
+
+    if distribution.len() > MAX_DISTRIBUTION_LENGTH {
+        return Err(AggregatorError::DistributionLengthExceeded);
+    }
+    // if distribution.iter().map(|dist| dist.parts).sum::<S>() == 0 {
+    //     return Err(AggregatorError::InvalidTotalParts);
+    // }
+
+    Ok(())
+}
+
+
 
 /*
     SOROSWAP AGGREGATOR SMART CONTRACT INTERFACE:
@@ -101,33 +175,47 @@ pub trait SoroswapAggregatorTrait {
 
     /* SWAP FUNCTION */
 
-    /// Executes a swap operation distributed across multiple decentralized exchanges (DEXes) as specified
-    /// by the `distribution`. Each entry in the distribution details which DEX to use, the path of tokens
-    /// for swap (if applicable), and the portion of the total `amount_in` to swap through that DEX. This
-    /// function aims to optimize the swap by leveraging different DEX protocols based on the distribution
-    /// strategy to minimize slippage and maximize output.
-    ///
+    /// Swaps an exact amount of input tokens for as many output tokens as possible
+    /// along the specified trading route. The route is determined by the `path` vector,
+    /// where the first element is the input token, the last is the output token, 
+    /// and any intermediate elements represent pairs to trade through if a direct pair does not exist.
     /// # Arguments
-    /// * `e` - The runtime environment.
-    /// * `input_token` - The address of the input token to swap.
-    /// * `output_token` - The address of the destination token to receive.
-    /// * `amount_in` - The total amount of `input_token` to be swapped.
-    /// * `amount_out_min` - The minimum amount of `output_token` expected to receive, ensuring the swap
-    ///   does not proceed under unfavorable conditions.
-    /// * `distribution` - A vector of `DexDistribution` specifying how the total swap amount is distributed
-    ///   across different DEX protocols, including the swap path for each (if required by the DEX).
-    /// * `to` - The recipient address for the `output_token`.
-    /// * `deadline` - A Unix timestamp marking the deadline by which the swap must be completed.
-    ///
+    /// * `amount_in` - The exact amount of input tokens to be swapped.
+    /// * `amount_out_min` - The minimum required amount of output tokens to receive.
+    /// * `path` - A vector representing the trading route, where the first element is the input token 
+    ///         and the last is the output token. Intermediate elements represent pairs to trade through.
+    /// * `to` - The address where the output tokens will be sent to.
+    /// * `deadline` - The deadline for executing the operation.
     /// # Returns
-    /// The total amount of `output_token` received from the swap if successful, encapsulated in a `Result`.
-    /// On failure, returns a `AggregatorError` detailing the cause of the error.
-    fn swap(
-        e: Env,
-        input_token: Address,
-        output_token: Address,
+    /// A vector containing the amounts of tokens received at each step of the trading route.
+    fn swap_exact_tokens_for_tokens(
+        env: Env,
         amount_in: i128,
         amount_out_min: i128,
+        distribution: Vec<DexDistribution>,
+        to: Address,
+        deadline: u64,
+    ) -> Result<Vec<i128>, AggregatorError>;
+
+
+    /// Swaps tokens for an exact amount of output token, following the specified trading route.
+    /// The route is determined by the `path` vector, where the first element is the input token,
+    /// the last is the output token, and any intermediate elements represent pairs to trade through.
+    
+    /// # Arguments
+    /// * `amount_out` - The exact amount of output token to be received.
+    /// * `amount_in_max` - The maximum allowed amount of input tokens to be swapped.
+    /// * `path` - A vector representing the trading route, where the first element is the input token 
+    ///         and the last is the output token. Intermediate elements represent pairs to trade through.
+    /// * `to` - The address where the output tokens will be sent to.
+    /// * `deadline` - The deadline for executing the operation.
+    
+    /// # Returns
+    /// A vector containing the amounts of tokens used at each step of the trading route.
+    fn swap_tokens_for_exact_tokens(
+        e: Env,
+        amount_out: i128,
+        amount_in_max: i128,
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
@@ -176,6 +264,8 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         e: Env,
         adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError> {
+
+        
         check_initialized(&e)?;
         check_admin(&e);
 
@@ -198,7 +288,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         Ok(())
     }
-
+ 
     /// Sets the paused state of the protocol in the aggregator.
     ///
     /// # Argumentsnts
@@ -238,80 +328,96 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(())
     }
 
-    // ** SWAP FUNCTIONS ** //
-    // TODO: add checked functions by default
+    // fn swap(
+    //     e: Env,
+    //     _from_token: Address,
+    //     _dest_token: Address,
+    //     amount: i128,
+    //     amount_out_min: i128,
+    //     distribution: Vec<DexDistribution>,
+    //     to: Address,
+    //     deadline: u64,
+    // ) -> Result<Vec<i128>, AggregatorError> {
 
-    fn swap(
+
+
+    fn swap_exact_tokens_for_tokens(
         e: Env,
-        _from_token: Address,
-        _dest_token: Address,
-        amount: i128,
+        amount_in: i128,
         amount_out_min: i128,
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError> {
-        check_initialized(&e)?;
-        check_nonnegative_amount(amount)?;
-        check_nonnegative_amount(amount_out_min)?;
         extend_instance_ttl(&e);
-        to.require_auth();
-        ensure_deadline(&e, deadline)?;
-
-        if distribution.len() > MAX_DISTRIBUTION_LENGTH {
-            return Err(AggregatorError::DistributionLengthExceeded);
-        }
+        check_parameters(&e, amount_in, amount_out_min, to, deadline, distribution.clone())?;
 
         let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();
-
-        if total_parts == 0 {
-            return Err(AggregatorError::InvalidTotalParts);
-        }
-
-        // Vector to store responses from each swap
         let mut swap_responses: Vec<i128> = Vec::new(&e);
         let mut total_swapped: i128 = 0;
 
-        for (index, dist) in distribution.iter().enumerate() {
-            let swap_amount = if index == (distribution.len() - 1) as usize {
-                // For the last iteration, swap whatever remains
-                amount
-                    .checked_sub(total_swapped)
-                    .ok_or(AggregatorError::ArithmeticError)?
-            } else {
-                // Calculate part of the total amount based on distribution parts
-                amount
-                    .checked_mul(dist.parts)
-                    .and_then(|prod| prod.checked_div(total_parts))
-                    .ok_or(AggregatorError::ArithmeticError)?
-            };
+        // for (index, dist) in distribution.iter().enumerate() {
+        //     let swap_amount = if index == (distribution.len() - 1) as usize {
+        //         // For the last iteration, swap whatever remains
+        //         amount
+        //             .checked_sub(total_swapped)
+        //             .ok_or(AggregatorError::ArithmeticError)?
+        //     } else {
+        //         // Calculate part of the total amount based on distribution parts
+        //         amount
+        //             .checked_mul(dist.parts)
+        //             .and_then(|prod| prod.checked_div(total_parts))
+        //             .ok_or(AggregatorError::ArithmeticError)?
+        //     };
 
-            let adapter = get_adapter(&e, dist.protocol_id.clone())?;
-            // if paused return error
-            if adapter.paused {
-                return Err(AggregatorError::ProtocolPaused );
-            }
-            let adapter_client = SoroswapAggregatorAdapterClient::new(&e, &adapter.address);
-            let response = adapter_client.swap(
-                &to,
-                &dist.path,
-                &swap_amount,
-                &amount_out_min,
-                &deadline,
-                &dist.is_exact_in,
-            );
+        //     let adapter = get_adapter(&e, dist.protocol_id.clone())?;
+        //     // if paused return error
+        //     if adapter.paused {
+        //         return Err(AggregatorError::ProtocolPaused );
+        //     }
+        //     let adapter_client = SoroswapAggregatorAdapterClient::new(&e, &adapter.address);
+        //     // create a SwapExactTokensForTokens object
+        //     let swap = SwapExactTokensForTokens {
 
-            // Store the response from the swap
-            for item in response.iter() {
-                swap_responses.push_back(item);
-            }
-            total_swapped = total_swapped
-                .checked_add(swap_amount)
-                .ok_or(AggregatorError::ArithmeticError)?;
-        }
 
-        event::swap(&e, amount, distribution, to);
+
+
+
+
+        //     let response = adapter_client.swap(
+        //         &to,
+        //         &dist.path,
+        //         &swap_amount,
+        //         &amount_out_min,
+        //         &deadline,
+        //         &dist.is_exact_in,
+        //     );
+
+        //     // Store the response from the swap
+        //     for item in response.iter() {
+        //         swap_responses.push_back(item);
+        //     }
+        //     total_swapped = total_swapped
+        //         .checked_add(swap_amount)
+        //         .ok_or(AggregatorError::ArithmeticError)?;
+        // }
+
+        // event::swap(&e, amount, distribution, to);
         Ok(swap_responses)
+    }
+
+    fn swap_tokens_for_exact_tokens(
+        e: Env,
+        amount_out: i128,
+        amount_in_max: i128,
+        distribution: Vec<DexDistribution>,
+        to: Address,
+        deadline: u64,
+    ) -> Result<Vec<i128>, AggregatorError>{
+        let mut swap_responses: Vec<i128> = Vec::new(&e);
+        Ok(swap_responses)
+
+
     }
 
     /*  *** Read only functions: *** */
