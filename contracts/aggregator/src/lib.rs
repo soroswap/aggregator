@@ -105,6 +105,7 @@ fn check_parameters(
     to: Address,
     deadline: u64,
     distribution: Vec<DexDistribution>,
+    total_parts: i128
     ) -> Result<(), AggregatorError> {
 
     check_initialized(e)?;
@@ -116,12 +117,58 @@ fn check_parameters(
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
         return Err(AggregatorError::DistributionLengthExceeded);
     }
-    // if distribution.iter().map(|dist| dist.parts).sum::<S>() == 0 {
-    //     return Err(AggregatorError::InvalidTotalParts);
-    // }
+    if total_parts == 0 {
+        return Err(AggregatorError::InvalidTotalParts);
+    }
 
     Ok(())
 }
+
+
+fn calculate_distribution_amounts(
+    env: &Env,
+    total_amount: i128,
+    distribution: &Vec<DexDistribution>,
+    total_parts: i128
+) -> Result<Vec<i128>, AggregatorError> {
+    let mut total_swapped = 0;
+
+    let mut swap_amounts = soroban_sdk::Vec::new(env);
+
+    for (index, dist) in distribution.iter().enumerate() {
+        let swap_amount = if index == (distribution.len() - 1) as usize {
+            total_amount
+                .checked_sub(total_swapped)
+                .ok_or(AggregatorError::ArithmeticError)?
+        } else {
+            let amount = total_amount
+                .checked_mul(dist.parts)
+                .and_then(|prod| prod.checked_div(total_parts))
+                .ok_or(AggregatorError::ArithmeticError)?;
+            total_swapped += amount;
+            amount
+        };
+
+        swap_amounts.push_back(swap_amount);
+    }
+
+    Ok(swap_amounts)
+}
+
+pub fn get_adapter_client(
+    e: &Env,
+    protocol_id: String
+) -> Result<SoroswapAggregatorAdapterClient, AggregatorError> {
+    
+    let adapter = get_adapter(&e, protocol_id.clone())?;
+    if adapter.paused {
+        return Err(AggregatorError::ProtocolPaused);
+    }
+    Ok(SoroswapAggregatorAdapterClient::new(&e, &adapter.address))
+}
+
+
+
 
 
 
@@ -190,6 +237,8 @@ pub trait SoroswapAggregatorTrait {
     /// A vector containing the amounts of tokens received at each step of the trading route.
     fn swap_exact_tokens_for_tokens(
         env: Env,
+        token_in: Address,
+        token_out: Address,
         amount_in: i128,
         amount_out_min: i128,
         distribution: Vec<DexDistribution>,
@@ -214,6 +263,8 @@ pub trait SoroswapAggregatorTrait {
     /// A vector containing the amounts of tokens used at each step of the trading route.
     fn swap_tokens_for_exact_tokens(
         e: Env,
+        token_in: Address,
+        token_out: Address,
         amount_out: i128,
         amount_in_max: i128,
         distribution: Vec<DexDistribution>,
@@ -328,96 +379,95 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(())
     }
 
-    // fn swap(
-    //     e: Env,
-    //     _from_token: Address,
-    //     _dest_token: Address,
-    //     amount: i128,
-    //     amount_out_min: i128,
-    //     distribution: Vec<DexDistribution>,
-    //     to: Address,
-    //     deadline: u64,
-    // ) -> Result<Vec<i128>, AggregatorError> {
-
-
-
     fn swap_exact_tokens_for_tokens(
         e: Env,
+        token_in: Address,
+        token_out: Address,
         amount_in: i128,
         amount_out_min: i128,
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError> {
+        
         extend_instance_ttl(&e);
-        check_parameters(&e, amount_in, amount_out_min, to, deadline, distribution.clone())?;
-
         let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();
+        check_parameters(&e, amount_in, amount_out_min, to.clone(), deadline, distribution.clone(), total_parts)?;
+        
+        let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution, total_parts)?;
         let mut swap_responses: Vec<i128> = Vec::new(&e);
-        let mut total_swapped: i128 = 0;
 
-        // for (index, dist) in distribution.iter().enumerate() {
-        //     let swap_amount = if index == (distribution.len() - 1) as usize {
-        //         // For the last iteration, swap whatever remains
-        //         amount
-        //             .checked_sub(total_swapped)
-        //             .ok_or(AggregatorError::ArithmeticError)?
-        //     } else {
-        //         // Calculate part of the total amount based on distribution parts
-        //         amount
-        //             .checked_mul(dist.parts)
-        //             .and_then(|prod| prod.checked_div(total_parts))
-        //             .ok_or(AggregatorError::ArithmeticError)?
-        //     };
+        // TODO: check initial balances
+        for (index, swap_amount) in swap_amounts.iter().enumerate() {
+            let dist = distribution.get(index as u32).unwrap();
+            let protocol_id = dist.protocol_id;
+            
+            let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
+            
+            // Perform the swap and handle the response (not shown)
+            let response = adapter_client.swap_exact_tokens_for_tokens(
+                &swap_amount, // amount_in
+                &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
+                &dist.path,
+                &to,
+                &deadline,
+            );
 
-        //     let adapter = get_adapter(&e, dist.protocol_id.clone())?;
-        //     // if paused return error
-        //     if adapter.paused {
-        //         return Err(AggregatorError::ProtocolPaused );
-        //     }
-        //     let adapter_client = SoroswapAggregatorAdapterClient::new(&e, &adapter.address);
-        //     // create a SwapExactTokensForTokens object
-        //     let swap = SwapExactTokensForTokens {
+            // TODO: handle response, maybe store?
+            //     for item in response.iter() {
+            //         swap_responses.push_back(item);
+            //     }
+        }
+        // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
+        // event::swap(&e, amount, distribution, to); // MAYBE NOT NEEDED IF ADAPTERS RESPOND WITH AMOUNTS
 
-
-
-
-
-
-        //     let response = adapter_client.swap(
-        //         &to,
-        //         &dist.path,
-        //         &swap_amount,
-        //         &amount_out_min,
-        //         &deadline,
-        //         &dist.is_exact_in,
-        //     );
-
-        //     // Store the response from the swap
-        //     for item in response.iter() {
-        //         swap_responses.push_back(item);
-        //     }
-        //     total_swapped = total_swapped
-        //         .checked_add(swap_amount)
-        //         .ok_or(AggregatorError::ArithmeticError)?;
-        // }
-
+        // // TODO check amount out min
         // event::swap(&e, amount, distribution, to);
         Ok(swap_responses)
     }
 
     fn swap_tokens_for_exact_tokens(
         e: Env,
+        token_in: Address,
+        token_out: Address,
         amount_out: i128,
         amount_in_max: i128,
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError>{
+        
+        extend_instance_ttl(&e);
+        let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();
+        check_parameters(&e, amount_out, amount_in_max, to.clone(), deadline, distribution.clone(), total_parts)?;
+        
+        let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution, total_parts)?;
         let mut swap_responses: Vec<i128> = Vec::new(&e);
+
+        // TODO: check initial balances
+        for (index, swap_amount) in swap_amounts.iter().enumerate() {
+            let dist = distribution.get(index as u32).unwrap();
+            let protocol_id = dist.protocol_id;
+            
+            let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
+            
+            let response = adapter_client.swap_tokens_for_exact_tokens(
+                &swap_amount, // amount_out
+                &i128::MAX, // amount_in_max
+                &dist.path, //path
+                &to,//to
+                &deadline, //deadline
+            );
+
+            // TODO: handle response, maybe store?
+            //     for item in response.iter() {
+            //         swap_responses.push_back(item);
+            //     }
+
+        }
+        // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
+        // event::swap(&e, amount, distribution, to);
         Ok(swap_responses)
-
-
     }
 
     /*  *** Read only functions: *** */
