@@ -425,15 +425,15 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         }
         // Check final token out balance
         let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
-        if final_token_out_balance.checked_sub(initial_token_out_balance).ok_or(AggregatorError::ArithmeticError)? 
-            < amount_out_min {
+        let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).ok_or(AggregatorError::ArithmeticError)?;
+        
+        if final_amount_out < amount_out_min {
             return Err(AggregatorError::InsufficientOutputAmount);
         }
 
         // event::swap(&e, amount, distribution, to); // MAYBE NOT NEEDED IF ADAPTERS RESPOND WITH AMOUNTS
-
-        // // TODO check amount out min
         // event::swap(&e, amount, distribution, to);
+
         Ok(swap_responses)
     }
 
