@@ -43,27 +43,7 @@ pub struct SwapTokensForExactTokens {
     path: Vec<Address>,
     to: Address,
     deadline: u64}
-// creata a function swap that receives either a SwapExactTokensForTokens or a SwapTokensForExactTokens
-// and returns a Result<Vec<i128>, AggregatorError>
-pub fn swap(
-    env: Env,
-    swap: SwapExactTokensForTokens,
-    adapter_client: SoroswapAggregatorAdapterClient,
-) -> Result<Vec<i128>, AggregatorError> {
-    let mut swap_responses: Vec<i128> = Vec::new(&env);
 
-
-    // let response = adapter_client.swap(
-    //     &swap.to,
-    //     &swap.path,
-    //     &swap.amount_in,
-    //     &swap.amount_out_min,
-    //     &swap.deadline,
-    //     &true,
-    // )?;
-
-    Ok(swap_responses)
-}
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
     if amount < 0 {
@@ -248,7 +228,7 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<i128>, AggregatorError>;
+    ) -> Result<Vec<Vec<i128>>, AggregatorError>;
 
 
     /// Swaps tokens for an exact amount of output token, following the specified trading route.
@@ -274,7 +254,7 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<i128>, AggregatorError>;
+    ) -> Result<Vec<Vec<i128>>, AggregatorError>;
 
     /*  *** Read only functions: *** */
 
@@ -392,13 +372,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<i128>, AggregatorError> {
+    ) -> Result<Vec<Vec<i128>>, AggregatorError> {
         
         extend_instance_ttl(&e);        
         check_parameters(&e, amount_in, amount_out_min, to.clone(), deadline, distribution.clone())?;
         
         let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution)?;
-        let mut swap_responses: Vec<i128> = Vec::new(&e);
+        let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial out balance
         let initial_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
@@ -406,10 +386,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution.get(index as u32).unwrap();
             let protocol_id = dist.protocol_id;
-            
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
-            
-            // Perform the swap and handle the response (not shown)
             let response = adapter_client.swap_exact_tokens_for_tokens(
                 &swap_amount, // amount_in
                 &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
@@ -417,12 +394,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 &to,
                 &deadline,
             );
-
-            // TODO: handle response, maybe store?
-            //     for item in response.iter() {
-            //         swap_responses.push_back(item);
-            //     }
+            swap_responses.push_back(response);
         }
+        
         // Check final token out balance
         let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
         let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).ok_or(AggregatorError::ArithmeticError)?;
@@ -431,9 +405,15 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             return Err(AggregatorError::InsufficientOutputAmount);
         }
 
-        // event::swap(&e, amount, distribution, to); // MAYBE NOT NEEDED IF ADAPTERS RESPOND WITH AMOUNTS
-        // event::swap(&e, amount, distribution, to);
-
+        event::swap(
+            &e,
+            token_in,
+            token_out,
+            amount_in,
+            final_amount_out,
+            distribution,
+            to);
+            
         Ok(swap_responses)
     }
 
@@ -446,13 +426,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-    ) -> Result<Vec<i128>, AggregatorError>{
+    ) -> Result<Vec<Vec<i128>>, AggregatorError>{
         
         extend_instance_ttl(&e);
         check_parameters(&e, amount_out, amount_in_max, to.clone(), deadline, distribution.clone())?;
         
         let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution)?;
-        let mut swap_responses: Vec<i128> = Vec::new(&e);
+        let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // TODO: check initial balances
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
@@ -468,6 +448,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 &to,//to
                 &deadline, //deadline
             );
+            swap_responses.push_back(response);
 
             // TODO: handle response, maybe store?
             //     for item in response.iter() {
@@ -476,7 +457,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
         }
         // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
-        // event::swap(&e, amount, distribution, to);
+        // event::swap(
+        //     &e,
+        //     token_in,
+        //     token_out,
+        //     amount_in_max,
+        //     amount_out,
+
         Ok(swap_responses)
     }
 

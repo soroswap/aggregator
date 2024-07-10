@@ -1,5 +1,5 @@
 extern crate std;
-use soroban_sdk::{Vec, String, Address};
+use soroban_sdk::{Vec, vec, String, Address};
 use crate::DexDistribution;
 use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
@@ -375,8 +375,15 @@ fn swap_exact_tokens_for_tokens_succeed_correctly() {
     // compare
     assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in);
     assert_eq!(user_balance_after_1, user_balance_before_1 + expected_amount_out);
-    // 
+    
     // check the result vec
-    todo!();
+    // the result vec in this case is a vec of 1 vec with two elements, the amount 0 and amount 1
+    let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_soroswap_result_vec.push_back(amount_in);
+    expected_soroswap_result_vec.push_back(expected_amount_out);
 
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_soroswap_result_vec);
+
+    assert_eq!(result, expected_result);
 }

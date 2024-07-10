@@ -64,10 +64,6 @@ pub(crate) fn protocol_paused(e: &Env, protocol_id: String, paused: bool) {
 }
 
 
-
-
-
-
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NewAdminEvent {
@@ -87,23 +83,27 @@ pub(crate) fn new_admin(e: &Env, old: Address, new: Address) {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SwapEvent {
+    pub token_in: Address,
+    pub token_out: Address,
     pub amount_in: i128,
+    pub amount_out: i128,
     pub distribution: Vec<DexDistribution>,
     pub to: Address,
 }
 
-/// Publishes an `SwapEvent` to the event stream.
-///
-/// # Arguments
-///
-/// * `e` - An instance of the `Env` struct.
-/// * `path` - A vector representing the trading route, where the first element is the input token
-///            and the last is the output token. Intermediate elements represent pairs to trade through.
-/// * `amounts` - A vector containing the amounts of tokens traded at each step of the trading route.
-/// * `to` - The address where the output tokens will be sent to.
-pub(crate) fn swap(e: &Env, amount_in: i128, distribution: Vec<DexDistribution>, to: Address) {
+pub(crate) fn swap(
+    e: &Env,
+    token_in: Address,
+    token_out: Address,
+    amount_in: i128,
+    amount_out: i128,
+    distribution: Vec<DexDistribution>, 
+    to: Address) {
     let event = SwapEvent {
+        token_in,
+        token_out,
         amount_in,
+        amount_out,
         distribution,
         to,
     };
