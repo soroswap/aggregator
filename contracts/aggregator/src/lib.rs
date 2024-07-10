@@ -1,5 +1,7 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String, Vec};
+use soroban_sdk::token::Client as TokenClient;
+
 
 mod error;
 mod event;
@@ -105,7 +107,6 @@ fn check_parameters(
     to: Address,
     deadline: u64,
     distribution: Vec<DexDistribution>,
-    total_parts: i128
     ) -> Result<(), AggregatorError> {
 
     check_initialized(e)?;
@@ -117,8 +118,10 @@ fn check_parameters(
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
         return Err(AggregatorError::DistributionLengthExceeded);
     }
-    if total_parts == 0 {
-        return Err(AggregatorError::InvalidTotalParts);
+    for dist in distribution {
+        if dist.parts  == 0 {
+                return Err(AggregatorError::ZeroDistributionPart);
+        }
     }
 
     Ok(())
@@ -129,10 +132,11 @@ fn calculate_distribution_amounts(
     env: &Env,
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
-    total_parts: i128
 ) -> Result<Vec<i128>, AggregatorError> {
-    let mut total_swapped = 0;
 
+    let total_parts: u32 = distribution.iter().map(|dist| dist.parts).sum();
+    let total_parts: i128 = total_parts.into();
+    let mut total_swapped = 0;
     let mut swap_amounts = soroban_sdk::Vec::new(env);
 
     for (index, dist) in distribution.iter().enumerate() {
@@ -142,7 +146,7 @@ fn calculate_distribution_amounts(
                 .ok_or(AggregatorError::ArithmeticError)?
         } else {
             let amount = total_amount
-                .checked_mul(dist.parts)
+                .checked_mul(dist.parts.into())
                 .and_then(|prod| prod.checked_div(total_parts))
                 .ok_or(AggregatorError::ArithmeticError)?;
             total_swapped += amount;
@@ -390,14 +394,15 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         deadline: u64,
     ) -> Result<Vec<i128>, AggregatorError> {
         
-        extend_instance_ttl(&e);
-        let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();
-        check_parameters(&e, amount_in, amount_out_min, to.clone(), deadline, distribution.clone(), total_parts)?;
+        extend_instance_ttl(&e);        
+        check_parameters(&e, amount_in, amount_out_min, to.clone(), deadline, distribution.clone())?;
         
-        let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution, total_parts)?;
+        let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution)?;
         let mut swap_responses: Vec<i128> = Vec::new(&e);
 
-        // TODO: check initial balances
+        // Check initial out balance
+        let initial_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
+
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution.get(index as u32).unwrap();
             let protocol_id = dist.protocol_id;
@@ -418,7 +423,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             //         swap_responses.push_back(item);
             //     }
         }
-        // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
+        // Check final token out balance
+        let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
+        if final_token_out_balance.checked_sub(initial_token_out_balance).ok_or(AggregatorError::ArithmeticError)? 
+            < amount_out_min {
+            return Err(AggregatorError::InsufficientOutputAmount);
+        }
+
         // event::swap(&e, amount, distribution, to); // MAYBE NOT NEEDED IF ADAPTERS RESPOND WITH AMOUNTS
 
         // // TODO check amount out min
@@ -438,10 +449,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ) -> Result<Vec<i128>, AggregatorError>{
         
         extend_instance_ttl(&e);
-        let total_parts: i128 = distribution.iter().map(|dist| dist.parts).sum();
-        check_parameters(&e, amount_out, amount_in_max, to.clone(), deadline, distribution.clone(), total_parts)?;
+        check_parameters(&e, amount_out, amount_in_max, to.clone(), deadline, distribution.clone())?;
         
-        let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution, total_parts)?;
+        let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution)?;
         let mut swap_responses: Vec<i128> = Vec::new(&e);
 
         // TODO: check initial balances
