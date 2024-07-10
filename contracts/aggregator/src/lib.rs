@@ -396,7 +396,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             );
             swap_responses.push_back(response);
         }
-        
+
         // Check final token out balance
         let final_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
         let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).ok_or(AggregatorError::ArithmeticError)?;
@@ -434,7 +434,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution)?;
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
-        // TODO: check initial balances
+        // Check initial in balance
+        let initial_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
+
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution.get(index as u32).unwrap();
             let protocol_id = dist.protocol_id;
@@ -455,6 +457,13 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             //         swap_responses.push_back(item);
             //     }
 
+        }
+        // Check final token in balance, so we did not spend more than amount_in_max
+        let final_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
+        let final_amount_in = initial_token_in_balance.checked_sub(final_token_in_balance).ok_or(AggregatorError::ArithmeticError)?;
+        
+        if final_amount_in > amount_in_max {
+            return Err(AggregatorError::ExcessiveInputAmount);
         }
         // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
         // event::swap(

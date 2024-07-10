@@ -183,7 +183,7 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
 
 
 #[test]
-fn swap_exact_tokens_for_tokens_enough_output_amount() {
+fn swap_exact_tokens_for_tokens_enough_output_amount_soroswap_protocol() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.adapter_contract.initialize(
         &String::from_str(&test.env, "soroswap"),
@@ -216,7 +216,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount() {
 
 
 #[test]
-fn swap_exact_tokens_for_tokens_2_hops() {
+fn swap_exact_tokens_for_tokens_2_hops_soroswap_protocol() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
     test.adapter_contract.initialize(
