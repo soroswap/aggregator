@@ -440,9 +440,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
             let dist = distribution.get(index as u32).unwrap();
             let protocol_id = dist.protocol_id;
-            
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
-            
             let response = adapter_client.swap_tokens_for_exact_tokens(
                 &swap_amount, // amount_out
                 &i128::MAX, // amount_in_max
@@ -451,12 +449,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 &deadline, //deadline
             );
             swap_responses.push_back(response);
-
-            // TODO: handle response, maybe store?
-            //     for item in response.iter() {
-            //         swap_responses.push_back(item);
-            //     }
-
         }
         // Check final token in balance, so we did not spend more than amount_in_max
         let final_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
@@ -465,7 +457,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         if final_amount_in > amount_in_max {
             return Err(AggregatorError::ExcessiveInputAmount);
         }
-        // TODO check FINAL BALANCES AND CHECK FOR amount_in_max
         // event::swap(
         //     &e,
         //     token_in,
