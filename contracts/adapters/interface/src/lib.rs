@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 #![no_std]
 
 use soroban_sdk::{contractclient, contractspecfn, Address, Env, Vec, String};

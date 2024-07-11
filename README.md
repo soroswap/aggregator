@@ -39,6 +39,16 @@ make build
 this could take a while since is building all the protocols smart contracts
 after everything is built you can now follow the following instructions
 
+## Run Tests and Scout Audit
+```
+make test
+```
+For Scout Audits (tool created by CoinFabrik), you should enter in each of the sub projects, for example
+```
+cd /workspace/contracts/aggregator
+cargo scout-audit
+```
+
 ## Deployment
 
 To deploy the smart contracts you first would need to build the source with
