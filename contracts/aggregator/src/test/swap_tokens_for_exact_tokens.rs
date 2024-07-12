@@ -270,125 +270,65 @@ fn swap_tokens_for_exact_tokens_excessive_input_amount() {
 
 #[test]
 fn swap_tokens_for_exact_tokens_succeed_correctly() {
-//     let test = SoroswapAggregatorTest::setup();
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
-//     // Initialize aggregator
-//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
-//     // call the function
-//     let mut distribution_vec = Vec::new(&test.env);
-//     // add one with part 1 and other with part 0
-//     let mut path: Vec<Address> = Vec::new(&test.env);
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    // call the function
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+    let mut distribution_vec = Vec::new(&test.env);
 
-//     let distribution_0 = DexDistribution {
-//         protocol_id: String::from_str(&test.env, "soroswap"),
-//         path,
-//         parts: 1,
-//     };
-//     distribution_vec.push_back(distribution_0);
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
 
-//     let amount_out = 1_000_000;
-//     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
-//     let expected_amount_out = 3987999;
+    let expected_amount_out = 5_000_000;
+    let amount_in_should = test
+        .router_contract
+        .router_get_amounts_in(&expected_amount_out, &path)
+        .get(0)
+        .unwrap();
 
-//     // check initial user balance of both tokens
-//     let user_balance_before_0 = test.token_0.balance(&test.user);
-//     let user_balance_before_1 = test.token_1.balance(&test.user);
+    // check initial user balance of both tokens
+    let user_balance_before_0 = test.token_0.balance(&test.user);
+    let user_balance_before_1 = test.token_1.balance(&test.user);
 
+    let result = test.aggregator_contract.swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &expected_amount_out,
+        &amount_in_should,
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline
+    );
 
-//     //  MOCK THE SPECIFIC AUTHORIZATION
-//     // TODO: solve the sub invokes to to the mock auth corectly
-//     let result = test.aggregator_contract
-//     // .mock_auths(&[
-//     //     MockAuth {
-//     //         address: &test.user.clone(),
-//     //         invoke: 
-//     //             &MockAuthInvoke {
-//     //                 contract: &test.aggregator_contract.address.clone(),
-//     //                 fn_name: "swap_tokens_for_exact_tokens",
-//     //                 args: (
-//     //                     test.token_0.address.clone(),
-//     //                     test.token_1.address.clone(),
-//     //                     amount_out,
-//     //                     (expected_amount_out),
-//     //                     distribution_vec.clone(),
-//     //                     test.user.clone(),
-//     //                     deadline,
-//     //                 ).into_val(&test.env),
-//     //                 sub_invokes: &[],
-//     //             },
-//     //     }
-//     // ])
-//     .swap_tokens_for_exact_tokens(
-//         &test.token_0.address.clone(),
-//         &test.token_1.address.clone(),
-//         &amount_out,
-//         &(expected_amount_out),
-//         &distribution_vec.clone(),
-//         &test.user.clone(),
-//         &deadline
-//     );
-    
-// //     // CHECK THAT WE SAW IT IN THE PREVIOUS AUTORIZED TXS
-// //     assert_eq!(
-// //         test.env.auths(),
-// //         std::vec![(
-// //             test.user.clone(),
-// //             AuthorizedInvocation {
-// //                function: AuthorizedFunction::Contract((
-// //                    test.aggregator_contract.address.clone(),
-// //                    Symbol::new(&test.env, "swap_tokens_for_exact_tokens"),
-// //                    (
-// //                     test.token_0.address.clone(),
-// //                     test.token_1.address.clone(),
-// //                     amount_out,
-// //                     (expected_amount_out),
-// //                     distribution_vec.clone(),
-// //                     test.user.clone(),
-// //                     deadline,
-// //                 ).into_val(&test.env)
-// //                )),
-// //                sub_invocations: std::vec![]
-// //            }
-// //         )]
-// //    );
+// TODO test specific mock auth
 
-
-//     // let result = test.aggregator_contract.swap_tokens_for_exact_tokens(
-//     //     &test.token_0.address.clone(),
-//     //     &test.token_1.address.clone(),
-//     //     &amount_out,
-//     //     &(expected_amount_out),
-//     //     &distribution_vec,
-//     //     &test.user.clone(),
-//     //     &deadline&test.token_0.address.clone(),
-//     //     &test.token_1.address.clone(),
-//     //     &amount_out,
-//     //     &(expected_amount_out),
-//     //     &distribution_vec,
-//     //     &test.user.clone(),
-//     //     &deadline
-//     // );
-//     // check new user balances
-//     let user_balance_after_0 = test.token_0.balance(&test.user);
-//     let user_balance_after_1 = test.token_1.balance(&test.user);
+    // check new user balances
+    let user_balance_after_0 = test.token_0.balance(&test.user);
+    let user_balance_after_1 = test.token_1.balance(&test.user);
 //     // compare
-//     assert_eq!(user_balance_after_0, user_balance_before_0 - amount_out);
-//     assert_eq!(user_balance_after_1, user_balance_before_1 + expected_amount_out);
-    
-//     // check the result vec
-//     // the result vec in this case is a vec of 1 vec with two elements, the amount 0 and amount 1
-//     let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
-//     expected_soroswap_result_vec.push_back(amount_out);
-//     expected_soroswap_result_vec.push_back(expected_amount_out);
 
-//     let mut expected_result = Vec::new(&test.env);
-//     expected_result.push_back(expected_soroswap_result_vec);
+    assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in_should);
+    assert_eq!(user_balance_after_1, user_balance_before_1 + expected_amount_out);    
+    // check the result vec
+    // the result vec in this case is a vec of 1 vec with two elements, the amount 0 and amount 1
+    let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_soroswap_result_vec.push_back(amount_in_should);
+    expected_soroswap_result_vec.push_back(expected_amount_out);
 
-//     assert_eq!(result, expected_result);
-todo!();
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_soroswap_result_vec);
+
+    assert_eq!(result, expected_result);
 }
 
 
