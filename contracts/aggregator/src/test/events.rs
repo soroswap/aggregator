@@ -335,7 +335,7 @@ fn swap_exact_tokens_for_tokens_event() {
     let expected_amount_out = 3987999;
 
    
-    let result = test.aggregator_contract
+    test.aggregator_contract
     .swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
@@ -398,7 +398,7 @@ fn swap_tokens_for_exact_tokens_event() {
         .unwrap();
 
    
-    let result = test.aggregator_contract
+    test.aggregator_contract
     .swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),

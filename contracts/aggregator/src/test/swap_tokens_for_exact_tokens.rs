@@ -1,18 +1,19 @@
 extern crate std;
-use soroban_sdk::{Vec, vec, String, Address};
+use soroban_sdk::{Vec, String, Address};
 use crate::DexDistribution;
 use crate::error::AggregatorError;
 use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
-use soroban_sdk::{
-    IntoVal,
-    testutils::{
-        MockAuth, 
-        MockAuthInvoke,
-        AuthorizedInvocation,
-        AuthorizedFunction
-    },
-    Symbol
-};
+// use soroban_sdk::{
+//     vec,
+//     IntoVal,
+//     testutils::{
+//         MockAuth, 
+//         MockAuthInvoke,
+//         AuthorizedInvocation,
+//         AuthorizedFunction
+//     },
+//     Symbol
+// };
 
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
@@ -104,8 +105,8 @@ fn swap_tokens_for_exact_tokens_distribution_over_max() {
     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
-    let MAX_DISTRIBUTION_LENGTH: u32 = 15;
-    for i in 0..MAX_DISTRIBUTION_LENGTH+1 { // this will be 16
+    const MAX_DISTRIBUTION_LENGTH: u32 = 15;
+    for _i in 0..MAX_DISTRIBUTION_LENGTH+1 { // this will be 16
         let distribution = DexDistribution {
             protocol_id: String::from_str(&test.env, "protocol_id"),
             path: Vec::new(&test.env),
@@ -355,10 +356,10 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
     };
     distribution_vec.push_back(distribution_0);
 
-    let initial_user_balance: i128 = 20_000_000_000_000_000_000;
-    let amount_0: i128 = 1_000_000_000_000_000_000;
-    let amount_1: i128 = 4_000_000_000_000_000_000;
-    let amount_2: i128 = 8_000_000_000_000_000_000;
+    // let initial_user_balance: i128 = 20_000_000_000_000_000_000;
+    // let amount_0: i128 = 1_000_000_000_000_000_000;
+    // let amount_1: i128 = 4_000_000_000_000_000_000;
+    // let amount_2: i128 = 8_000_000_000_000_000_000;
 
     let expected_amount_out = 123_456_789;
     // pair token_1, token_2

@@ -23,26 +23,6 @@ pub enum SwapType {
     TokensForExactTokens,
 }
 
-//fn swap_exact_tokens_for_tokens(
-    // env: Env,
-    // amount_in: i128,
-    // amount_out_min: i128,
-    // path: Vec<Address>,
-    // to: Address,
-    // deadline: u64,
-// create an object with all these fields
-pub struct SwapExactTokensForTokens {
-    amount_in: i128,
-    amount_out_min: i128,
-    path : Vec<Address>,
-    to: Address,
-    deadline: u64}
-pub struct SwapTokensForExactTokens {
-    amount_out: i128,
-    amount_in_max: i128,
-    path: Vec<Address>,
-    to: Address,
-    deadline: u64}
 
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {

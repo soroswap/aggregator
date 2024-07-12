@@ -6,7 +6,6 @@ use soroban_sdk::{
     testutils::{Address as _, Ledger},
     vec, Address, BytesN, Env, String, Vec,
 };
-use soroban_sdk::{testutils::arbitrary::std::dbg};
 
 
 // Token Contract
@@ -144,9 +143,9 @@ pub struct SoroswapAggregatorTest<'a> {
     env: Env,
     aggregator_contract: SoroswapAggregatorClient<'a>,
     router_contract: SoroswapRouterClient<'a>,
-    factory_contract: SoroswapFactoryClient<'a>,
+    // factory_contract: SoroswapFactoryClient<'a>,
     soroswap_adapter_contract: SoroswapAggregatorAdapterForSoroswapClient<'a>,
-    phoenix_adapter_contract: SoroswapAggregatorAdapterForPhoenixClient<'a>,
+    // phoenix_adapter_contract: SoroswapAggregatorAdapterForPhoenixClient<'a>,
     token_0: TokenClient<'a>,
     token_1: TokenClient<'a>,
     token_2: TokenClient<'a>,
@@ -161,7 +160,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let aggregator_contract = create_soroswap_aggregator(&env);
         let router_contract = create_soroswap_router(&env);
         let soroswap_adapter_contract = create_soroswap_adapter(&env);
-        let phoenix_adapter_contract = create_phoenix_adapter(&env);
+        let _phoenix_adapter_contract = create_phoenix_adapter(&env);
 
         let initial_user_balance = 20_000_000_000_000_000_000;
 
@@ -262,9 +261,9 @@ impl<'a> SoroswapAggregatorTest<'a> {
             env,
             aggregator_contract,
             router_contract,
-            factory_contract,
+            // factory_contract,
             soroswap_adapter_contract,
-            phoenix_adapter_contract,
+            // phoenix_adapter_contract,
             token_0,
             token_1,
             token_2,
