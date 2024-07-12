@@ -370,5 +370,79 @@ fn swap_exact_tokens_for_tokens_event() {
 
 #[test]
 fn swap_tokens_for_exact_tokens_event() {
-    todo!();
+    // create test
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+
+    let mut distribution_vec = Vec::new(&test.env);
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let expected_amount_out = 5_000_000;
+    let amount_in_should = test
+        .router_contract
+        .router_get_amounts_in(&expected_amount_out, &path)
+        .get(0)
+        .unwrap();
+
+   
+    let result = test.aggregator_contract
+    .swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &expected_amount_out,
+        &(amount_in_should),
+        &distribution_vec.clone(),
+        &test.user.clone(),
+        &deadline
+    );
+    // check the event
+    let swap_event = test.env.events().all().last().unwrap();
+    let expected_swap_event: SwapEvent = SwapEvent {
+        token_in: test.token_0.address.clone(),
+        token_out: test.token_1.address.clone(),
+        amount_in: amount_in_should,
+        amount_out: expected_amount_out,
+        distribution: distribution_vec.clone(),
+        to: test.user.clone(),
+    };
+    // test one by one swap_event.clone().0
+    // assert_eq!(
+    //     swap_event.clone().0,
+    //     test.aggregator_contract.address.clone()
+    // );
+    // assert_eq!(
+    //     swap_event.clone().1,
+    //     ("SoroswapAggregator", symbol_short!("swap")).into_val(&test.env)
+    // );
+    // assert_eq!(
+    //     swap_event.clone().1,
+        
+    //     expected_swap_event.clone()
+            
+    // );
+
+    assert_eq!(
+        vec![&test.env, swap_event.clone()],
+        vec![
+            &test.env,
+            (
+                test.aggregator_contract.address.clone(),
+                ("SoroswapAggregator", symbol_short!("swap")).into_val(&test.env),
+                (expected_swap_event).into_val(&test.env)
+            ),
+        ]
+    );
 }

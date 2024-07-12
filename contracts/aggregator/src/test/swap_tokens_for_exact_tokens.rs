@@ -269,7 +269,7 @@ fn swap_tokens_for_exact_tokens_excessive_input_amount() {
 }
 
 #[test]
-fn swap_tokens_for_exact_tokens_succeed_correctly() {
+fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
@@ -333,76 +333,94 @@ fn swap_tokens_for_exact_tokens_succeed_correctly() {
 
 
 #[test]
-fn swap_tokens_for_exact_tokens_succeed_correctly_two_hops() {
-//     let test = SoroswapAggregatorTest::setup();
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
-//     // Initialize aggregator
-//     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-//     test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
-//     // call the function
-//     let mut distribution_vec = Vec::new(&test.env);
-//     // add one with part 1 and other with part 0
-//     let mut path: Vec<Address> = Vec::new(&test.env);
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
-//     path.push_back(test.token_2.address.clone());
+fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    // call the function
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+    path.push_back(test.token_2.address.clone());
 
 
-//     let distribution_0 = DexDistribution {
-//         protocol_id: String::from_str(&test.env, "soroswap"),
-//         path,
-//         parts: 1,
-//     };
-//     distribution_vec.push_back(distribution_0);
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
 
-//     let initial_user_balance: i128 = 20_000_000_000_000_000_000;
-//     let amount_0: i128 = 1_000_000_000_000_000_000;
-//     let amount_1: i128 = 4_000_000_000_000_000_000;
-//     let amount_2: i128 = 8_000_000_000_000_000_000;
+    let initial_user_balance: i128 = 20_000_000_000_000_000_000;
+    let amount_0: i128 = 1_000_000_000_000_000_000;
+    let amount_1: i128 = 4_000_000_000_000_000_000;
+    let amount_2: i128 = 8_000_000_000_000_000_000;
 
-//     let amount_out = 123_456_789;
-//     // fee = 123456789 * 3 /1000 =  370370,367 = 370371 // USE CEILING
-//     // amount_out less fee = 123456789- 370371 = 123086418
-//     // First out = (123086418*4000000000000000000)/(1000000000000000000 + 123086418) = 492345671.939398935 = 492345671
-//     let first_out = 492345671;
-//     // fee = 492345671 * 3 /1000 =  1477037.013 = 1477038 // USE CEILING
-//     // in less fee = 492345671 - 1477038 = 490868633
-//     // Second out = (490868633*8000000000000000000)/(4000000000000000000 + 490868633) = 981737265.879523993 = 981737265
-//     let expected_amount_out = 981737265;
+    let expected_amount_out = 123_456_789;
+    // pair token_1, token_2
+    // token_1 is r_in, token_2 is r_out
+    // (r_in*amount_out)*1000 / (r_out - amount_out)*997
+    // (4_000_000_000_000_000_000*123456789)*1000 / ((8_000_000_000_000_000_000 - 123456789)*997) + 1 = 
+    // 493827156000000000000000000000 / (7999999999876543211 * 997) +1 = 
+    // 493827156000000000000000000000 / 7975999999876913581367 +1 = CEIL(61914136.911687662) +1 = 61914137 +1 = 61914138
+    // 
+    let middle_amount_in =61914138;
 
-//     let user_balance_before_0 = test.token_0.balance(&test.user);
-//     let user_balance_before_1 = test.token_1.balance(&test.user);
-//     let user_balance_before_2 = test.token_2.balance(&test.user);
+    // pair token_0, token_1
+    // token_0 is r_in, token_1 is r_out
+    // first amount in = 
+    // (1_000_000_000_000_000_000*61914138)*1000 / ((4_000_000_000_000_000_000 - 61914138)*997) + 1 = 
+    // 61914138000000000000000000000 / (3999999999938085862 * 997) + 1 =
+    // CEIL (61914138000000000000000000000 / 3987999999938271604414) +1 = ceil(15525109.8) +1 = 15525111
 
-//     let result = test.aggregator_contract
-//     .swap_tokens_for_exact_tokens(
-//         &test.token_0.address.clone(),
-//         &test.token_2.address.clone(),
-//         &amount_out,
-//         &(0),
-//         &distribution_vec.clone(),
-//         &test.user.clone(),
-//         &deadline
-//     );
-
-//     let user_balance_after_0 = test.token_0.balance(&test.user);
-//     let user_balance_after_1 = test.token_1.balance(&test.user);
-//     let user_balance_after_2 = test.token_2.balance(&test.user);
-
-//    // compare
-//     assert_eq!(user_balance_after_0, user_balance_before_0 - amount_out);
-//     assert_eq!(user_balance_after_1, user_balance_before_1);
-//     assert_eq!(user_balance_after_2, user_balance_before_2 + expected_amount_out);
+    let amount_in_should =15525111;
 
 
-//     let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
-//     expected_soroswap_result_vec.push_back(amount_out);
-//     expected_soroswap_result_vec.push_back(first_out);
-//     expected_soroswap_result_vec.push_back(expected_amount_out);
+    let user_balance_before_0 = test.token_0.balance(&test.user);
+    let user_balance_before_1 = test.token_1.balance(&test.user);
+    let user_balance_before_2 = test.token_2.balance(&test.user);
 
-//     let mut expected_result = Vec::new(&test.env);
-//     expected_result.push_back(expected_soroswap_result_vec);
+    let result = test.aggregator_contract.swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(), //token_in
+        &test.token_2.address.clone(), //token_out
+        &expected_amount_out, //amount_out
+        &amount_in_should,  // amount_in_max
+        &distribution_vec, // path
+        &test.user, // to
+        &deadline); // deadline
 
-//     assert_eq!(result, expected_result);
-todo!();  
+
+    let user_balance_after_0 = test.token_0.balance(&test.user);
+    let user_balance_after_1 = test.token_1.balance(&test.user);
+    let user_balance_after_2 = test.token_2.balance(&test.user);
+
+   // compare
+    assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in_should);
+    assert_eq!(user_balance_after_1, user_balance_before_1);
+    assert_eq!(user_balance_after_2, user_balance_before_2 + expected_amount_out);
+
+    let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_soroswap_result_vec.push_back(amount_in_should);
+    expected_soroswap_result_vec.push_back(middle_amount_in);
+    expected_soroswap_result_vec.push_back(expected_amount_out);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_soroswap_result_vec);
+
+    assert_eq!(result, expected_result);
+
+}
+
+#[test]
+fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
+    todo!();
+}
+
+#[test]
+fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
+    todo!();
 }

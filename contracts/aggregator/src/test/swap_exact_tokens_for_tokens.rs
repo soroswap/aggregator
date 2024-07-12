@@ -267,7 +267,7 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
 }
 
 #[test]
-fn swap_exact_tokens_for_tokens_succeed_correctly() {
+fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
@@ -390,7 +390,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly() {
 
 
 #[test]
-fn swap_exact_tokens_for_tokens_succeed_correctly_two_hops() {
+fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
@@ -462,4 +462,14 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_hops() {
 
     assert_eq!(result, expected_result);
    
+}
+
+
+#[test]
+fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
+    todo!();
+}
+#[test]
+fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
+    todo!();
 }

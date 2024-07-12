@@ -457,13 +457,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         if final_amount_in > amount_in_max {
             return Err(AggregatorError::ExcessiveInputAmount);
         }
-        // event::swap(
-        //     &e,
-        //     token_in,
-        //     token_out,
-        //     amount_in_max,
-        //     amount_out,
-
+        event::swap(
+            &e,
+            token_in,
+            token_out,
+            final_amount_in,
+            amount_out,
+            distribution,
+            to);
         Ok(swap_responses)
     }
 
