@@ -34,8 +34,12 @@ pub fn set_admin(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::Admin, &address)
 }
 
-pub fn get_admin(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::Admin).unwrap()
+pub fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
+    match e.storage().instance().get(&DataKey::Admin)
+    {
+        Some(admin) => Ok(admin),
+        None => Err(AggregatorError::NotInitialized),
+    }
 }
 
 pub fn put_adapter(e: &Env, adapter: Adapter) {

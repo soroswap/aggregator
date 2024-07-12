@@ -23,26 +23,6 @@ pub enum SwapType {
     TokensForExactTokens,
 }
 
-//fn swap_exact_tokens_for_tokens(
-    // env: Env,
-    // amount_in: i128,
-    // amount_out_min: i128,
-    // path: Vec<Address>,
-    // to: Address,
-    // deadline: u64,
-// create an object with all these fields
-pub struct SwapExactTokensForTokens {
-    amount_in: i128,
-    amount_out_min: i128,
-    path : Vec<Address>,
-    to: Address,
-    deadline: u64}
-pub struct SwapTokensForExactTokens {
-    amount_out: i128,
-    amount_in_max: i128,
-    path: Vec<Address>,
-    to: Address,
-    deadline: u64}
 
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
@@ -75,9 +55,10 @@ fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     }
 }
 
-fn check_admin(e: &Env) {
-    let admin: Address = get_admin(&e);
+fn check_admin(e: &Env) -> Result<(), AggregatorError> {
+    let admin: Address = get_admin(&e)?;
     admin.require_auth();
+    Ok(())
 }
 
 fn check_parameters(
@@ -280,6 +261,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         if is_initialized(&e) {
             return Err(AggregatorError::AlreadyInitialized);
         }
+        admin.require_auth();
 
         for adapter in adapter_vec.iter() {
             put_adapter(&e, adapter);
@@ -302,7 +284,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
         
         check_initialized(&e)?;
-        check_admin(&e);
+        check_admin(&e)?;
 
         for adapter in adapter_vec.iter() {
             put_adapter(&e, adapter);
@@ -315,7 +297,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
     fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        check_admin(&e);
+        check_admin(&e)?;
 
         remove_adapter(&e, protocol_id.clone());
 
@@ -335,7 +317,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
     fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        check_admin(&e);
+        check_admin(&e)?;
 
         set_pause_protocol(&e, protocol_id.clone(), paused)?;
 
@@ -346,9 +328,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
     fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        check_admin(&e);
+        check_admin(&e)?;
 
-        let admin: Address = get_admin(&e);
+        let admin: Address = get_admin(&e)?;
         set_admin(&e, new_admin.clone());
 
         event::new_admin(&e, admin, new_admin);
@@ -357,7 +339,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError> {
         check_initialized(&e)?;
-        check_admin(&e);
+        check_admin(&e)?;
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
         Ok(())
@@ -384,7 +366,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let initial_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
 
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution.get(index as u32).unwrap();
+            let dist = distribution.get(index as u32).ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
             let response = adapter_client.swap_exact_tokens_for_tokens(
@@ -438,7 +420,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         let initial_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
 
         for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution.get(index as u32).unwrap();
+            let dist = distribution.get(index as u32).ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
             let response = adapter_client.swap_tokens_for_exact_tokens(
@@ -457,13 +439,14 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         if final_amount_in > amount_in_max {
             return Err(AggregatorError::ExcessiveInputAmount);
         }
-        // event::swap(
-        //     &e,
-        //     token_in,
-        //     token_out,
-        //     amount_in_max,
-        //     amount_out,
-
+        event::swap(
+            &e,
+            token_in,
+            token_out,
+            final_amount_in,
+            amount_out,
+            distribution,
+            to);
         Ok(swap_responses)
     }
 
@@ -471,7 +454,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
 
     fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
         check_initialized(&e)?;
-        Ok(get_admin(&e))
+        Ok(get_admin(&e)?)
     }
 
     fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
