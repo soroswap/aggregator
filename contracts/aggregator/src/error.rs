@@ -17,7 +17,7 @@ pub enum AggregatorError {
 
     // checks of the desired amount.
     // if at the end, the total output is too low (insufficient) for what we expected as amount_out_min
-    InsufficientOutputAmount = 608,// the amount of output tokens to receive is insufficient given the provided amount_out_min
+    InsufficientOutputAmount = 608, // the amount of output tokens to receive is insufficient given the provided amount_out_min
 
     // checks the maximum amount we are willing to spend
     // if at the end, the total amount of paid tokens is too high (excessive) for what we expected as amount_in_max

@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
+use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
 
 #[test]
 fn test_get_adapters() {
@@ -8,7 +8,8 @@ fn test_get_adapters() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let result = test.aggregator_contract.get_adapters();
 

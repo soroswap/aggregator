@@ -1,12 +1,12 @@
 extern crate std;
-use soroban_sdk::{Vec, String, Address};
-use crate::DexDistribution;
 use crate::error::AggregatorError;
-use crate::test::{SoroswapAggregatorTest, create_protocols_addresses};
+use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use crate::DexDistribution;
+use soroban_sdk::{Address, String, Vec};
 // use soroban_sdk::{
 //     IntoVal,
 //     testutils::{
-//         MockAuth, 
+//         MockAuth,
 //         MockAuthInvoke,
 //         AuthorizedInvocation,
 //         AuthorizedFunction
@@ -24,10 +24,9 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
         &100,
         &Vec::new(&test.env),
         &test.user.clone(),
-        &100
+        &100,
     );
     assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
-    
 }
 
 #[test]
@@ -36,7 +35,8 @@ fn swap_exact_tokens_for_tokens_negative_amount_in() {
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
@@ -45,11 +45,11 @@ fn swap_exact_tokens_for_tokens_negative_amount_in() {
         &100,
         &Vec::new(&test.env),
         &test.user.clone(),
-        &100
+        &100,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::NegativeNotAllowed)));
-}   
+}
 
 #[test]
 fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
@@ -57,7 +57,8 @@ fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
@@ -66,12 +67,11 @@ fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
         &-1,
         &Vec::new(&test.env),
         &test.user.clone(),
-        &100
+        &100,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::NegativeNotAllowed)));
 }
-
 
 #[test]
 fn swap_exact_tokens_for_tokens_deadline_expired() {
@@ -79,7 +79,8 @@ fn swap_exact_tokens_for_tokens_deadline_expired() {
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
@@ -88,7 +89,7 @@ fn swap_exact_tokens_for_tokens_deadline_expired() {
         &100,
         &Vec::new(&test.env),
         &test.user.clone(),
-        &0
+        &0,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::DeadlineExpired)));
@@ -101,11 +102,13 @@ fn swap_exact_tokens_for_tokens_distribution_over_max() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     const MAX_DISTRIBUTION_LENGTH: u32 = 15;
-    for _i in 0..MAX_DISTRIBUTION_LENGTH+1 { // this will be 16
+    for _i in 0..MAX_DISTRIBUTION_LENGTH + 1 {
+        // this will be 16
         let distribution = DexDistribution {
             protocol_id: String::from_str(&test.env, "protocol_id"),
             path: Vec::new(&test.env),
@@ -121,7 +124,7 @@ fn swap_exact_tokens_for_tokens_distribution_over_max() {
         &100,
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::DistributionLengthExceeded)));
@@ -133,7 +136,8 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -157,11 +161,10 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
         &100,
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ZeroDistributionPart)));
-
 }
 
 #[test]
@@ -170,7 +173,8 @@ fn swap_exact_tokens_for_tokens_protocol_not_found() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -188,7 +192,7 @@ fn swap_exact_tokens_for_tokens_protocol_not_found() {
         &100,
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
@@ -200,7 +204,8 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -212,7 +217,8 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
     distribution_vec.push_back(distribution_0);
 
     // pause the protocol
-    test.aggregator_contract.set_pause(&String::from_str(&test.env, "soroswap"), &true);
+    test.aggregator_contract
+        .set_pause(&String::from_str(&test.env, "soroswap"), &true);
 
     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
@@ -221,12 +227,11 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
         &100,
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolPaused)));
 }
-
 
 #[test]
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
@@ -234,7 +239,8 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -257,10 +263,10 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &amount_in,
-        &(expected_amount_out+1),
+        &(expected_amount_out + 1),
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
@@ -272,7 +278,8 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -295,18 +302,50 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     let user_balance_before_0 = test.token_0.balance(&test.user);
     let user_balance_before_1 = test.token_1.balance(&test.user);
 
-
     //  MOCK THE SPECIFIC AUTHORIZATION
     // TODO: solve the sub invokes to to the mock auth corectly
-    let result = test.aggregator_contract
-    // .mock_auths(&[
-    //     MockAuth {
-    //         address: &test.user.clone(),
-    //         invoke: 
-    //             &MockAuthInvoke {
-    //                 contract: &test.aggregator_contract.address.clone(),
-    //                 fn_name: "swap_exact_tokens_for_tokens",
-    //                 args: (
+    let result = test
+        .aggregator_contract
+        // .mock_auths(&[
+        //     MockAuth {
+        //         address: &test.user.clone(),
+        //         invoke:
+        //             &MockAuthInvoke {
+        //                 contract: &test.aggregator_contract.address.clone(),
+        //                 fn_name: "swap_exact_tokens_for_tokens",
+        //                 args: (
+        //                     test.token_0.address.clone(),
+        //                     test.token_1.address.clone(),
+        //                     amount_in,
+        //                     (expected_amount_out),
+        //                     distribution_vec.clone(),
+        //                     test.user.clone(),
+        //                     deadline,
+        //                 ).into_val(&test.env),
+        //                 sub_invokes: &[],
+        //             },
+        //     }
+        // ])
+        .swap_exact_tokens_for_tokens(
+            &test.token_0.address.clone(),
+            &test.token_1.address.clone(),
+            &amount_in,
+            &(expected_amount_out),
+            &distribution_vec.clone(),
+            &test.user.clone(),
+            &deadline,
+        );
+
+    //     // CHECK THAT WE SAW IT IN THE PREVIOUS AUTORIZED TXS
+    //     assert_eq!(
+    //         test.env.auths(),
+    //         std::vec![(
+    //             test.user.clone(),
+    //             AuthorizedInvocation {
+    //                function: AuthorizedFunction::Contract((
+    //                    test.aggregator_contract.address.clone(),
+    //                    Symbol::new(&test.env, "swap_exact_tokens_for_tokens"),
+    //                    (
     //                     test.token_0.address.clone(),
     //                     test.token_1.address.clone(),
     //                     amount_in,
@@ -314,45 +353,12 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     //                     distribution_vec.clone(),
     //                     test.user.clone(),
     //                     deadline,
-    //                 ).into_val(&test.env),
-    //                 sub_invokes: &[],
-    //             },
-    //     }
-    // ])
-    .swap_exact_tokens_for_tokens(
-        &test.token_0.address.clone(),
-        &test.token_1.address.clone(),
-        &amount_in,
-        &(expected_amount_out),
-        &distribution_vec.clone(),
-        &test.user.clone(),
-        &deadline
-    );
-    
-//     // CHECK THAT WE SAW IT IN THE PREVIOUS AUTORIZED TXS
-//     assert_eq!(
-//         test.env.auths(),
-//         std::vec![(
-//             test.user.clone(),
-//             AuthorizedInvocation {
-//                function: AuthorizedFunction::Contract((
-//                    test.aggregator_contract.address.clone(),
-//                    Symbol::new(&test.env, "swap_exact_tokens_for_tokens"),
-//                    (
-//                     test.token_0.address.clone(),
-//                     test.token_1.address.clone(),
-//                     amount_in,
-//                     (expected_amount_out),
-//                     distribution_vec.clone(),
-//                     test.user.clone(),
-//                     deadline,
-//                 ).into_val(&test.env)
-//                )),
-//                sub_invocations: std::vec![]
-//            }
-//         )]
-//    );
-
+    //                 ).into_val(&test.env)
+    //                )),
+    //                sub_invocations: std::vec![]
+    //            }
+    //         )]
+    //    );
 
     // let result = test.aggregator_contract.swap_exact_tokens_for_tokens(
     //     &test.token_0.address.clone(),
@@ -374,8 +380,11 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     let user_balance_after_1 = test.token_1.balance(&test.user);
     // compare
     assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in);
-    assert_eq!(user_balance_after_1, user_balance_before_1 + expected_amount_out);
-    
+    assert_eq!(
+        user_balance_after_1,
+        user_balance_before_1 + expected_amount_out
+    );
+
     // check the result vec
     // the result vec in this case is a vec of 1 vec with two elements, the amount 0 and amount 1
     let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
@@ -388,14 +397,14 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     assert_eq!(result, expected_result);
 }
 
-
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -403,7 +412,6 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
     path.push_back(test.token_2.address.clone());
-
 
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
@@ -431,26 +439,27 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     let user_balance_before_1 = test.token_1.balance(&test.user);
     let user_balance_before_2 = test.token_2.balance(&test.user);
 
-    let result = test.aggregator_contract
-    .swap_exact_tokens_for_tokens(
+    let result = test.aggregator_contract.swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
         &test.token_2.address.clone(),
         &amount_in,
         &(0),
         &distribution_vec.clone(),
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
 
     let user_balance_after_0 = test.token_0.balance(&test.user);
     let user_balance_after_1 = test.token_1.balance(&test.user);
     let user_balance_after_2 = test.token_2.balance(&test.user);
 
-   // compare
+    // compare
     assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in);
     assert_eq!(user_balance_after_1, user_balance_before_1);
-    assert_eq!(user_balance_after_2, user_balance_before_2 + expected_amount_out);
-
+    assert_eq!(
+        user_balance_after_2,
+        user_balance_before_2 + expected_amount_out
+    );
 
     let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
     expected_soroswap_result_vec.push_back(amount_in);
@@ -461,17 +470,16 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     expected_result.push_back(expected_soroswap_result_vec);
 
     assert_eq!(result, expected_result);
-   
 }
-
 
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
-    let test = SoroswapAggregatorTest::setup(); 
+    let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract.initialize(&test.admin, &initialize_aggregator_addresses); 
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     // add one with part 1 and other with part 0
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -495,7 +503,11 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     let total_expected_amount_in = 123_456_789;
 
     // The total expected amount will come from 2 different trades:
-    let expected_amount_in_0 = 123_456_789_i128.checked_div(4).unwrap().checked_mul(1).unwrap();
+    let expected_amount_in_0 = 123_456_789_i128
+        .checked_div(4)
+        .unwrap()
+        .checked_mul(1)
+        .unwrap();
     let expected_amount_in_1 = total_expected_amount_in - expected_amount_in_0;
 
     // reserve_0 = 1_000_000_000_000_000_000;
@@ -508,15 +520,14 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     // fee = ceil(30864197 * 3 /1000) =  92592.591 = 92593 // USE CEILING
     // amount_in less fee = 30864197- 92593 = 30771604
     // out = (amount_in_less_fees*reserve_1)/(reserve_0 + amount_in_less_fees) =
-    // First out = (30771604*4000000000000000000)/(1000000000000000000 + 30771604) = 
+    // First out = (30771604*4000000000000000000)/(1000000000000000000 + 30771604) =
     // 123086416000000000000000000 / 1000000000030771604 = 123086415.996212434 = 123086415 // no ceiling div
     let expected_amount_out_0 = 123086415;
 
-
     // swap 1 happens with new reserves
-    // reserve_0 = 1_000_000_000_000_000_000 + 30864197 = 
+    // reserve_0 = 1_000_000_000_000_000_000 + 30864197 =
     // 1000000000000000000 + 30864197 = 1000000000030864197
-    // reserve_1 = 4_000_000_000_000_000_000 - 123086415 = 
+    // reserve_1 = 4_000_000_000_000_000_000 - 123086415 =
     // 4000000000000000000 - 123086415 = 3999999999876913585
 
     // fee = ceil(92592592 * 3 /1000) =  277777.776 = 277778 // USE CEILING
@@ -527,7 +538,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     let expected_amount_out_1 = 369259255;
 
     let total_expected_amount_out = expected_amount_out_0 + expected_amount_out_1;
-    
+
     // if we just expect one unit more of the expected amount out, the function should fail with expected error
     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
@@ -536,7 +547,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         &(total_expected_amount_out + 1),
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
@@ -553,7 +564,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         &total_expected_amount_out,
         &distribution_vec,
         &test.user.clone(),
-        &deadline
+        &deadline,
     );
 
     // check balance after
@@ -561,15 +572,20 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     let user_balance_after_1 = test.token_1.balance(&test.user);
 
     // compare
-    assert_eq!(user_balance_after_0, user_balance_before_0 - total_expected_amount_in);
-    assert_eq!(user_balance_after_1, user_balance_before_1 + total_expected_amount_out);
+    assert_eq!(
+        user_balance_after_0,
+        user_balance_before_0 - total_expected_amount_in
+    );
+    assert_eq!(
+        user_balance_after_1,
+        user_balance_before_1 + total_expected_amount_out
+    );
 
     // check the result vec
     // the result vec in this case is a vec of 2 vecs with two elements, the amount 0 and amount 1
     let mut expected_soroswap_result_vec_0: Vec<i128> = Vec::new(&test.env);
     expected_soroswap_result_vec_0.push_back(expected_amount_in_0);
     expected_soroswap_result_vec_0.push_back(expected_amount_out_0);
-
 
     let mut expected_soroswap_result_vec_1: Vec<i128> = Vec::new(&test.env);
     expected_soroswap_result_vec_1.push_back(expected_amount_in_1);
@@ -580,8 +596,6 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     expected_result.push_back(expected_soroswap_result_vec_1);
 
     assert_eq!(success_result, expected_result);
-    
-
 }
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
