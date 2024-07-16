@@ -24,7 +24,7 @@ pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> TokenClient<'a> {
 // Pair Contract
 pub mod pair {
     soroban_sdk::contractimport!(file = "../../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm");
-   pub type SoroswapPairClient<'a> = Client<'a>;
+//    pub type SoroswapPairClient<'a> = Client<'a>;
 }
 // use pair::SoroswapPairClient;
 
@@ -57,7 +57,6 @@ pub mod router {
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 use router::SoroswapRouterClient;
-pub use router::SoroswapRouterError;
 
 // SoroswapRouter Contract
 fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
@@ -74,7 +73,7 @@ pub struct SoroswapTest<'a> {
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
     pub user: Address,
-    pub admin: Address
+    // pub admin: Address
 }
 
 impl<'a> SoroswapTest<'a> {
@@ -180,7 +179,7 @@ impl<'a> SoroswapTest<'a> {
             token_1,
             token_2,
             user,
-            admin
+            // admin
         }
     }
 }

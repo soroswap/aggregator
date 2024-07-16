@@ -114,7 +114,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
     
     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
 
-    let result = test.adapter_contract.swap_tokens_for_exact_tokens( // add try_ to test the error
+    test.adapter_contract.swap_tokens_for_exact_tokens( // add try_ to test the error
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -171,7 +171,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
 
 
     test.env.budget().reset_unlimited();
-    let result = test.adapter_contract.swap_tokens_for_exact_tokens(
+    test.adapter_contract.swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -200,7 +200,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
 
     let expected_amount_out = 5_000_000;
 
-    let result = test.adapter_contract.swap_tokens_for_exact_tokens(
+    test.adapter_contract.swap_tokens_for_exact_tokens(
         &expected_amount_out, // amount_out
         &0,                   // amount_in_max
         &path,                // path
@@ -239,7 +239,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough_amount_in_should_minus_
         .get(0)
         .unwrap();
 
-    let result = test.adapter_contract.swap_tokens_for_exact_tokens(
+    test.adapter_contract.swap_tokens_for_exact_tokens(
         &expected_amount_out, // amount_out
         &(amount_in_should - 1), // amount_in_max
         &path,                // path
