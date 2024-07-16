@@ -418,7 +418,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
 
 #[test]
 fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
-    let test = SoroswapAggregatorTest::setup();
+    let test = SoroswapAggregatorTest::setup(); 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
