@@ -2,16 +2,13 @@ extern crate std;
 use crate::error::AggregatorError;
 use crate::models::Adapter;
 use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
-use soroban_sdk::{vec, String, Vec};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
+use soroban_sdk::{vec, String, Vec};
 
-pub fn new_protocol_vec(
-    test: &SoroswapAggregatorTest,
-    protocol_id: &String,
-) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
@@ -49,7 +46,10 @@ fn test_remove_adapter() {
     let is_protocol_paused = test
         .aggregator_contract
         .try_get_paused(&String::from_str(&test.env, "soroswap"));
-    assert_eq!(is_protocol_paused, Err(Ok(AggregatorError::ProtocolNotFound)));
+    assert_eq!(
+        is_protocol_paused,
+        Err(Ok(AggregatorError::ProtocolNotFound))
+    );
 
     //add new protocol
     let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));

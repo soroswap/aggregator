@@ -35,33 +35,25 @@ pub fn set_admin(e: &Env, address: Address) {
 }
 
 pub fn get_admin(e: &Env) -> Result<Address, AggregatorError> {
-    match e.storage().instance().get(&DataKey::Admin)
-    {
+    match e.storage().instance().get(&DataKey::Admin) {
         Some(admin) => Ok(admin),
         None => Err(AggregatorError::NotInitialized),
     }
 }
 
 pub fn put_adapter(e: &Env, adapter: Adapter) {
-    e.storage().instance().set(
-        &DataKey::Adapter(adapter.protocol_id.clone()),
-        &adapter,
-    );
+    e.storage()
+        .instance()
+        .set(&DataKey::Adapter(adapter.protocol_id.clone()), &adapter);
     add_protocol_id(e, adapter.protocol_id);
 }
 
 pub fn has_adapter(e: &Env, protocol_id: String) -> bool {
-    e.storage()
-        .instance()
-        .has(&DataKey::Adapter(protocol_id))
+    e.storage().instance().has(&DataKey::Adapter(protocol_id))
 }
 
 pub fn get_adapter(e: &Env, protocol_id: String) -> Result<Adapter, AggregatorError> {
-    match e
-        .storage()
-        .instance()
-        .get(&DataKey::Adapter(protocol_id))
-    {
+    match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
         Some(adapter) => Ok(adapter),
         None => Err(AggregatorError::ProtocolNotFound),
     }
@@ -109,7 +101,11 @@ pub fn remove_adapter_id(e: &Env, protocol_id: String) {
         .set(&DataKey::ProtocolList, &new_protocols);
 }
 
-pub fn set_pause_protocol(e: &Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>{
+pub fn set_pause_protocol(
+    e: &Env,
+    protocol_id: String,
+    paused: bool,
+) -> Result<(), AggregatorError> {
     let mut protocol = get_adapter(&e, protocol_id)?;
     protocol.paused = paused;
     put_adapter(&e, protocol);

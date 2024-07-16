@@ -1,12 +1,15 @@
 extern crate std;
 use crate::error::AggregatorError;
 use crate::models::Adapter;
-use crate::test::{create_protocols_addresses, create_soroswap_router, new_update_adapters_addresses, SoroswapAggregatorTest};
-use soroban_sdk::{vec, String, Vec};
+use crate::test::{
+    create_protocols_addresses, create_soroswap_router, new_update_adapters_addresses,
+    SoroswapAggregatorTest,
+};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
+use soroban_sdk::{vec, String, Vec};
 
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(

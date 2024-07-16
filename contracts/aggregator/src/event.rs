@@ -1,5 +1,5 @@
 //! Definition of the Events used in the contract
-use crate::models::{DexDistribution, Adapter};
+use crate::models::{Adapter, DexDistribution};
 use soroban_sdk::{contracttype, symbol_short, Address, Env, String, Vec};
 
 // INITIALIZED
@@ -18,7 +18,6 @@ pub(crate) fn initialized(e: &Env, admin: Address, adapter_addresses: Vec<Adapte
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("init")), event);
 }
-
 
 // UPDATE PROTOCOL EVENT
 #[contracttype]
@@ -58,11 +57,13 @@ pub struct PausedProtocolEvent {
 }
 
 pub(crate) fn protocol_paused(e: &Env, protocol_id: String, paused: bool) {
-    let event = PausedProtocolEvent { protocol_id, paused};
+    let event = PausedProtocolEvent {
+        protocol_id,
+        paused,
+    };
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("paused")), event);
 }
-
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -76,8 +77,6 @@ pub(crate) fn new_admin(e: &Env, old: Address, new: Address) {
     e.events()
         .publish(("SoroswapAggregator", symbol_short!("new_admin")), event);
 }
-
-
 
 // SWAP EVENT
 #[contracttype]
@@ -97,8 +96,9 @@ pub(crate) fn swap(
     token_out: Address,
     amount_in: i128,
     amount_out: i128,
-    distribution: Vec<DexDistribution>, 
-    to: Address) {
+    distribution: Vec<DexDistribution>,
+    to: Address,
+) {
     let event = SwapEvent {
         token_in,
         token_out,

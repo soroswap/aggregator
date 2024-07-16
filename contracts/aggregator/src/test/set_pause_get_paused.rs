@@ -1,253 +1,245 @@
-    extern crate std;
-    use crate::error::AggregatorError;
-    use crate::models::Adapter;
-    use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
-    use soroban_sdk::{vec, String, Vec};
 
-    pub fn new_protocol_vec(
-        test: &SoroswapAggregatorTest,
-        protocol_id: &String,
-    ) -> Vec<Adapter> {
-        let new_router = create_soroswap_router(&test.env);
-        vec![
-            &test.env,
-            Adapter {
-                protocol_id: protocol_id.clone(),
-                address: new_router.address,
-                paused: false,
-            },
-        ]
-    }
+extern crate std;
+use crate::error::AggregatorError;
+use crate::models::Adapter;
+use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
+use soroban_sdk::{vec, String, Vec};
 
-    #[test]
-    fn test_set_pause_true_false() {
-        let test = SoroswapAggregatorTest::setup();
+pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
+    let new_router = create_soroswap_router(&test.env);
+    vec![
+        &test.env,
+        Adapter {
+            protocol_id: protocol_id.clone(),
+            address: new_router.address,
+            paused: false,
+        },
+    ]
+}
 
-        //Initialize aggregator
-        let initialize_aggregator_addresses = create_protocols_addresses(&test);
-        test.aggregator_contract
-            .initialize(&test.admin, &initialize_aggregator_addresses);
+#[test]
+fn test_set_pause_true_false() {
+    let test = SoroswapAggregatorTest::setup();
 
-        // check that protocol is not paused
-        let mut is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "soroswap"));
-        assert_eq!(is_protocol_paused, false);
+    //Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
-        //  PAUSE
-        test.aggregator_contract
-            .set_pause(&String::from_str(&test.env, "soroswap"), &true);
+    // check that protocol is not paused
+    let mut is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, false);
 
-        let mut updated_protocols = test.aggregator_contract.get_adapters();
+    //  PAUSE
+    test.aggregator_contract
+        .set_pause(&String::from_str(&test.env, "soroswap"), &true);
 
-        // we should have the vec but with paused protocol
-        let expected_protocols_vec = vec![
-            &test.env,
-            Adapter {
-                protocol_id: String::from_str(&test.env, "soroswap"),
-                address: test.soroswap_adapter_contract.address.clone(),
-                paused: true,
-            },
-        ];
-        assert_eq!(updated_protocols, expected_protocols_vec);
+    let mut updated_protocols = test.aggregator_contract.get_adapters();
 
-        // check is_paused
+    // we should have the vec but with paused protocol
+    let expected_protocols_vec = vec![
+        &test.env,
+        Adapter {
+            protocol_id: String::from_str(&test.env, "soroswap"),
+            address: test.soroswap_adapter_contract.address.clone(),
+            paused: true,
+        },
+    ];
+    assert_eq!(updated_protocols, expected_protocols_vec);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "soroswap"));
-        assert_eq!(is_protocol_paused, true);
+    // check is_paused
 
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, true);
 
-        //add new protocol
-        let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
-        test.aggregator_contract.update_adapters(&new_protocol_0);
+    //add new protocol
+    let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
+    test.aggregator_contract.update_adapters(&new_protocol_0);
 
-        let mut expected_new_protocols = vec![
-            &test.env,
-            Adapter {
-                protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
-                address: initialize_aggregator_addresses.get(0).unwrap().address,
-                paused: true,
-            },
-            new_protocol_0.get(0).unwrap()
-        ];
+    let mut expected_new_protocols = vec![
+        &test.env,
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(0).unwrap().address,
+            paused: true,
+        },
+        new_protocol_0.get(0).unwrap(),
+    ];
 
-        updated_protocols = test.aggregator_contract.get_adapters();
-        assert_eq!(updated_protocols, expected_new_protocols);
+    updated_protocols = test.aggregator_contract.get_adapters();
+    assert_eq!(updated_protocols, expected_new_protocols);
 
-        // add new protoco 1
-        let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));
-        test.aggregator_contract.update_adapters(&new_protocol_1);
+    // add new protoco 1
+    let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));
+    test.aggregator_contract.update_adapters(&new_protocol_1);
 
-        expected_new_protocols = vec![
-            &test.env,
-            Adapter {
-                protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
-                address: initialize_aggregator_addresses.get(0).unwrap().address,
-                paused: true,
-            },
-            new_protocol_0.get(0).unwrap(),
-            new_protocol_1.get(0).unwrap()
-        ];
+    expected_new_protocols = vec![
+        &test.env,
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(0).unwrap().address,
+            paused: true,
+        },
+        new_protocol_0.get(0).unwrap(),
+        new_protocol_1.get(0).unwrap(),
+    ];
 
-        updated_protocols = test.aggregator_contract.get_adapters();
-        assert_eq!(updated_protocols, expected_new_protocols);
+    updated_protocols = test.aggregator_contract.get_adapters();
+    assert_eq!(updated_protocols, expected_new_protocols);
 
-        // PAUSE PROTOCOL 1
-        test.aggregator_contract
+    // PAUSE PROTOCOL 1
+    test.aggregator_contract
         .set_pause(&String::from_str(&test.env, "new_protocol_1"), &true);
 
-        expected_new_protocols = vec![
-            &test.env,
-            Adapter {
-                protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
-                address: initialize_aggregator_addresses.get(0).unwrap().address,
-                paused: true,
-            },
-            new_protocol_0.get(0).unwrap(),
-            Adapter {
-                protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
-                address: new_protocol_1.get(0).unwrap().address,
-                paused: true,
-            },
-        ];
+    expected_new_protocols = vec![
+        &test.env,
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(0).unwrap().address,
+            paused: true,
+        },
+        new_protocol_0.get(0).unwrap(),
+        Adapter {
+            protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
+            address: new_protocol_1.get(0).unwrap().address,
+            paused: true,
+        },
+    ];
 
-        updated_protocols = test.aggregator_contract.get_adapters();
-        assert_eq!(updated_protocols, expected_new_protocols);
+    updated_protocols = test.aggregator_contract.get_adapters();
+    assert_eq!(updated_protocols, expected_new_protocols);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "soroswap"));
-        assert_eq!(is_protocol_paused, true);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, true);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_0"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_0"));
+    assert_eq!(is_protocol_paused, false);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_1"));
-        assert_eq!(is_protocol_paused, true);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_1"));
+    assert_eq!(is_protocol_paused, true);
 
+    // UNPAUSE new_protocol_1
 
-        // UNPAUSE new_protocol_1
-
-        test.aggregator_contract
+    test.aggregator_contract
         .set_pause(&String::from_str(&test.env, "new_protocol_1"), &false);
 
-        expected_new_protocols = vec![
-            &test.env,
-            Adapter {
-                protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
-                address: initialize_aggregator_addresses.get(0).unwrap().address,
-                paused: true,
-            },
-            new_protocol_0.get(0).unwrap(),
-            Adapter {
-                protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
-                address: new_protocol_1.get(0).unwrap().address,
-                paused: false,
-            },
-        ];
+    expected_new_protocols = vec![
+        &test.env,
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(0).unwrap().address,
+            paused: true,
+        },
+        new_protocol_0.get(0).unwrap(),
+        Adapter {
+            protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
+            address: new_protocol_1.get(0).unwrap().address,
+            paused: false,
+        },
+    ];
 
-        updated_protocols = test.aggregator_contract.get_adapters();
-        assert_eq!(updated_protocols, expected_new_protocols);
+    updated_protocols = test.aggregator_contract.get_adapters();
+    assert_eq!(updated_protocols, expected_new_protocols);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "soroswap"));
-        assert_eq!(is_protocol_paused, true);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, true);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_0"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_0"));
+    assert_eq!(is_protocol_paused, false);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_1"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_1"));
+    assert_eq!(is_protocol_paused, false);
 
+    // UNPAUSE soroswap
 
-        // UNPAUSE soroswap
-
-        test.aggregator_contract
+    test.aggregator_contract
         .set_pause(&String::from_str(&test.env, "soroswap"), &false);
 
-        expected_new_protocols = vec![
-            &test.env,
-            Adapter {
-                protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
-                address: initialize_aggregator_addresses.get(0).unwrap().address,
-                paused: false,
-            },
-            new_protocol_0.get(0).unwrap(),
-            Adapter {
-                protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
-                address: new_protocol_1.get(0).unwrap().address,
-                paused: false,
-            },
-        ];
+    expected_new_protocols = vec![
+        &test.env,
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(0).unwrap().address,
+            paused: false,
+        },
+        new_protocol_0.get(0).unwrap(),
+        Adapter {
+            protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
+            address: new_protocol_1.get(0).unwrap().address,
+            paused: false,
+        },
+    ];
 
-        updated_protocols = test.aggregator_contract.get_adapters();
-        assert_eq!(updated_protocols, expected_new_protocols);
+    updated_protocols = test.aggregator_contract.get_adapters();
+    assert_eq!(updated_protocols, expected_new_protocols);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "soroswap"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "soroswap"));
+    assert_eq!(is_protocol_paused, false);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_0"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_0"));
+    assert_eq!(is_protocol_paused, false);
 
-        is_protocol_paused = test
-            .aggregator_contract
-            .get_paused(&String::from_str(&test.env, "new_protocol_1"));
-        assert_eq!(is_protocol_paused, false);
+    is_protocol_paused = test
+        .aggregator_contract
+        .get_paused(&String::from_str(&test.env, "new_protocol_1"));
+    assert_eq!(is_protocol_paused, false);
+}
 
-    }
+// test non initialized
+#[test]
+fn test_set_pause_not_yet_initialized() {
+    let test = SoroswapAggregatorTest::setup();
+    let result = test
+        .aggregator_contract
+        .try_set_pause(&String::from_str(&test.env, "soroswap"), &true);
 
-    // test non initialized
-    #[test]
-    fn test_set_pause_not_yet_initialized() {
-        let test = SoroswapAggregatorTest::setup();
-        let result = test
-            .aggregator_contract
-            .try_set_pause(&String::from_str(&test.env, "soroswap"), &true);
+    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+}
 
-        assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
-    }
+// test non initialized
+#[test]
+fn test_set_pause_non_existent() {
+    let test = SoroswapAggregatorTest::setup();
 
-    // test non initialized
-    #[test]
-    fn test_set_pause_non_existent() {
-        let test = SoroswapAggregatorTest::setup();
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
 
-        let initialize_aggregator_addresses = create_protocols_addresses(&test);
-        test.aggregator_contract
-            .initialize(&test.admin, &initialize_aggregator_addresses);
+    let result = test
+        .aggregator_contract
+        .try_set_pause(&String::from_str(&test.env, "nonsoroswap"), &true);
 
-        let result = test
-            .aggregator_contract
-            .try_set_pause(&String::from_str(&test.env, "nonsoroswap"), &true);
+    assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
+}
 
-        assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
-    }
+// test non initialized
+#[test]
+fn test_get_paused_non_existent() {
+    let test = SoroswapAggregatorTest::setup();
 
+    let result = test
+        .aggregator_contract
+        .try_get_paused(&String::from_str(&test.env, "nonsoroswap"));
 
-    // test non initialized
-    #[test]
-    fn test_get_paused_non_existent() {
-        let test = SoroswapAggregatorTest::setup();
-
-        let result = test
-            .aggregator_contract
-            .try_get_paused(&String::from_str(&test.env, "nonsoroswap"));
-
-        assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
-    }
-
+    assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
+}
