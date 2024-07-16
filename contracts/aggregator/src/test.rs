@@ -9,7 +9,7 @@ use soroban_sdk::{
 
 // Token Contract
 mod token {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/token/target/wasm32-unknown-unknown/release/soroban_token_contract.wasm");
+    soroban_sdk::contractimport!(file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm");
     pub type TokenClient<'a> = Client<'a>;
 }
 use token::TokenClient;
@@ -27,14 +27,14 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../../protocols/soroswap/contracts/pair/target/wasm32-unknown-unknown/release/soroswap_pair.wasm"
+        file = "../adapters/soroswap/soroswap_contracts/soroswap_pair.wasm"
     );
     e.deployer().upload_contract_wasm(WASM)
 }
 
 // SoroswapFactory Contract
 mod factory {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/factory/target/wasm32-unknown-unknown/release/soroswap_factory.wasm");
+    soroban_sdk::contractimport!(file = "../adapters/soroswap/soroswap_contracts/soroswap_factory.wasm");
     pub type SoroswapFactoryClient<'a> = Client<'a>;
 }
 use factory::SoroswapFactoryClient;
@@ -49,7 +49,7 @@ fn create_soroswap_factory<'a>(e: &Env, setter: &Address) -> SoroswapFactoryClie
 
 // SoroswapRouter Contract
 mod router {
-    soroban_sdk::contractimport!(file = "../../protocols/soroswap/contracts/router/target/wasm32-unknown-unknown/release/soroswap_router.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../adapters/soroswap/soroswap_contracts/soroswap_router.optimized.wasm");
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 use router::SoroswapRouterClient;
