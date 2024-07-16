@@ -30,9 +30,9 @@ fn convert_to_swaps(e: &Env, path: &Vec<Address>) -> Vec<Swap> {
     //     ask_asset_min_amount: None,
     // }
 
-    for i in 0..(addresses.len() - 1) {
-        let offer_asset = addresses.get(i).expect("Failed to get offer asset");
-        let ask_asset = addresses.get(i + 1).expect("Failed to get ask a    sset");
+    for i in 0..(path.len() - 1) {
+        let offer_asset = path.get(i).expect("Failed to get offer asset");
+        let ask_asset = path.get(i + 1).expect("Failed to get ask a    sset");
 
         swaps.push_back(Swap {
           offer_asset: offer_asset.clone(), // asset being sold (token_in)
@@ -43,7 +43,6 @@ fn convert_to_swaps(e: &Env, path: &Vec<Address>) -> Vec<Swap> {
 
     swaps
 }
-
 
 pub fn protocol_swap_exact_tokens_for_tokens(
     e: &Env,
@@ -83,8 +82,39 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
 
-    // TODO: CHECK AND TEST
-    phoenix_multihop_client.swap(&to, &operations, &None, &amount_in_max);
+    // We first need to get the "reverse_amount from phoenix.simulate_reverse_swap"
+    // however here, if the path is [t0, t1, t2, t3, t4], the  operations should be
+    // swap_0 = Swap{
+    //     offer_asset: t3,
+    //     ask_asset: t4,
+    //     ask_asset_min_amount: None,
+    // },
+    // swap_1 = Swap{
+    //     offer_asset: t2,
+    //     ask_asset: t3,
+    //     ask_asset_min_amount: None,
+    // },
+    // swap_2 = Swap{
+    //     offer_asset: t1,
+    //     ask_asset: t2,
+    //     ask_asset_min_amount: None,
+    // },
+    // swap_3 = Swap{
+    //     offer_asset: t0,
+    //     ask_asset: t1,
+    //     ask_asset_min_amount: None,
+    // }
+
+    let revert_operations = convert_to_revert_swaps(e, path);
+    let reverse_simulated_swap = phoenix_multihop_client.simulate_reverse_swap(
+        operations.rev(), //operations: Vec<Swap>,
+        amount_out); //amount: i128,
+
+    phoenix_multihop_client.swap(
+        &to, // recipient: Address, 
+        &operations, // operations: Vec<Swap>,
+        &None, // max_spread_bps: Option<i64>.
+        &reverse_simulated_swap.offer_amount); //amout: i128. Amount being sold. Input from the user,
 
     // Returning empty array (should check phoenix response if it return amounts, apparently it doesnt)
     Ok(vec![&e])
