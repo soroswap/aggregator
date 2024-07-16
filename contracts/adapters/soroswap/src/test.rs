@@ -26,7 +26,7 @@ pub struct SoroswapAggregatorAdapterTest<'a> {
     token_1: TokenClient<'a>,
     token_2: TokenClient<'a>,
     user: Address,
-    admin: Address
+    // admin: Address
 }
 
 impl<'a> SoroswapAggregatorAdapterTest<'a> {
@@ -44,7 +44,7 @@ impl<'a> SoroswapAggregatorAdapterTest<'a> {
             token_1: test.token_1,
             token_2: test.token_2,
             user: test.user,
-            admin: test.admin
+            // admin: test.admin
         }
     }
 }
