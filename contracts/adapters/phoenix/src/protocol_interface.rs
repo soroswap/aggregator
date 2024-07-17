@@ -66,6 +66,15 @@ pub fn protocol_swap_exact_tokens_for_tokens(
         &amount_in); //amout: i128. Amount being sold. Input from the user,
 
     // Returning empty array (should check phoenix response if it return amounts, apparently it doesnt)
+    // We dont know the amount of the output token, unless we do an extra cross contract call to the token contract
+    // In order to avoid extra calls, we are returning an empty array
+
+    //To be more exact, this adapter should do the cross contract call and check for amount_out_min...
+    // But in order to calculate the exact amount_out we should do 2 cross_contract calls to the token contract, 
+    // one before and one after....
+
+    // Because our Aggregator contract checks for everything, we wont add this here.
+    // Can we do Benchmark studies to see the amount of extra operations/fees that this incurrs?
     Ok(vec![&e])
 }
 
@@ -105,10 +114,15 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     //     ask_asset_min_amount: None,
     // }
 
-    let revert_operations = convert_to_revert_swaps(e, path);
+    // This is the same of operations.rev()
+
     let reverse_simulated_swap = phoenix_multihop_client.simulate_reverse_swap(
         operations.rev(), //operations: Vec<Swap>,
         amount_out); //amount: i128,
+    
+    if reverse_simulated_swap.offer_amount > amount_in_max {
+        // TODO: Here we should have a new Error object
+    }
 
     phoenix_multihop_client.swap(
         &to, // recipient: Address, 
@@ -116,6 +130,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         &None, // max_spread_bps: Option<i64>.
         &reverse_simulated_swap.offer_amount); //amout: i128. Amount being sold. Input from the user,
 
-    // Returning empty array (should check phoenix response if it return amounts, apparently it doesnt)
+    // Here we are not 100% sure if the  amount_in will be exactely reverse_simulated_swap.offer_amount
+    // and if the amount_out will be indeed amount_out
     Ok(vec![&e])
 }
