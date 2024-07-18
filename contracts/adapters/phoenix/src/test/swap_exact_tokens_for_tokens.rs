@@ -194,10 +194,10 @@ fn swap_exact_tokens_for_tokens_enough_output_amount() {
     path.push_back(test.token_2.address.clone());
     path.push_back(test.token_3.address.clone());
 
-    let amount_in = 50i128;
+    let amount_in = 500i128;
     // The next taken from phoenix contract tests
     // TODO: Check with future versions of phoenix
-    let expected_amount_out = 50i128;
+    let expected_amount_out = 500i128;
 
     let initial_user_balance_0 = test.token_0.balance(&test.user);
     let initial_user_balance_1 = test.token_1.balance(&test.user);
