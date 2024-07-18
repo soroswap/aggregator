@@ -26,7 +26,7 @@ pub struct PhoenixAggregatorAdapterTest<'a> {
     token_2: TokenClient<'a>,
     token_3: TokenClient<'a>,
     user: Address,
-    admin: Address
+    // admin: Address
 }
 
 impl<'a> PhoenixAggregatorAdapterTest<'a> {
@@ -44,7 +44,7 @@ impl<'a> PhoenixAggregatorAdapterTest<'a> {
             token_2: test.token_2,
             token_3: test.token_3,
             user: test.user,
-            admin: test.admin
+            // admin: test.admin
         }
     }
 }

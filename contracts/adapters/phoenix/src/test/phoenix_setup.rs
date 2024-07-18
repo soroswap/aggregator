@@ -2,7 +2,7 @@
 // extern crate std;
 use soroban_sdk::{
     vec,
-    IntoVal,
+    // IntoVal,
     String,
     Env, 
     Bytes,
@@ -72,20 +72,20 @@ pub mod token_contract {
 
 pub use token_contract::Client as TokenClient;
 
-pub fn create_token_contract_with_metadata<'a>(
-    env: &Env,
-    admin: &Address,
-    decimals: u32,
-    name: String,
-    symbol: String,
-    amount: i128,
-) -> TokenClient<'a> {
-    let token =
-        TokenClient::new(env, &env.register_contract_wasm(None, token_contract::WASM));
-    token.initialize(admin, &decimals, &name.into_val(env), &symbol.into_val(env));
-    token.mint(admin, &amount);
-    token
-}
+// pub fn create_token_contract_with_metadata<'a>(
+//     env: &Env,
+//     admin: &Address,
+//     decimals: u32,
+//     name: String,
+//     symbol: String,
+//     amount: i128,
+// ) -> TokenClient<'a> {
+//     let token =
+//         TokenClient::new(env, &env.register_contract_wasm(None, token_contract::WASM));
+//     token.initialize(admin, &decimals, &name.into_val(env), &symbol.into_val(env));
+//     token.mint(admin, &amount);
+//     token
+// }
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
@@ -219,13 +219,13 @@ pub fn deploy_and_initialize_lp(
 pub struct PhoenixTest<'a> {
     pub env: Env,
     pub multihop_client: MultihopClient<'a>,
-    pub factory_client: PhoenixFactory<'a>,
+    // pub factory_client: PhoenixFactory<'a>,
     pub token_0: TokenClient<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
     pub token_3: TokenClient<'a>,
     pub user: Address,
-    pub admin: Address
+    // pub admin: Address
 }
 
 impl<'a> PhoenixTest<'a> {
@@ -292,13 +292,13 @@ impl<'a> PhoenixTest<'a> {
     PhoenixTest {
             env: env.clone(),
             multihop_client,
-            factory_client,
+            // factory_client,
             token_0,
             token_1,
             token_2,
             token_3,
             user,
-            admin: admin.clone()
+            // admin: admin.clone()
         }
     }
 }
