@@ -2,6 +2,7 @@ use soroban_sdk::{
    Env, BytesN, Address,
 };
 
+
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
         file = "../adapters/soroswap/soroswap_contracts/soroswap_pair.wasm"

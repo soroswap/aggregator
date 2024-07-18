@@ -8,8 +8,21 @@ use soroban_sdk::{
 };
 
 mod soroswap_setup;
-use soroswap_setup::{SoroswapAggregatorAdapterForSoroswapClient, create_soroswap_adapter, create_soroswap_factory, create_soroswap_router,
-    SoroswapRouterClient};
+use soroswap_setup::{
+    create_soroswap_adapter, 
+    create_soroswap_factory, 
+    create_soroswap_router,
+    SoroswapAggregatorAdapterForSoroswapClient,
+    SoroswapRouterClient,
+};
+
+mod phoenix_setup;
+
+// SoroswapAggregator Contract [THE MAIN CONTRACT]
+fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
+    SoroswapAggregatorClient::new(e, &e.register_contract(None, SoroswapAggregator {}))
+}
+
 
 // Token Contract
 mod token {
@@ -17,32 +30,17 @@ mod token {
     pub type TokenClient<'a> = Client<'a>;
 }
 use token::TokenClient;
-
 pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
     TokenClient::new(&e, &e.register_stellar_asset_contract(admin.clone()))
 }
 
-// For Phoenix
-mod phoenix_adapter {
+pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file =
-            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+        file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm"
     );
-    pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
-}
-use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
-
-// Adapter for phoenix
-fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
-    let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
-    let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
-    adapter
+    env.deployer().upload_contract_wasm(WASM)
 }
 
-// SoroswapAggregator Contract
-fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
-    SoroswapAggregatorClient::new(e, &e.register_contract(None, SoroswapAggregator {}))
-}
 
 // Helper function to initialize / update soroswap aggregator protocols
 pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
@@ -121,6 +119,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         
         
         /*  INITIALIZE SOROSWAP FACTORY, ROUTER AND LPS */
+        /************************************************/
         env.budget().reset_unlimited();
         let router_contract = create_soroswap_router(&env);
         let factory_contract = create_soroswap_factory(&env, &admin);
@@ -192,6 +191,8 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
 
         /* INITIALIZE PHOENIX FACTORY, LP AND MULTIHOP */
+        /************************************************/
+
 
 
 
@@ -205,7 +206,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
             &router_contract.address,
         );
 
-        let _phoenix_adapter_contract = create_phoenix_adapter(&env);
+        // let _phoenix_adapter_contract = create_phoenix_adapter(&env);
 
 
         SoroswapAggregatorTest {
