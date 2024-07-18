@@ -70,16 +70,16 @@ pub fn protocol_swap_exact_tokens_for_tokens(
         &None, // max_spread_bps: Option<i64>.
         &amount_in); //amout: i128. Amount being sold. Input from the user,
         
-        let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
-        
-        // check if the amount of token_out received is greater than the minimum amount expected
-        // TODO: Remove this checks if we want to reduce the number of total instructions
-        // TODO: Do benchmarking
-        let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).unwrap();
-        if  final_amount_out < *amount_out_min {
-            // panic
-            panic!("Amount of token out received is less than the minimum amount expected");
-        }
+    let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
+    
+    // check if the amount of token_out received is greater than the minimum amount expected
+    // TODO: Remove this checks if we want to reduce the number of total instructions
+    // TODO: Do benchmarking
+    let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).unwrap();
+    if  final_amount_out < *amount_out_min {
+        // panic
+        panic!("Amount of token out received is less than the minimum amount expected");
+    }
 
     let mut swap_amounts: Vec<i128> = Vec::new(e);
     swap_amounts.push_back(amount_in.clone());

@@ -32,7 +32,7 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
 }
 
-use factory::Client as PhoenixFactory;
+pub use factory::Client as PhoenixFactory;
 
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
@@ -219,13 +219,13 @@ pub fn deploy_and_initialize_lp(
 pub struct PhoenixTest<'a> {
     pub env: Env,
     pub multihop_client: MultihopClient<'a>,
-    // pub factory_client: PhoenixFactory<'a>,
+    pub factory_client: PhoenixFactory<'a>,
     pub token_0: TokenClient<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
     pub token_3: TokenClient<'a>,
     pub user: Address,
-    // pub admin: Address
+    pub admin: Address
 }
 
 impl<'a> PhoenixTest<'a> {
@@ -280,11 +280,11 @@ impl<'a> PhoenixTest<'a> {
 
         // Setup multihop
         let multihop_client = deploy_multihop_contract(&env, admin.clone(), &factory_client.address);
-        token_0.mint(&user, &50i128);
+        token_0.mint(&user, &1000i128);
 
         // Check initial user value of every token:
 
-        assert_eq!(token_0.balance(&user), 50i128);
+        assert_eq!(token_0.balance(&user), 1000i128);
         assert_eq!(token_1.balance(&user), 0i128);
         assert_eq!(token_2.balance(&user), 0i128);
         assert_eq!(token_3.balance(&user), 0i128);
@@ -292,13 +292,13 @@ impl<'a> PhoenixTest<'a> {
     PhoenixTest {
             env: env.clone(),
             multihop_client,
-            // factory_client,
+            factory_client,
             token_0,
             token_1,
             token_2,
             token_3,
             user,
-            // admin: admin.clone()
+            admin: admin.clone()
         }
     }
 }

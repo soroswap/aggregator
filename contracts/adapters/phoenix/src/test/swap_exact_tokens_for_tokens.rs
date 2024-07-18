@@ -1,5 +1,5 @@
 use soroban_sdk::{Address, vec, Vec, String};
-use crate::test::{PhoenixAggregatorAdapterTest};
+use crate::test::{PhoenixAggregatorAdapterTest, phoenix_setup::deploy_and_initialize_lp};
 use soroswap_aggregator_adapter_interface::{AdapterError};
 
 
@@ -145,7 +145,8 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
 
 
 #[test]
-#[should_panic] // TODO: Test the imported error
+// #[should_panic] // TODO: Change to an error object (If we dont delete this check)
+#[should_panic(expected = "Amount of token out received is less than the minimum amount expected")]
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.adapter_client.initialize(
@@ -161,10 +162,8 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     path.push_back(test.token_3.address.clone());
 
     let amount_in = 50i128;
-
-    //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
-
-    let expected_amount_out = 50;
+    // The next taken from phoenix contract tests
+    let expected_amount_out = 50i128;
 
     test.env.budget().reset_unlimited();
     test.adapter_client.swap_exact_tokens_for_tokens(
@@ -175,57 +174,121 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
         &deadline,        // deadline
     );
 
-    // TODO TEST THAT WE GET THE RIGHT ERROR
-    assert_eq!(test.token_0.balance(&test.user), 0);
-    assert_eq!(test.token_1.balance(&test.user), 0);
-    assert_eq!(test.token_2.balance(&test.user), 0);
-    assert_eq!(test.token_3.balance(&test.user), 50);
-
-    // assert_eq!(
-    //     result,
-    //     Err(Ok(CombinedRouterError::RouterInsufficientOutputAmount))
-    // );
 }
 
 
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_enough_output_amount() {
-//     let test = PhoenixAggregatorAdapterTest::setup();
-//     test.adapter_client.initialize(
-//         &String::from_str(&test.env, "phoenix"),
-//         &test.multihop_client.address);
+#[test]
+fn swap_exact_tokens_for_tokens_enough_output_amount() {
+    let test = PhoenixAggregatorAdapterTest::setup();
+    test.adapter_client.initialize(
+        &String::from_str(&test.env, "phoenix"),
+        &test.multihop_client.address);
 
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
-//     let mut path: Vec<Address> = Vec::new(&test.env);
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
+    let mut path: Vec<Address> = Vec::new(&test.env);
 
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
-//     path.push_back(test.token_2.address.clone());
-//     path.push_back(test.token_3.address.clone());
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+    path.push_back(test.token_2.address.clone());
+    path.push_back(test.token_3.address.clone());
 
-//     let amount_in = 50i128;
+    let amount_in = 50i128;
+    // The next taken from phoenix contract tests
+    // TODO: Check with future versions of phoenix
+    let expected_amount_out = 50i128;
 
-//     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
+    let initial_user_balance_0 = test.token_0.balance(&test.user);
+    let initial_user_balance_1 = test.token_1.balance(&test.user);
+    let initial_user_balance_2 = test.token_2.balance(&test.user);
+    let initial_user_balance_3 = test.token_3.balance(&test.user);
 
-//     let expected_amount_out = 50;
+    let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
 
-//     test.env.budget().reset_unlimited();
-//     let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
-//         &amount_in,       // amount_in
-//         &(expected_amount_out),  // amount_out_min
-//         &path,            // path
-//         &test.user,       // to
-//         &deadline,        // deadline
-//     );
+    assert_eq!(token_out_address, test.token_3.address);
+    
+    test.env.budget().reset_unlimited();
+    let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
+        &amount_in,       // amount_in
+        &(expected_amount_out),  // amount_out_min
+        &path,            // path
+        &test.user,       // to
+        &deadline,        // deadline
+    );
 
-//     // WE NEED TO RETURN THE VALUES
-//     assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
-//     assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
-// }
+
+    assert_eq!(test.token_0.balance(&test.user), initial_user_balance_0 - amount_in);
+    assert_eq!(test.token_1.balance(&test.user), initial_user_balance_1);
+    assert_eq!(test.token_2.balance(&test.user), initial_user_balance_2);
+    assert_eq!(test.token_3.balance(&test.user), initial_user_balance_3 + expected_amount_out);
+
+    // WE NEED TO RETURN THE VALUES
+    assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
+    assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
+}
+
+
+
+#[test]
+fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
+    let test = PhoenixAggregatorAdapterTest::setup();
+    test.adapter_client.initialize(
+        &String::from_str(&test.env, "phoenix"),
+        &test.multihop_client.address);
+
+    // we will make a pool betwern token 0 and token 2 with fees
+    deploy_and_initialize_lp(
+        &test.env,
+        &test.factory_client,
+        test.admin.clone(),
+        test.token_0.address.clone(),
+        1_000_000,
+        test.token_2.address.clone(),
+        1_000_000,
+        Some(2000),
+    );
+
+
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;  
+
+    let mut path: Vec<Address> = Vec::new(&test.env);
+
+    path.push_back(test.token_0.address.clone());
+    // path.push_back(test.token_1.address.clone());
+    path.push_back(test.token_2.address.clone());
+    // path.push_back(test.token_3.address.clone());
+
+    let amount_in = 300i128;
+    // The next taken from phoenix contract tests
+    // TODO: Check with future versions of phoenix
+    // 1000 tokens initially
+    // swap 300 from token0 to token1 with 2000 bps (20%)
+    // tokens1 will be 240
+    let expected_amount_out = 240i128;
+
+    let initial_user_balance_0 = test.token_0.balance(&test.user);
+    // let initial_user_balance_1 = test.token_1.balance(&test.user);
+    let initial_user_balance_2 = test.token_2.balance(&test.user);
+    // let initial_user_balance_3 = test.token_3.balance(&test.user);
+    
+    test.env.budget().reset_unlimited();
+    let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
+        &amount_in,       // amount_in
+        &(expected_amount_out),  // amount_out_min
+        &path,            // path
+        &test.user,       // to
+        &deadline,        // deadline
+    );
+
+
+    assert_eq!(test.token_0.balance(&test.user), initial_user_balance_0 - amount_in);
+    assert_eq!(test.token_2.balance(&test.user), initial_user_balance_2 + expected_amount_out);
+
+    // WE NEED TO RETURN THE VALUES
+    assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
+    assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
+}
 
 
 // use crate::factory_contract::PoolType;
