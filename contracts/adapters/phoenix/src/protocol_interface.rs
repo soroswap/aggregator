@@ -1,6 +1,6 @@
 // based on https://github.com/Phoenix-Protocol-Group/phoenix_contracts/tree/v1.0.0
 
-use soroban_sdk::{Env, Address, Vec, vec};
+use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
 use crate::storage::{get_protocol_address};
 use soroswap_aggregator_adapter_interface::{AdapterError};
 
@@ -50,13 +50,18 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     amount_out_min: &i128,
     path: &Vec<Address>, 
     to: &Address,
-    deadline: &u64,
+    _deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
     let phoenix_multihop_address = get_protocol_address(&e)?;
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
-
+    
+    // TODO: Remove this checks if we want to reduce the number of total instructions
+    // TODO: Do benchmarking
+    let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
+    let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
+    
     // By using max_spread_bps = None, the Phoenix LP will use the maximum allowed slippage
     // amount_in is the amount being sold of the first token in the operations.
     phoenix_multihop_client.swap(
@@ -64,18 +69,23 @@ pub fn protocol_swap_exact_tokens_for_tokens(
         &operations, // operations: Vec<Swap>,
         &None, // max_spread_bps: Option<i64>.
         &amount_in); //amout: i128. Amount being sold. Input from the user,
+        
+        let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
+        
+        // check if the amount of token_out received is greater than the minimum amount expected
+        // TODO: Remove this checks if we want to reduce the number of total instructions
+        // TODO: Do benchmarking
+        let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).unwrap();
+        if  final_amount_out < *amount_out_min {
+            // panic
+            panic!("Amount of token out received is less than the minimum amount expected");
+        }
 
-    // Returning empty array (should check phoenix response if it return amounts, apparently it doesnt)
-    // We dont know the amount of the output token, unless we do an extra cross contract call to the token contract
-    // In order to avoid extra calls, we are returning an empty array
+    let mut swap_amounts: Vec<i128> = Vec::new(e);
+    swap_amounts.push_back(amount_in.clone());
+    swap_amounts.push_back(final_amount_out);
 
-    //To be more exact, this adapter should do the cross contract call and check for amount_out_min...
-    // But in order to calculate the exact amount_out we should do 2 cross_contract calls to the token contract, 
-    // one before and one after....
-
-    // Because our Aggregator contract checks for everything, we wont add this here.
-    // Can we do Benchmark studies to see the amount of extra operations/fees that this incurrs?
-    Ok(vec![&e])
+    Ok(swap_amounts)
 }
 
 pub fn protocol_swap_tokens_for_exact_tokens(
@@ -84,7 +94,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     amount_in_max: &i128,
     path: &Vec<Address>,
     to: &Address,
-    deadline: &u64,
+    _deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
     let phoenix_multihop_address = get_protocol_address(&e)?;
@@ -114,14 +124,19 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     //     ask_asset_min_amount: None,
     // }
 
-    // This is the same of operations.rev()
-
+    let mut operations_reversed = soroban_sdk::Vec::new(&e);
+    for op in operations.iter().rev() {
+        operations_reversed.push_back(op.clone());
+    }
     let reverse_simulated_swap = phoenix_multihop_client.simulate_reverse_swap(
-        operations.rev(), //operations: Vec<Swap>,
+        &operations_reversed, //operations: Vec<Swap>,
         amount_out); //amount: i128,
     
-    if reverse_simulated_swap.offer_amount > amount_in_max {
-        // TODO: Here we should have a new Error object
+    // TODO: Eliminate this check. The overall in max is checked by the Aggregator
+    // Removing this check will reduce the amount of instructions/
+    // TODO: Do Benchmarking
+    if reverse_simulated_swap.offer_amount > *amount_in_max {
+        panic!("Amount of token in required is greater than the maximum amount expected");
     }
 
     phoenix_multihop_client.swap(
@@ -130,7 +145,10 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         &None, // max_spread_bps: Option<i64>.
         &reverse_simulated_swap.offer_amount); //amout: i128. Amount being sold. Input from the user,
 
-    // Here we are not 100% sure if the  amount_in will be exactely reverse_simulated_swap.offer_amount
-    // and if the amount_out will be indeed amount_out
-    Ok(vec![&e])
+    // Here we trust in the amounts returned by Phoenix contracts
+    let mut swap_amounts: Vec<i128> = Vec::new(e);
+    swap_amounts.push_back(reverse_simulated_swap.offer_amount);
+    swap_amounts.push_back(*amount_out);
+
+    Ok(swap_amounts)
 }
