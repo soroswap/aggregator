@@ -13,7 +13,7 @@ use phoenix_setup::{PhoenixTest, MultihopClient, TokenClient, PhoenixFactory};
 // use router::SoroswapRouterClient;
 
 // PhoenixAggregatorAdapter Contract
-fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> SoroswapAggregatorPhoenixAdapterClient<'a> {
+fn create_soroswap_aggregator_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorPhoenixAdapterClient<'a> {
     SoroswapAggregatorPhoenixAdapterClient::new(e, &e.register_contract(None, SoroswapAggregatorPhoenixAdapter {}))
 }
 
@@ -34,7 +34,7 @@ impl<'a> PhoenixAggregatorAdapterTest<'a> {
     fn setup() -> Self {
         let test = PhoenixTest::phoenix_setup();
         
-        let adapter_client = create_soroswap_aggregator_adapter(&test.env);
+        let adapter_client = create_soroswap_aggregator_phoenix_adapter(&test.env);
 
         PhoenixAggregatorAdapterTest {
             env: test.env,

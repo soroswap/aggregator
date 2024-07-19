@@ -17,6 +17,12 @@ use soroswap_setup::{
 };
 
 mod phoenix_setup;
+use phoenix_setup::{
+    create_phoenix_adapter,
+    deploy_and_initialize_factory as phoenix_deploy_and_initialize_factory,
+    deploy_and_initialize_lp as phoenix_deploy_and_initialize_lp,
+    deploy_multihop_contract as phoenix_deploy_multihop_contract
+};
 
 // SoroswapAggregator Contract [THE MAIN CONTRACT]
 fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
@@ -59,7 +65,7 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
         &test.env,
         Adapter {
             protocol_id: String::from_str(&test.env, "some_protocol"),
-            address: test.router_contract.address.clone(),
+            address: test.soroswap_router_contract.address.clone(),
             paused: false,
         },
     ]
@@ -69,7 +75,7 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
 //     vec![&test.env,
 //         Adapter {
 //             protocol_id: dex_constants::SOROSWAP,
-//             address: test.router_contract.address.clone(),
+//             address: test.soroswap_router_contract.address.clone(),
 //         },
 //     ]
 // }
@@ -78,7 +84,7 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
 //     vec![&test.env,
 //         Adapter {
 //             protocol_id: dex_constants::PHOENIX,
-//             address: test.router_contract.address.clone(),
+//             address: test.soroswap_router_contract.address.clone(),
 //         },
 //     ]
 // }
@@ -86,7 +92,7 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
 pub struct SoroswapAggregatorTest<'a> {
     env: Env,
     aggregator_contract: SoroswapAggregatorClient<'a>,
-    router_contract: SoroswapRouterClient<'a>,
+    soroswap_router_contract: SoroswapRouterClient<'a>,
     // factory_contract: SoroswapFactoryClient<'a>,
     soroswap_adapter_contract: SoroswapAggregatorAdapterForSoroswapClient<'a>,
     // phoenix_adapter_contract: SoroswapAggregatorAdapterForPhoenixClient<'a>,
@@ -110,20 +116,27 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let token_0 = create_token_contract(&env, &admin);
         let token_1 = create_token_contract(&env, &admin);
         let token_2 = create_token_contract(&env, &admin);
+        let token_3 = create_token_contract(&env, &admin);
 
         let initial_user_balance = 20_000_000_000_000_000_000;
         token_0.mint(&user, &initial_user_balance);
         token_1.mint(&user, &initial_user_balance);
         token_2.mint(&user, &initial_user_balance);
+        token_3.mint(&user, &initial_user_balance);
+
+        token_0.mint(&admin, &initial_user_balance);
+        token_1.mint(&admin, &initial_user_balance);
+        token_2.mint(&admin, &initial_user_balance);
+        token_3.mint(&admin, &initial_user_balance);
         
         
         
         /*  INITIALIZE SOROSWAP FACTORY, ROUTER AND LPS */
         /************************************************/
         env.budget().reset_unlimited();
-        let router_contract = create_soroswap_router(&env);
+        let soroswap_router_contract = create_soroswap_router(&env);
         let factory_contract = create_soroswap_factory(&env, &admin);
-        router_contract.initialize(&factory_contract.address);
+        soroswap_router_contract.initialize(&factory_contract.address);
 
         let ledger_timestamp = 100;
         let desired_deadline = 1000;
@@ -147,7 +160,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
             factory_contract.pair_exists(&token_0.address, &token_1.address),
             false
         );
-        let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = router_contract
+        let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = soroswap_router_contract
             .add_liquidity(
                 &token_0.address,  //     token_a: Address,
                 &token_1.address,  //     token_b: Address,
@@ -159,7 +172,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
                 &desired_deadline, //     deadline: u64,
             );
 
-        let (added_token_1_1, added_token_2_0, added_liquidity_1_2) = router_contract
+        let (added_token_1_1, added_token_2_0, added_liquidity_1_2) = soroswap_router_contract
             .add_liquidity(
                 &token_1.address,  //     token_a: Address,
                 &token_2.address,  //     token_b: Address,
@@ -192,10 +205,44 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
         /* INITIALIZE PHOENIX FACTORY, LP AND MULTIHOP */
         /************************************************/
+        let phoenix_factory_client = phoenix_deploy_and_initialize_factory(&env.clone(), admin.clone());
 
 
+        phoenix_deploy_and_initialize_lp(
+            &env,
+            &phoenix_factory_client,
+            admin.clone(),
+            token_0.address.clone(),
+            1_000_000,
+            token_1.address.clone(),
+            1_000_000,
+            None,
+        );
+        phoenix_deploy_and_initialize_lp(
+            &env,
+            &phoenix_factory_client,
+            admin.clone(),
+            token_1.address.clone(),
+            1_000_000,
+            token_2.address.clone(),
+            1_000_000,
+            None,
+        );
+        phoenix_deploy_and_initialize_lp(
+            &env,
+            &phoenix_factory_client,
+            admin.clone(),
+            token_2.address.clone(),
+            1_000_000,
+            token_3.address.clone(),
+            1_000_000,
+            None,
+        );
 
-
+        let phoenix_multihop_client = phoenix_deploy_multihop_contract(
+            &env,
+            admin.clone(),
+            &phoenix_factory_client.address);
 
 
         /* CREATE ADAPTERS */
@@ -203,16 +250,20 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let soroswap_adapter_contract = create_soroswap_adapter(&env);
         soroswap_adapter_contract.initialize(
             &String::from_str(&env, "soroswap"),
-            &router_contract.address,
+            &soroswap_router_contract.address,
         );
 
-        // let _phoenix_adapter_contract = create_phoenix_adapter(&env);
+        let phoenix_adapter_contract = create_phoenix_adapter(&env);
+        phoenix_adapter_contract.initialize(
+            &String::from_str(&env, "phoenix"),
+            &phoenix_multihop_client.address
+        );
 
 
         SoroswapAggregatorTest {
             env,
             aggregator_contract,
-            router_contract,
+            soroswap_router_contract,
             // factory_contract,
             soroswap_adapter_contract,
             // phoenix_adapter_contract,
