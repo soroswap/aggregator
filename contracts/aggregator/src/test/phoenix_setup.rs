@@ -7,7 +7,7 @@ mod phoenix_adapter {
     );
     pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
 }
-use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
+pub use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
 use crate::test::install_token_wasm;
 // Adapter for phoenix
 pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {

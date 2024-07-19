@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use crate::test::{create_protocols_addresses, SoroswapAggregatorTest, create_soroswap_phoenix_addresses};
 use crate::DexDistribution;
 use soroban_sdk::{Address, String, Vec};
 // use soroban_sdk::{
@@ -599,5 +599,120 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
 }
 #[test]
 fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
-    todo!();
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses(&test);
+
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
+
+    // call the function
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+    let mut distribution_vec = Vec::new(&test.env);
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    let distribution_1 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "phoenix"),
+        path: path.clone(),
+        parts: 3,
+    };
+    distribution_vec.push_back(distribution_0);
+    distribution_vec.push_back(distribution_1);
+
+    let total_expected_amount_in = 123_456_789;
+
+    // The total expected amount will come from 2 different trades:
+    // 123_456_789_i128
+    //     .checked_div(4)
+    //     .unwrap()
+    //     .checked_mul(1)
+    //     .unwrap();
+    let expected_amount_in_0 = 30864197;
+    let expected_amount_in_1 = 92592592;// total_expected_amount_in - expected_amount_in_0;
+
+    // FOR SOROSWAP:
+    // reserve_0 = 1_000_000_000_000_000_000;
+    // reserve_1 = 4_000_000_000_000_000_000;
+
+    // expected_amount_in_0 = 30864197
+    // expected_amount_in_1 = 92592592
+
+    // swap 0
+    // fee = ceil(30864197 * 3 /1000) =  92592.591 = 92593 // USE CEILING
+    // amount_in less fee = 30864197- 92593 = 30771604
+    // out = (amount_in_less_fees*reserve_1)/(reserve_0 + amount_in_less_fees) =
+    // First out = (30771604*4000000000000000000)/(1000000000000000000 + 30771604) =
+    // 123086416000000000000000000 / 1000000000030771604 = 123086415.996212434 = 123086415 // no ceiling div
+    let expected_amount_out_0 = 123086415;
+
+    // FOR PHOENIX WE EXPECT OUT THE SAME AS IN
+    let expected_amount_out_1 = 92592592;
+
+    let total_expected_amount_out = expected_amount_out_0 + expected_amount_out_1;
+
+    // if we just expect one unit more of the expected amount out, the function should fail with expected error
+    let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &total_expected_amount_in,
+        &(total_expected_amount_out + 1),
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline,
+    );
+    // compare the error
+    assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
+
+    // check balance before
+    let user_balance_before_0 = test.token_0.balance(&test.user);
+    let user_balance_before_1 = test.token_1.balance(&test.user);
+
+    // if we expect the exact amount out, the function should succeed
+    let success_result = test.aggregator_contract.swap_exact_tokens_for_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &total_expected_amount_in,
+        &total_expected_amount_out,
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline,
+    );
+
+    // check balance after
+    let user_balance_after_0 = test.token_0.balance(&test.user);
+    let user_balance_after_1 = test.token_1.balance(&test.user);
+
+    // compare
+    assert_eq!(
+        user_balance_after_0,
+        user_balance_before_0 - total_expected_amount_in
+    );
+    assert_eq!(
+        user_balance_after_1,
+        user_balance_before_1 + total_expected_amount_out
+    );
+
+    // check the result vec
+    // the result vec in this case is a vec of 2 vecs with two elements, the amount 0 and amount 1
+    let mut expected_soroswap_result: Vec<i128> = Vec::new(&test.env);
+    expected_soroswap_result.push_back(expected_amount_in_0);
+    expected_soroswap_result.push_back(expected_amount_out_0);
+
+    let mut expected_phoenix_result: Vec<i128> = Vec::new(&test.env);
+    expected_phoenix_result.push_back(expected_amount_in_1);
+    expected_phoenix_result.push_back(expected_amount_out_1);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_soroswap_result);
+    expected_result.push_back(expected_phoenix_result);
+
+    assert_eq!(success_result, expected_result);
 }
