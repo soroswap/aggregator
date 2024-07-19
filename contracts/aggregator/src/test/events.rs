@@ -381,7 +381,7 @@ fn swap_tokens_for_exact_tokens_event() {
 
     let expected_amount_out = 5_000_000;
     let amount_in_should = test
-        .router_contract
+        .soroswap_router_contract
         .router_get_amounts_in(&expected_amount_out, &path)
         .get(0)
         .unwrap();

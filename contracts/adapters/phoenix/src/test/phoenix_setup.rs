@@ -2,7 +2,7 @@
 // extern crate std;
 use soroban_sdk::{
     vec,
-    IntoVal,
+    // IntoVal,
     String,
     Env, 
     Bytes,
@@ -32,7 +32,7 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
 }
 
-use factory::Client as PhoenixFactory;
+pub use factory::Client as PhoenixFactory;
 
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
@@ -72,20 +72,20 @@ pub mod token_contract {
 
 pub use token_contract::Client as TokenClient;
 
-pub fn create_token_contract_with_metadata<'a>(
-    env: &Env,
-    admin: &Address,
-    decimals: u32,
-    name: String,
-    symbol: String,
-    amount: i128,
-) -> TokenClient<'a> {
-    let token =
-        TokenClient::new(env, &env.register_contract_wasm(None, token_contract::WASM));
-    token.initialize(admin, &decimals, &name.into_val(env), &symbol.into_val(env));
-    token.mint(admin, &amount);
-    token
-}
+// pub fn create_token_contract_with_metadata<'a>(
+//     env: &Env,
+//     admin: &Address,
+//     decimals: u32,
+//     name: String,
+//     symbol: String,
+//     amount: i128,
+// ) -> TokenClient<'a> {
+//     let token =
+//         TokenClient::new(env, &env.register_contract_wasm(None, token_contract::WASM));
+//     token.initialize(admin, &decimals, &name.into_val(env), &symbol.into_val(env));
+//     token.mint(admin, &amount);
+//     token
+// }
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
@@ -280,11 +280,11 @@ impl<'a> PhoenixTest<'a> {
 
         // Setup multihop
         let multihop_client = deploy_multihop_contract(&env, admin.clone(), &factory_client.address);
-        token_0.mint(&user, &50i128);
+        token_0.mint(&user, &1000i128);
 
         // Check initial user value of every token:
 
-        assert_eq!(token_0.balance(&user), 50i128);
+        assert_eq!(token_0.balance(&user), 1000i128);
         assert_eq!(token_1.balance(&user), 0i128);
         assert_eq!(token_2.balance(&user), 0i128);
         assert_eq!(token_3.balance(&user), 0i128);

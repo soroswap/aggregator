@@ -1,23 +1,26 @@
 #![no_std]
 use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
-
 mod event;
 mod storage;
 mod protocol_interface;
 mod test;
 
 use storage::{
-    extend_instance_ttl, 
-    set_initialized, 
-    is_initialized, 
+    extend_instance_ttl,
+    set_initialized,
+    is_initialized,
     set_protocol_id,
     get_protocol_id,
-    set_protocol_address, 
-    get_protocol_address, 
+    set_protocol_address,
+    get_protocol_address,
 };
-use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
-use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
-    protocol_swap_tokens_for_exact_tokens};
+use soroswap_aggregator_adapter_interface::{
+    SoroswapAggregatorAdapterTrait, AdapterError
+};
+use protocol_interface::{
+    protocol_swap_exact_tokens_for_tokens,
+    protocol_swap_tokens_for_exact_tokens
+};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
@@ -49,7 +52,18 @@ struct SoroswapAggregatorPhoenixAdapter;
 
 #[contractimpl]
 impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorPhoenixAdapter {
-    /// Initializes the contract and sets the phoenix multihop address
+    
+    /// Initializes the contract and sets the Phoenix multihop address.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The contract environment.
+    /// * `protocol_id` - The identifier for the protocol.
+    /// * `protocol_address` - The address associated with the protocol.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the contract is already initialized (`AdapterError::AlreadyInitialized`).
     fn initialize(
         e: Env,
         protocol_id: String,
