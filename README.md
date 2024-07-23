@@ -6,7 +6,7 @@ The Soroswap Aggregator Contract currently aggregates the pools from the Soroswa
 
 ## 1. Setup
 
-1.1. Clone this repo. Submodules are not more required to build the contracts, but are important to understand the underlying protocols
+1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
 
 ```bash
 git clone --recurse-submodules http://github.com/soroswap/aggregator.git
