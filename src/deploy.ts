@@ -41,34 +41,46 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   
   await deployContract('aggregator', 'aggregator', addressBook, loadedConfig.admin);
   
-  const protocolAddressPair = [
+    // pub struct Adapter {
+    //   pub protocol_id: String,
+    //   pub address: Address,
+    //   pub paused: bool,
+  // }
+
+  const adaptersVec = [
     {
       protocol_id: "soroswap",
       address: new Address(addressBook.getContractId('soroswap_adapter')),
+      paused: false
     },
   ];
 
-  const protocolAddressPairScVal = protocolAddressPair.map((pair) => {
+  const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('address'),
-        val: pair.address.toScVal(),
+        val: adapter.address.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('paused'),
+        val: nativeToScVal(adapter.paused),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: xdr.ScVal.scvString(pair.protocol_id),
+        val: xdr.ScVal.scvString(adapter.protocol_id),
       }),
     ]);
-  });
+  }));
 
-  const aggregatorProtocolAddressesScVal = xdr.ScVal.scvVec(protocolAddressPairScVal);
 
-  const aggregatorInitParams: xdr.ScVal[] = [
+  // fn initialize(e: Env, admin: Address, adapter_vec: Vec<Adapter>)
+  const aggregatorInitParams: xdr.ScVal[] = [ 
     new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
-    aggregatorProtocolAddressesScVal, // proxy_addresses: Vec<ProxyAddressPair>,
+    adaptersVecScVal, // adapter_vec: Vec<Adapter>,
   ];
 
   console.log("Initializing Aggregator")
+  
   await invokeContract(
     'aggregator',
     addressBook,

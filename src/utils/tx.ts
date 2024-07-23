@@ -40,6 +40,8 @@ export async function invokeTransaction(tx: Transaction, source: Keypair, sim: b
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
     console.log("There was an error while simulation the transaction: simulation_resp", simulation_resp)
+    console.log("🚀 ~ invokeTransaction ~ simulation_resp.events[0].event:", simulation_resp.events[0].event)
+    
     throw Error(`Simulation error`);
   } else if (sim) {
     // Only simulate the TX. Assemble the TX to borrow the resource estimation algorithm in
