@@ -67,7 +67,7 @@ class EnvConfig {
       passphrase = networkConfig.soroban_network_passphrase;
     }
 
-    const admin = process.env.SOROSWAP_ADMIN_SECRET_KEY;
+    const admin = process.env.AGGREGATOR_DEPLOYER_ADMIN_SECRET_KEY;
 
     if (
       rpc_url === undefined ||
