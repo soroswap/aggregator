@@ -13,8 +13,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   console.log('-------------------------------------------------------');
   console.log('Deploying Adapters');
   console.log('-------------------------------------------------------');
-  console.log("Soroswap Adapter");
-  console.log('Installing Aggregator Contract');
+  console.log("** Soroswap Adapter");
   await installContract('soroswap_adapter', addressBook, loadedConfig.admin);
   await deployContract('soroswap_adapter', 'soroswap_adapter', addressBook, loadedConfig.admin);
 

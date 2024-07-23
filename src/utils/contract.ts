@@ -44,7 +44,7 @@ export async function installContract(wasmKey: string, addressBook: AddressBook,
   );
   const wasmHash = hash(contractWasm);
   addressBook.setWasmHash(wasmKey, wasmHash.toString('hex'));
-  console.log('Installing:', wasmKey, wasmHash.toString('hex'));
+  console.log('   Installing:', wasmKey, `with wasm hash `, wasmHash.toString('hex'));
   const op = Operation.invokeHostFunction({
     func: xdr.HostFunction.hostFunctionTypeUploadContractWasm(contractWasm),
     auth: [],
