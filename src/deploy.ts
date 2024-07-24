@@ -88,8 +88,10 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     aggregatorInitParams,
     loadedConfig.admin
   );
+  console.log("Aggregator initialized")
 
   if (network != 'mainnet') {
+    console.log("Setting up Phoenix protocol")
     // mocks
     await phoenixSetup();
     console.log("Updating protocols on aggregator")
