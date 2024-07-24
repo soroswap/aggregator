@@ -78,7 +78,14 @@ yarn deploy <network>
 ```
 You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
 
-when deployment is completed you can find the addresses in ./.sosorban directory
+when deployment is completed you can find the addresses in ./.soroban directory
+
+## 4.- Publish deployed address.
+If you want to publish the json files that are in the ignored `.soroban` folder, do:
+
+```bash
+yarn publish_addresses <network>
+```
 
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes

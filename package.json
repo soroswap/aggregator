@@ -7,6 +7,7 @@
     "build": "tsc",
     "deploy": "tsc && node dist/deploy.js",
     "test": "tsc && node dist/test.js",
+    "publish_addresses": "tsc && node dist/publish_addresses.js",
     "test_adapter": "tsc && node dist/test_soroswap_adapter.js",
     "test_phoenix_adapter": "tsc && node dist/test_phoenix_adapter.js",
     "multi_test": "tsc && node dist/multi_test.js"
