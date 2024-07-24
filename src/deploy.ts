@@ -1,6 +1,6 @@
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { phoenixSetup } from './protocols/phoenix/phoenix_setup.js';
-import { updateAggregatorProtocols } from './update_protocols.js';
+import { updateAdapters } from './update_protocols.js';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -13,8 +13,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   console.log('-------------------------------------------------------');
   console.log('Deploying Adapters');
   console.log('-------------------------------------------------------');
-  console.log("Soroswap Adapter");
-  console.log('Installing Aggregator Contract');
+  console.log("** Soroswap Adapter");
   await installContract('soroswap_adapter', addressBook, loadedConfig.admin);
   await deployContract('soroswap_adapter', 'soroswap_adapter', addressBook, loadedConfig.admin);
 
@@ -42,34 +41,46 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   
   await deployContract('aggregator', 'aggregator', addressBook, loadedConfig.admin);
   
-  const protocolAddressPair = [
+    // pub struct Adapter {
+    //   pub protocol_id: String,
+    //   pub address: Address,
+    //   pub paused: bool,
+  // }
+
+  const adaptersVec = [
     {
       protocol_id: "soroswap",
       address: new Address(addressBook.getContractId('soroswap_adapter')),
+      paused: false
     },
   ];
 
-  const protocolAddressPairScVal = protocolAddressPair.map((pair) => {
+  const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('address'),
-        val: pair.address.toScVal(),
+        val: adapter.address.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('paused'),
+        val: nativeToScVal(adapter.paused),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: xdr.ScVal.scvString(pair.protocol_id),
+        val: xdr.ScVal.scvString(adapter.protocol_id),
       }),
     ]);
-  });
+  }));
 
-  const aggregatorProtocolAddressesScVal = xdr.ScVal.scvVec(protocolAddressPairScVal);
 
-  const aggregatorInitParams: xdr.ScVal[] = [
+  // fn initialize(e: Env, admin: Address, adapter_vec: Vec<Adapter>)
+  const aggregatorInitParams: xdr.ScVal[] = [ 
     new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
-    aggregatorProtocolAddressesScVal, // proxy_addresses: Vec<ProxyAddressPair>,
+    adaptersVecScVal, // adapter_vec: Vec<Adapter>,
   ];
 
   console.log("Initializing Aggregator")
+  
   await invokeContract(
     'aggregator',
     addressBook,
@@ -77,13 +88,18 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     aggregatorInitParams,
     loadedConfig.admin
   );
+  console.log("Aggregator initialized")
 
   if (network != 'mainnet') {
+    console.log("Setting up Phoenix protocol")
     // mocks
     await phoenixSetup();
-    console.log("Updating protocols on aggregator")
-    await updateAggregatorProtocols(addressBook);
+    console.log("Updating adapters on aggregator.. adding Phoenix")
+    await updateAdapters(addressBook);
   }
+
+  // TODO: IF MAINNET, UPDATE PHOENIX ADAPTERS WITH MAINNET DEPLOYMENT ADDRESS
+  console.log("Aggregator setup complete")
 }
 
 const network = process.argv[2];

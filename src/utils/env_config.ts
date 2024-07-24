@@ -67,7 +67,7 @@ class EnvConfig {
       passphrase = networkConfig.soroban_network_passphrase;
     }
 
-    const admin = process.env.SOROSWAP_ADMIN_SECRET_KEY;
+    const admin = process.env.AGGREGATOR_DEPLOYER_ADMIN_SECRET_KEY;
 
     if (
       rpc_url === undefined ||
@@ -95,10 +95,15 @@ class EnvConfig {
    */
   getUser(userKey: string): Keypair {
     const userSecretKey = process.env[userKey];
-    if (userSecretKey != undefined) {
-      return Keypair.fromSecret(userSecretKey);
-    } else {
+    if (userSecretKey === undefined) {
       throw new Error(`${userKey} secret key not found in .env`);
+    }
+    try {
+      return Keypair.fromSecret(userSecretKey);
+    }
+    catch (e) {
+      throw new Error(`${userKey} secret key
+        might not be found in .env. Failed with error ${e}`);
     }
   }
 }

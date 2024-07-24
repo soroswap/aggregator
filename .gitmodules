@@ -7,3 +7,6 @@
 [submodule "contracts/protocols/soroswap"]
 	path = protocols/soroswap
 	url = https://github.com/soroswap/core.git
+[submodule "protocols/soroswap"]
+	path = protocols/soroswap
+	url = https://github.com/soroswap/core
