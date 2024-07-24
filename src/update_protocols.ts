@@ -1,43 +1,53 @@
-import { Address, xdr } from '@stellar/stellar-sdk';
+import { Address, xdr, nativeToScVal } from '@stellar/stellar-sdk';
 import { AddressBook } from './utils/address_book.js';
 import { invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 
-export async function updateAggregatorProtocols(addressBook: AddressBook) {
+export async function updateAdapters(addressBook: AddressBook) {
   if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   
-  const protocolAddressPair = [
+  //   pub struct Adapter {
+  //     pub protocol_id: String,
+  //     pub address: Address,
+  //     pub paused: bool,
+  // }
+  const adaptersVec = [
     {
       protocol_id: "phoenix",
       address: new Address(addressBook.getContractId('phoenix_adapter')),
+      paused: false
     },
   ];
 
-  const protocolAddressPairScVal = protocolAddressPair.map((pair) => {
+  const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('address'),
-        val: pair.address.toScVal(),
+        val: adapter.address.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('paused'),
+        val: nativeToScVal(adapter.paused),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: xdr.ScVal.scvString(pair.protocol_id),
+        val: xdr.ScVal.scvString(adapter.protocol_id),
       }),
     ]);
-  });
+  }));
 
-  const aggregatorProtocolAddressesScVal = xdr.ScVal.scvVec(protocolAddressPairScVal);
 
-  const aggregatorInitParams: xdr.ScVal[] = [
-    aggregatorProtocolAddressesScVal, // proxy_addresses: Vec<ProxyAddressPair>,
+  const aggregatorUpdateAdaptersParams: xdr.ScVal[] = [
+    adaptersVecScVal, // adapter_vec: Vec<Adapter>
   ];
 
-  console.log("Initializing Aggregator")
+  // fn update_adapters(e: Env, adapter_vec: Vec<Adapter>)
+  console.log("Updating Adapters")
   await invokeContract(
     'aggregator',
     addressBook,
-    'update_protocols',
-    aggregatorInitParams,
+    'update_adapters',
+    aggregatorUpdateAdaptersParams,
     loadedConfig.admin
   );
 }

@@ -24,12 +24,12 @@ const CONTRACT_REL_PATH: object = {
     '../../contracts/aggregator/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
   soroswap_adapter: '../../contracts/target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm',
   phoenix_adapter: '../../contracts/target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm',
-  phoenix_factory: '../../contracts/adapters/phoenix/phioenix_contracts/phoenix_factory.wasm',
-  phoenix_multihop: '../../contracts/adapters/phoenix/phioenix_contracts/phoenix_multihop.wasm',
-  phoenix_token: '../../contracts/adapters/phoenix/phioenix_contracts/soroban_token_contract.wasm',
-  phoenix_pool: '../../contracts/adapters/phoenix/phioenix_contracts/phoenix_pool.wasm',
-  phoenix_stake: '../../contracts/adapters/phoenix/phioenix_contracts/phoenix_stake.wasm',
-  phoenix_stable: '../../contracts/adapters/phoenix/phioenix_contracts/phoenix_stake.wasm',
+  phoenix_factory: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_factory.wasm',
+  phoenix_multihop: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm',
+  phoenix_token: '../../contracts/adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm',
+  phoenix_pool: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool.wasm',
+  phoenix_stake: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
+  phoenix_stable: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
 };
 
 const network = process.argv[2];

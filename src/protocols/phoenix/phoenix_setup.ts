@@ -13,14 +13,12 @@ export async function phoenixSetup() {
     // console.log('Installing and deploying: Phoenix Mocked Contracts');
     console.log('Loading Config for Phoenix');
     const phoenixAdmin = loadedConfig.getUser('PHOENIX_DEPLOYER_SECRET_KEY')
-    console.log("🚀 ~ phoenixSetup ~ phoenixAdmin:", phoenixAdmin)
 
     console.log('Airdropping Phoenix Admin');
     await airdropAccount(phoenixAdmin);
 
     
     const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
-    console.log("🚀 ~ phoenixSetup ~ tokensAdminAccount:", tokensAdminAccount)
     await airdropAccount(tokensAdminAccount);
 
     console.log('Deploying and Initalizing Phoenix');

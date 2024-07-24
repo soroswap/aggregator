@@ -1,6 +1,6 @@
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk';
 import { phoenixSetup } from './protocols/phoenix/phoenix_setup.js';
-import { updateAggregatorProtocols } from './update_protocols.js';
+import { updateAdapters } from './update_protocols.js';
 import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, bumpContractCode, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
@@ -94,9 +94,12 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
     console.log("Setting up Phoenix protocol")
     // mocks
     await phoenixSetup();
-    console.log("Updating protocols on aggregator")
-    await updateAggregatorProtocols(addressBook);
+    console.log("Updating adapters on aggregator.. adding Phoenix")
+    await updateAdapters(addressBook);
   }
+
+  // TODO: IF MAINNET, UPDATE PHOENIX ADAPTERS WITH MAINNET DEPLOYMENT ADDRESS
+  console.log("Aggregator setup complete")
 }
 
 const network = process.argv[2];
