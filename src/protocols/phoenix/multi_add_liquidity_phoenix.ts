@@ -35,13 +35,16 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
         }
         
         // Mint tokens
+        // export async function mintToken(contractId: string, amount: number, to: string, admin: Keypair) {
+
         await mintToken(tokenA, 25000000000000, phoenixAdmin.publicKey(), tokensAdminAccount);
         await mintToken(tokenB, 25000000000000, phoenixAdmin.publicKey(), tokensAdminAccount);
         
         console.log('-------------------------------------------------------');
         console.log("Adding liquidity for pair: ", tokenA, "|", tokenB);
-        console.log("TOKEN A Balance:", await getTokenBalance(tokenA, tokensAdminAccount.publicKey(), phoenixAdmin));
-        console.log("TOKEN B Balance:", await getTokenBalance(tokenB, tokensAdminAccount.publicKey(), phoenixAdmin));
+        
+        console.log("TOKEN A Balance:", await getTokenBalance(tokenA, phoenixAdmin.publicKey(), phoenixAdmin));
+        console.log("TOKEN B Balance:", await getTokenBalance(tokenB, phoenixAdmin.publicKey(), phoenixAdmin));
 
 
         const factory_contract = new PhoenixFactoryContract.Client({

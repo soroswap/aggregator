@@ -65,10 +65,11 @@ cargo scout-audit
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
+cd /workspace
 yarn build
 ```
 The .wasm files will already be optimized and will be available in 
-`/workspace/contracts/target/wasm32-unknown-unknown/release`
+`/workspace/contracts/target/wasm32-unknown-unknown/release/` with a name like `[NAME-OF-CONTRACT].optimized.wasm`
 
 after the WASMs are built you can run this to deploy, networks can be `testnet`, `standalone`, `futurenet`, `mainnet`. The RPCs will be taken from the `configs.json` file.
 

@@ -93,7 +93,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   if (network != 'mainnet') {
     console.log("Setting up Phoenix protocol")
     // mocks
-    await phoenixSetup();
+    await phoenixSetup(loadedConfig, addressBook);
     console.log("Updating adapters on aggregator.. adding Phoenix")
     await updateAdapters(addressBook);
   }
