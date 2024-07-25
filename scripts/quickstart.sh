@@ -83,6 +83,6 @@ docker run --rm -ti \
   stellar/quickstart:${quickstartHash} \
   $ARGS \
   --enable-soroban-rpc \
-  --protocol-version 21 \
+  --protocol-version ${protocolVersion} \
   --enable-soroban-diagnostic-events \
   "$@" # Pass through args from the CLI
