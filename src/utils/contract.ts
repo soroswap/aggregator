@@ -21,7 +21,7 @@ import { createTxBuilder, invoke, invokeTransaction } from './tx.js';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   aggregator:
-    '../../contracts/aggregator/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
+    '../../contracts/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
   soroswap_adapter: '../../contracts/target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm',
   phoenix_adapter: '../../contracts/target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm',
   phoenix_factory: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_factory.wasm',
@@ -105,7 +105,7 @@ export async function invokeContract(
   source: Keypair,
   simulation?: boolean
 ) {
-  console.log('Invoking contract: ', contractKey, ' with method: ', method);
+  console.log('Invoking contract: ', contractKey, ' with method: ', method, 'from source ', source.publicKey()  );
   const contractAddress = addressBook.getContractId(contractKey);
   console.log('🚀 « contractAddress:', contractAddress);
   const contractInstance = new Contract(contractAddress);
