@@ -121,7 +121,7 @@ const aggregatorManualTest = async ()=>{
       await setTrustline(asset, loadedConfig.admin)
       console.log(`✨Trustline for ${asset.code} set`)
       console.log(`Minting ${asset.code}`)
-      await payment(loadedConfig.admin.publicKey(), assetA, "15000", loadedConfig.tokenAdmin)
+      await payment(loadedConfig.admin.publicKey(), asset, "15000", loadedConfig.tokenAdmin)
       console.log(`✨Minted $1500 ${asset.code}`)
     } catch(e){
       console.log(`❌Error setting trustline for ${asset.code}`)
