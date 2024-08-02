@@ -3,9 +3,37 @@ import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { Address, Asset, BASE_FEE, Keypair, Networks, Operation, scValToNative, TransactionBuilder } from "@stellar/stellar-sdk";
 
-const aggregatorManualTest = async (networkPassphrase: string)=>{
+const network = process.argv[2];
+const addressBook = AddressBook.loadFromFile(network);
+const loadedConfig = config(network);
+
+const setTrustline = async (asset: Asset, account: Keypair, limit?: string,) => {
+  const loadedAccount = await loadedConfig.horizonRpc.loadAccount(account.publicKey());
+  const operation =  Operation.changeTrust({
+    asset: asset,
+    limit: limit || undefined
+    //limit: "0" //Remove trustline
+  })
+
+  const transaction = new TransactionBuilder(loadedAccount, {
+    fee: Number(BASE_FEE).toString(),
+    timebounds: { minTime: 0, maxTime: 0 },
+    networkPassphrase: loadedConfig.passphrase,
+  })
+    .addOperation(operation)
+    .setTimeout(300)
+    .build();
+
+  const keyPair = account;
+  await transaction.sign(keyPair);
+  const transactionResult = await loadedConfig.horizonRpc.submitTransaction(transaction);
+  return transactionResult;
+}
+
+const aggregatorManualTest = async ()=>{
   const usdc_address = "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"
   const xtar_address = "CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS"
+  const networkPassphrase = loadedConfig.passphrase
 
   console.log('-------------------------------------------------------');
   console.log('Testing Soroswap Aggregator');
@@ -48,6 +76,7 @@ const aggregatorManualTest = async (networkPassphrase: string)=>{
   console.log("Creating new tokens");
   console.log("-------------------------------------------------------");
   const tokenAdmin = loadedConfig.tokenAdmin.publicKey()
+  const phoenixAdmin = loadedConfig.admin.publicKey()
   const assetA = new Asset('PLT1', tokenAdmin)
   const assetB = new Asset('PLT2', tokenAdmin)
   const assetC = new Asset('PLT3', tokenAdmin)
@@ -64,51 +93,17 @@ const aggregatorManualTest = async (networkPassphrase: string)=>{
   console.log("-------------------------------------------------------");
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
-  const operation =  Operation.changeTrust({
-    asset: assetA,
-    limit: '5000000',
-    source: tokenAdmin,
-  })
-  console.log(operation.toXDR('base64'))
-
-  const source = await loadedConfig.horizonRpc.loadAccount(tokenAdmin);
-
-  const operation2 =  Operation.changeTrust({
-    asset: assetA,
-    source: source.account_id,
-  })
-
-  const txn = new TransactionBuilder(source, {
-    fee: Number(BASE_FEE).toString(),
-    timebounds: { minTime: 0, maxTime: 0 },
-    networkPassphrase: loadedConfig.passphrase,
-  })
-    .addOperation(operation2)
-    .setTimeout(300)
-    .build();
-
-  const keyPair = Keypair.fromSecret(loadedConfig.tokenAdmin.secret());
-  await txn.sign(keyPair);
-  console.log(txn.toXDR())
-  
+  const assets = [assetA, assetB, assetC]
+  for(let asset of assets){
+    console.log(`Setting trustline for ${asset.code}`)
+    try{
+      await setTrustline(asset, loadedConfig.admin)
+      console.log(`✨Trustline for ${asset.code} set`)
+    } catch(e){
+      console.log(`❌Error setting trustline for ${asset.code}`)
+      console.log(e)
+    }
+  }
 }
 
-
-const network = process.argv[2];
-const addressBook = AddressBook.loadFromFile(network);
-
-const loadedConfig = config(network);
-
-let networkPassphrase = Networks.TESTNET
-switch(network.toLocaleUpperCase()){
-  case 'TESTNET':
-    networkPassphrase = Networks.TESTNET;
-    break;
-  case 'STANDALONE':
-    networkPassphrase = Networks.STANDALONE;
-    break;
-  default:
-    throw new Error('Network not supported.')
-}
-
-aggregatorManualTest(networkPassphrase)
+aggregatorManualTest()
