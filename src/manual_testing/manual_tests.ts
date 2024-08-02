@@ -2,6 +2,7 @@ import { invokeContract, invokeCustomContract } from "../utils/contract.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { Address, Asset, BASE_FEE, Keypair, Networks, Operation, scValToNative, TransactionBuilder } from "@stellar/stellar-sdk";
+import { mintToken } from "../mint_token.js";
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -26,6 +27,26 @@ const setTrustline = async (asset: Asset, account: Keypair, limit?: string,) => 
 
   const keyPair = account;
   await transaction.sign(keyPair);
+  const transactionResult = await loadedConfig.horizonRpc.submitTransaction(transaction);
+  return transactionResult;
+}
+
+const payment = async (destination: string, asset: Asset, amount: string, source: Keypair) => {
+  const loadedSource = await loadedConfig.horizonRpc.loadAccount(source.publicKey());
+  const operation = Operation.payment({
+    destination: destination,
+    asset: asset,
+    amount: amount
+  })
+
+  const transaction = new TransactionBuilder(loadedSource, {
+    fee: BASE_FEE,
+    networkPassphrase: loadedConfig.passphrase
+  })
+    .addOperation(operation)
+    .setTimeout(300)
+    .build();
+    await transaction.sign(source);
   const transactionResult = await loadedConfig.horizonRpc.submitTransaction(transaction);
   return transactionResult;
 }
@@ -84,7 +105,7 @@ const aggregatorManualTest = async ()=>{
   const cID_B = assetB.contractId(networkPassphrase)
   const cID_C = assetC.contractId(networkPassphrase)
   console.log('----------------------')
-  console.log("------Contract ID's-------")
+  console.log("----Contract ID's----")
   console.log('----------------------')
   console.log(cID_A)
   console.log(cID_B)
@@ -99,6 +120,9 @@ const aggregatorManualTest = async ()=>{
     try{
       await setTrustline(asset, loadedConfig.admin)
       console.log(`✨Trustline for ${asset.code} set`)
+      console.log(`Minting ${asset.code}`)
+      await payment(loadedConfig.admin.publicKey(), assetA, "15000", loadedConfig.tokenAdmin)
+      console.log(`✨Minted $1500 ${asset.code}`)
     } catch(e){
       console.log(`❌Error setting trustline for ${asset.code}`)
       console.log(e)
