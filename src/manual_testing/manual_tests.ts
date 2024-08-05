@@ -38,31 +38,16 @@ const loadedConfig = config(network);
 
   const aggregatorManualTest = async ()=>{
   const networkPassphrase = loadedConfig.passphrase
-
-  console.log('-------------------------------------------------------');
-  console.log('Testing Soroswap Aggregator');
-  console.log('-------------------------------------------------------');
-
-  console.log("Getting protocols")
-  const {result} = await invokeContract(
-    'aggregator',
-    addressBook,
-    'get_adapters',
-    [],
-    loadedConfig.admin,
-    true
-  );
-  console.log(scValToNative(result.retval))
-
   //Issue #57 Create tokens
   console.log("-------------------------------------------------------");
   console.log("Creating new tokens");
   console.log("-------------------------------------------------------");
-  const tokenAdmin = loadedConfig.tokenAdmin.publicKey()
-  const phoenixAdmin = loadedConfig.admin.publicKey()
-  const assetA = new Asset('PLT1', tokenAdmin)
-  const assetB = new Asset('PLT2', tokenAdmin)
-  const assetC = new Asset('PLT3', tokenAdmin)
+  const tokenAdmin = loadedConfig.tokenAdmin
+  const phoenixAdmin = loadedConfig.phoenixAdmin
+  const aggregatorAdmin = loadedConfig.admin
+  const assetA = new Asset('PLT1', tokenAdmin.publicKey())
+  const assetB = new Asset('PLT2', tokenAdmin.publicKey())
+  const assetC = new Asset('PLT3', tokenAdmin.publicKey())
   const cID_A = assetA.contractId(networkPassphrase)
   const cID_B = assetB.contractId(networkPassphrase)
   const cID_C = assetC.contractId(networkPassphrase)
@@ -80,10 +65,10 @@ const loadedConfig = config(network);
   for(let asset of assets){
     console.log(`Setting trustline for ${asset.code}`)
     try{
-      await setTrustline(asset, loadedConfig.admin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+      await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`✨Trustline for ${asset.code} set`)
       console.log(`Minting ${asset.code}`)
-      await payment(loadedConfig.admin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+      await payment(phoenixAdmin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`✨Minted $1500 ${asset.code}`)
       console.log(`✨Deployed contract for ${asset.code}`)
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
@@ -111,33 +96,33 @@ const loadedConfig = config(network);
     nativeToScVal(150000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
-    new Address(phoenixAdmin).toScVal(),
+    new Address(phoenixAdmin.publicKey()).toScVal(),
     nativeToScVal(getCurrentTimePlusOneHour(), { type: "u64" }),
   ];
-  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addLiquidityParams, loadedConfig.admin)
+  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addLiquidityParams, phoenixAdmin)
   console.log('Soroswap Pair:', soroswapInvoke)
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
   const factory_contract = new PhoenixFactoryContract.Client({
-    publicKey: phoenixAdmin!,
+    publicKey: phoenixAdmin.publicKey()!,
     contractId: addressBook.getContractId("phoenix_factory"),
     networkPassphrase: loadedConfig.passphrase,
     rpcUrl: "https://soroban-testnet.stellar.org/",
-    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, loadedConfig.admin),
+    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
   });
 
   const tx = await factory_contract.create_liquidity_pool({
-    sender: phoenixAdmin,
+    sender: phoenixAdmin.publicKey(),
     lp_init_info: {
-      admin: phoenixAdmin,
-      fee_recipient: phoenixAdmin,
+      admin: aggregatorAdmin.publicKey(),
+      fee_recipient: phoenixAdmin.publicKey(),
       max_allowed_slippage_bps: 4000n,
       max_allowed_spread_bps: 400n,
       max_referral_bps: 5000n,
       swap_fee_bps: 0n,
       stake_init_info: {
-        manager: tokenAdmin,
+        manager: tokenAdmin.publicKey(),
         max_complexity: 10,
         min_bond: 6n,
         min_reward: 3n
@@ -147,10 +132,77 @@ const loadedConfig = config(network);
         token_b: cID_B,
       }
     },
-    share_token_name: `TOKEN${assetA.code}`,
-    share_token_symbol: `TKN${assetA.code}`,
+    share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
+    share_token_symbol: `PLP-${assetA.code}/${assetB.code}`,
   });
-  console.log(tx)
+  try {
+    const result = await tx.signAndSend();
+    console.log('🚀 « result:', result);
+  } catch (error) {
+    console.log('🚀 « error:', error);
+  }
+
+  console.log('-------------------------------------------------------');
+  console.log('Testing Soroswap Aggregator');
+  console.log('-------------------------------------------------------');
+
+  const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
+  console.log('soroswapAdapter:', soroswapAdapter)
+  const phoenixAdapter =  addressBook.getContractId('phoenix_adapter');
+  console.log('phoenixAdapter:', phoenixAdapter)
+
+  const dexDistributionRaw = [
+    {
+      protocol_id: "soroswap",
+      path: [cID_A, cID_B],
+      parts: 50,
+      is_exact_in: true,
+    },
+    {
+      protocol_id: "phoenix",
+      path: [cID_A, cID_B],
+      parts: 50,
+      is_exact_in: true,
+    },
+  ];
+
+  const dexDistributionScVal = dexDistributionRaw.map((distribution) => {
+    return xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('protocol_id'),
+        val: nativeToScVal(distribution.protocol_id),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('path'),
+        val: nativeToScVal(distribution.path.map((pathAddress) => new Address(pathAddress))),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('parts'),
+        val: nativeToScVal(distribution.parts, {type: "u32"}),
+      }),
+    ]);
+  });
+
+  const dexDistributionScValVec = xdr.ScVal.scvVec(dexDistributionScVal);
+
+  const aggregatorSwapParams: xdr.ScVal[] = [
+    new Address(cID_A).toScVal(), //_from_token: Address,
+    new Address(cID_B).toScVal(), //_dest_token: Address,
+    nativeToScVal(1000000000, {type: "i128"}),
+    nativeToScVal(0, {type: "i128"}),
+    dexDistributionScValVec, // proxy_addresses: Vec<ProxyAddressPair>,
+    new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
+    nativeToScVal(getCurrentTimePlusOneHour()), //deadline 
+  ];
+
+  console.log("Initializing Aggregator")
+  await invokeContract(
+    'aggregator',
+    addressBook,
+    'swap_exact_tokens_for_tokens',
+    aggregatorSwapParams,
+    loadedConfig.admin
+  );
   //Issue #59 Get the optimal route in the aggregator
   
   //Issue #60 Swap tokens using the aggregator
