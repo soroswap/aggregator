@@ -1,7 +1,8 @@
 import { invokeContract, invokeCustomContract } from "../utils/contract.js";
+import {setTrustline, payment, deployStellarAsset} from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, Asset, BASE_FEE, Keypair, nativeToScVal, Networks, Operation, scValToNative, TransactionBuilder, xdr, XdrLargeInt } from "@stellar/stellar-sdk";
+import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
 import { LiquidityPoolInitInfo as phoenixLPInterface } from "../protocols/phoenix/bindgins/factory_bindings.js";
 import { getCurrentTimePlusOneHour } from "../utils/tx.js";
@@ -9,69 +10,6 @@ import { getCurrentTimePlusOneHour } from "../utils/tx.js";
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
-
-const setTrustline = async (asset: Asset, account: Keypair, limit?: string,) => {
-  const loadedAccount = await loadedConfig.horizonRpc.loadAccount(account.publicKey());
-  const operation =  Operation.changeTrust({
-    asset: asset,
-    limit: limit || undefined
-    //limit: "0" //Remove trustline
-  })
-
-  const transaction = new TransactionBuilder(loadedAccount, {
-    fee: Number(BASE_FEE).toString(),
-    timebounds: { minTime: 0, maxTime: 0 },
-    networkPassphrase: loadedConfig.passphrase,
-  })
-    .addOperation(operation)
-    .setTimeout(300)
-    .build();
-
-  const keyPair = account;
-  await transaction.sign(keyPair);
-  const transactionResult = await loadedConfig.horizonRpc.submitTransaction(transaction);
-  return transactionResult;
-}
-
-const payment = async (destination: string, asset: Asset, amount: string, source: Keypair) => {
-  const loadedSource = await loadedConfig.horizonRpc.loadAccount(source.publicKey());
-  const operation = Operation.payment({
-    destination: destination,
-    asset: asset,
-    amount: amount
-  })
-
-  const transaction = new TransactionBuilder(loadedSource, {
-    fee: BASE_FEE,
-    networkPassphrase: loadedConfig.passphrase
-  })
-    .addOperation(operation)
-    .setTimeout(300)
-    .build();
-    await transaction.sign(source);
-  const transactionResult = await loadedConfig.horizonRpc.submitTransaction(transaction);
-  return transactionResult;
-}
-
-const aggregatorManualTest = async ()=>{
-  const usdc_address = "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"
-  const xtar_address = "CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS"
-  const networkPassphrase = loadedConfig.passphrase
-
-  console.log('-------------------------------------------------------');
-  console.log('Testing Soroswap Aggregator');
-  console.log('-------------------------------------------------------');
-
-  console.log("Getting protocols")
-  const {result} = await invokeContract(
-    'aggregator',
-    addressBook,
-    'get_adapters',
-    [],
-    loadedConfig.admin,
-    true
-  );
-  console.log(scValToNative(result.retval))
 
   //Old code may not work
 /*   console.log("-------------------------------------------------------");
@@ -97,6 +35,24 @@ const aggregatorManualTest = async ()=>{
   );
   console.log("XTAR USER BALANCE:", scValToNative(xtarUserBalance.result.retval)); */
 
+  const aggregatorManualTest = async ()=>{
+  const networkPassphrase = loadedConfig.passphrase
+
+  console.log('-------------------------------------------------------');
+  console.log('Testing Soroswap Aggregator');
+  console.log('-------------------------------------------------------');
+
+  console.log("Getting protocols")
+  const {result} = await invokeContract(
+    'aggregator',
+    addressBook,
+    'get_adapters',
+    [],
+    loadedConfig.admin,
+    true
+  );
+  console.log(scValToNative(result.retval))
+
   //Issue #57 Create tokens
   console.log("-------------------------------------------------------");
   console.log("Creating new tokens");
@@ -120,19 +76,21 @@ const aggregatorManualTest = async ()=>{
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
   const assets = [assetA, assetB, assetC]
-/*   for(let asset of assets){
+  for(let asset of assets){
     console.log(`Setting trustline for ${asset.code}`)
     try{
-      await setTrustline(asset, loadedConfig.admin)
+      await setTrustline(asset, loadedConfig.admin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`✨Trustline for ${asset.code} set`)
       console.log(`Minting ${asset.code}`)
-      await payment(loadedConfig.admin.publicKey(), asset, "15000", loadedConfig.tokenAdmin)
+      await payment(loadedConfig.admin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`✨Minted $1500 ${asset.code}`)
+      console.log('deploying assets')
+      await deployStellarAsset(asset, loadedConfig.tokenAdmin)
     } catch(e){
       console.log(`❌Error setting trustline for ${asset.code}`)
       console.log(e)
     }
-  } */
+  } 
  
   //Issue #58 Add liquidity in Phoenix and Soroswap
   console.log("-------------------------------------------------------");
@@ -170,8 +128,8 @@ const aggregatorManualTest = async ()=>{
       token_b: cID_B,
     },
   })
-  //const phoenixInvoke = await invokeContract('phoenix_factory', addressBook, 'create_liquidity_pool', [phoenixLPArgs], loadedConfig.admin)
-  //console.log('Phoenix Pair:', phoenixInvoke)
+/*   const phoenixInvoke = await invokeContract('phoenix_factory', addressBook, 'create_liquidity_pool', [phoenixLPArgs], loadedConfig.admin)
+  console.log('Phoenix Pair:', phoenixInvoke) */
 
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Soroswap");
