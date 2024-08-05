@@ -42,6 +42,10 @@ export async function phoenixSetup(loadedConfig: any, addressBook: any) {
     console.log('Installing Phoenix Adapter Contract');
     await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
     await deployContract('phoenix_adapter', 'phoenix_adapter', addressBook, loadedConfig.admin);
+    console.log("Phoenix pool");
+    console.log('Installing Phoenix pool Contract');
+    await installContract('phoenix_pool', addressBook, loadedConfig.admin);
+    await deployContract('phoenix_pool', 'phoenix_pool', addressBook, loadedConfig.admin);
   
     const multihopAddress = addressBook.getContractId('phoenix_multihop');
     const phoenixAdapterInitParams: xdr.ScVal[] = [
@@ -49,7 +53,7 @@ export async function phoenixSetup(loadedConfig: any, addressBook: any) {
       new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
     ];
   
-    console.log("Initializing Soroswap Adapter")
+    console.log("Initializing Phoenix Adapter")
     await invokeContract(
       'phoenix_adapter',
       addressBook,

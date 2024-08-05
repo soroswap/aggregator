@@ -84,11 +84,15 @@ const loadedConfig = config(network);
       console.log(`Minting ${asset.code}`)
       await payment(loadedConfig.admin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`✨Minted $1500 ${asset.code}`)
-      console.log('deploying assets')
+      console.log(`✨Deployed contract for ${asset.code}`)
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
-    } catch(e){
-      console.log(`❌Error setting trustline for ${asset.code}`)
-      console.log(e)
+    } catch(e:any){
+      if(e.toString().includes('ExistingValue')){
+        console.log('Contract alredy deployed')
+      } else {
+        console.log(`❌Error setting trustline for ${asset.code}`)
+        console.log(e)
+      }
     }
   } 
  
@@ -104,32 +108,40 @@ const loadedConfig = config(network);
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
+//    const phoenixLPArgs = nativeToScVal({
+//      admin: phoenixAdmin,
+//      //fee_recipient: phoenixAdmin,
+//      share_token_name: 'TestLP1',
+//      share_token_symbol: 'TLP1',
+//      pool_type: 0n,
+//      amp: 0n,
+//      default_slippage_bps: 25000n,
+//      max_allowed_fee_bps: 25000n,
+//  /*     max_allowed_slippage_bps: 4000n,
+//      max_allowed_spread_bps: 400n,
+//      max_referral_bps: 5000n,
+//      swap_fee_bps: 0n,
+//      stake_init_info: {
+//        manager: phoenixAdmin,
+//        max_complexity: 10,
+//        min_bond: 6n,
+//        min_reward: 3n
+//      }, */
+//      token_init_info: {
+//        token_a: cID_A,
+//        token_b: cID_B,
+//      },
+//    })
   const phoenixLPArgs = nativeToScVal({
-    admin: phoenixAdmin,
-    //fee_recipient: phoenixAdmin,
-    share_token_name: 'TestLP1',
-    share_token_symbol: 'TLP1',
-    pool_type: 0n,
-    amp: 0n,
-    default_slippage_bps: 1000n,
-    max_allowed_fee_bps: 1000n,
-/*     max_allowed_slippage_bps: 4000n,
-    max_allowed_spread_bps: 400n,
-    max_referral_bps: 5000n,
-    swap_fee_bps: 0n,
-    stake_init_info: {
-      manager: phoenixAdmin,
-      max_complexity: 10,
-      min_bond: 6n,
-      min_reward: 3n
-    }, */
-    token_init_info: {
-      token_a: cID_A,
-      token_b: cID_B,
-    },
+    depositor: phoenixAdmin,
+    desired_a: 150000000n,
+    min_a: 150000000n,
+    desired_b: 150000000n,
+    min_b: 150000000n,
+
   })
-/*   const phoenixInvoke = await invokeContract('phoenix_factory', addressBook, 'create_liquidity_pool', [phoenixLPArgs], loadedConfig.admin)
-  console.log('Phoenix Pair:', phoenixInvoke) */
+  const phoenixInvoke = await invokeContract('phoenix_pool', addressBook, 'provide_liquidity', [phoenixLPArgs], loadedConfig.admin)
+  console.log('Phoenix Pair:', phoenixInvoke) 
 
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Soroswap");
@@ -138,8 +150,8 @@ const loadedConfig = config(network);
   const addLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
-    nativeToScVal(1000, { type: "i128" }),
-    nativeToScVal(1000, { type: "i128" }),
+    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(150000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     new Address(phoenixAdmin).toScVal(),
