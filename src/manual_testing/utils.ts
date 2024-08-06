@@ -1,27 +1,36 @@
-import { invokeContract, invokeCustomContract } from "../utils/contract.js";
-import { AddressBook } from '../utils/address_book.js';
-import { config } from '../utils/env_config.js';
-import { Address, Asset, BASE_FEE, hash, Horizon, Keypair, nativeToScVal, Networks, Operation, scValToNative, StrKey, TransactionBuilder, xdr, XdrLargeInt } from "@stellar/stellar-sdk";
-import { AxiosClient, Server } from "@stellar/stellar-sdk/rpc";
-import { LiquidityPoolInitInfo as phoenixLPInterface } from "../protocols/phoenix/bindgins/factory_bindings.js";
-import { getCurrentTimePlusOneHour, invoke } from "../utils/tx.js";
+import { invokeCustomContract } from "../utils/contract.js";
+import { 
+  Address, 
+  Asset, 
+  BASE_FEE, 
+  Horizon, 
+  Keypair, 
+  Operation, 
+  scValToNative, 
+  TransactionBuilder, 
+} from "@stellar/stellar-sdk";
 import { deployStellarAsset } from "../utils/contract.js";
+
 const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server, passphrase: string, limit?: string,) => {
   const loadedAccount: Horizon.AccountResponse = await rpc.loadAccount(account.publicKey());
-/*   console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
-  let userBalance = await invokeCustomContract(
-    asset.contractId(passphrase),
-    "balance",
-    [new Address(account.publicKey()).toScVal()],
-    account,
-    true
-  );
-  const balance = scValToNative(userBalance.result.retval)
-  console.log('⚖️ ', parseInt(balance))
-  if(parseInt(balance) > 0) { 
-      console.log('Trustline already set') 
-      return;
-    } */
+  console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
+ /*  try{
+    let userBalance = await invokeCustomContract(
+      asset.contractId(passphrase),
+      "balance",
+      [new Address(account.publicKey()).toScVal()],
+      account,
+      true
+    );
+    const balance = scValToNative(userBalance.result.retval)
+    console.log('⚖️ ', parseInt(balance))
+    if(parseInt(balance) > 0) { 
+        console.log('Trustline already set') 
+        return;
+      }
+  } catch {
+    console.log('No balance found')
+  } */ 
   const operation =  Operation.changeTrust({
     asset: asset,
     limit: limit || undefined

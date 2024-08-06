@@ -45,6 +45,7 @@ const loadedConfig = config(network);
   const tokenAdmin = loadedConfig.tokenAdmin
   const phoenixAdmin = loadedConfig.phoenixAdmin
   const aggregatorAdmin = loadedConfig.admin
+  const testUser = loadedConfig.testUser
   const assetA = new Asset('PLT1', tokenAdmin.publicKey())
   const assetB = new Asset('PLT2', tokenAdmin.publicKey())
   const assetC = new Asset('PLT3', tokenAdmin.publicKey())
@@ -65,11 +66,11 @@ const loadedConfig = config(network);
   for(let asset of assets){
     console.log(`Setting trustline for ${asset.code}`)
     try{
-      await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+      await setTrustline(asset, testUser, loadedConfig.horizonRpc, loadedConfig.passphrase)
       console.log(`Minting ${asset.code}`)
-      await payment(phoenixAdmin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
-      console.log(`🚀Deploying contract for ${asset.code}...`)
+      await payment(testUser.publicKey(), asset, "150000000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
+      console.log(`🚀Deploying contract for ${asset.code}...`)
     } catch(e:any){
       if(e.toString().includes('ExistingValue')){
         console.log('Contract alredy deployed')
@@ -86,41 +87,41 @@ const loadedConfig = config(network);
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Soroswap");
   console.log("-------------------------------------------------------");
-  console.log('To:', phoenixAdmin)
+  console.log('To:', testUser.publicKey())
   const addLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
-    nativeToScVal(150000000n, { type: "i128" }),
-    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(15000000n, { type: "i128" }),
+    nativeToScVal(15000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
-    new Address(phoenixAdmin.publicKey()).toScVal(),
+    new Address(testUser.publicKey()).toScVal(),
     nativeToScVal(getCurrentTimePlusOneHour(), { type: "u64" }),
   ];
-  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addLiquidityParams, phoenixAdmin)
+  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addLiquidityParams, testUser)
   console.log('Soroswap Pair:', soroswapInvoke)
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
   const factory_contract = new PhoenixFactoryContract.Client({
-    publicKey: phoenixAdmin.publicKey()!,
+    publicKey: testUser.publicKey()!,
     contractId: addressBook.getContractId("phoenix_factory"),
     networkPassphrase: loadedConfig.passphrase,
     rpcUrl: "https://soroban-testnet.stellar.org/",
-    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
+    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, testUser),
   });
 
   const tx = await factory_contract.create_liquidity_pool({
-    sender: phoenixAdmin.publicKey(),
+    sender: testUser.publicKey(),
     lp_init_info: {
       admin: aggregatorAdmin.publicKey(),
-      fee_recipient: phoenixAdmin.publicKey(),
+      fee_recipient: testUser.publicKey(),
       max_allowed_slippage_bps: 4000n,
       max_allowed_spread_bps: 400n,
       max_referral_bps: 5000n,
       swap_fee_bps: 0n,
       stake_init_info: {
-        manager: tokenAdmin.publicKey(),
+        manager: testUser.publicKey(),
         max_complexity: 10,
         min_bond: 6n,
         min_reward: 3n
@@ -164,6 +165,12 @@ const loadedConfig = config(network);
     },
   ];
 
+//  pub struct DexDistribution {
+//    pub protocol_id: String,
+//    pub path: Vec<Address>,
+//    pub parts: u32,
+//  }
+
   const dexDistributionScVal = dexDistributionRaw.map((distribution) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
@@ -172,7 +179,7 @@ const loadedConfig = config(network);
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('path'),
-        val: nativeToScVal(distribution.path.map((pathAddress) => new Address(pathAddress))),
+        val: xdr.ScVal.scvVec(distribution.path.map((pathAddress) => new Address(pathAddress).toScVal())),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
@@ -183,14 +190,23 @@ const loadedConfig = config(network);
 
   const dexDistributionScValVec = xdr.ScVal.scvVec(dexDistributionScVal);
 
+//  fn swap_exact_tokens_for_tokens(
+//    token_in: Address,
+//    token_out: Address,
+//    amount_in: i128,
+//    amount_out_min: i128,
+//    distribution: Vec<DexDistribution>,
+//    to: Address,
+//    deadline: u64,
+//) 
   const aggregatorSwapParams: xdr.ScVal[] = [
-    new Address(cID_A).toScVal(), //_from_token: Address,
-    new Address(cID_B).toScVal(), //_dest_token: Address,
-    nativeToScVal(1000000000, {type: "i128"}),
+    new Address(cID_A).toScVal(),
+    new Address(cID_B).toScVal(), 
+    nativeToScVal(10000000, {type: "i128"}),
     nativeToScVal(0, {type: "i128"}),
-    dexDistributionScValVec, // proxy_addresses: Vec<ProxyAddressPair>,
-    new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
-    nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}), //deadline 
+    dexDistributionScValVec, 
+    new Address(loadedConfig.testUser.publicKey()).toScVal(), 
+    nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
   ];
 
   console.log("Initializing Aggregator")

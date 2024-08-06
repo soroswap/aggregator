@@ -30,6 +30,7 @@ class EnvConfig {
   admin: Keypair;
   tokenAdmin: Keypair;
   phoenixAdmin: Keypair;
+  testUser: Keypair;
 
   constructor(
     rpc: SorobanRpc.Server,
@@ -39,6 +40,7 @@ class EnvConfig {
     admin: Keypair,
     tokenAdmin: Keypair,
     phoenixAdmin: Keypair,
+    testUser: Keypair,
   ) {
     this.rpc = rpc;
     this.horizonRpc = horizonRpc;
@@ -47,6 +49,7 @@ class EnvConfig {
     this.admin = admin;
     this.tokenAdmin = tokenAdmin;
     this.phoenixAdmin = phoenixAdmin;
+    this.testUser = testUser ;
   }
 
   /**
@@ -82,6 +85,7 @@ class EnvConfig {
     const admin = process.env.AGGREGATOR_DEPLOYER_ADMIN_SECRET_KEY;
     const tokenAdmin = process.env.TEST_TOKENS_ADMIN_SECRET_KEY;
     const phoenixAdmin = process.env.PHOENIX_DEPLOYER_SECRET_KEY;
+    const testUser = process.env.TEST_USER_SECRET_KEY;
 
     if (
       rpc_url === undefined ||
@@ -90,7 +94,8 @@ class EnvConfig {
       passphrase === undefined ||
       admin === undefined ||
       tokenAdmin === undefined ||
-      phoenixAdmin === undefined
+      phoenixAdmin === undefined ||
+      testUser === undefined
       ) {
       throw new Error('Error: Configuration is missing required fields, include <network>');
     }
@@ -104,7 +109,8 @@ class EnvConfig {
       friendbot_url,
       Keypair.fromSecret(admin),
       Keypair.fromSecret(tokenAdmin),
-      Keypair.fromSecret(phoenixAdmin)
+      Keypair.fromSecret(phoenixAdmin),
+      Keypair.fromSecret(testUser),
     );
   }
 
