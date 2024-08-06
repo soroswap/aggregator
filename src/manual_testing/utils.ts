@@ -8,7 +8,20 @@ import { getCurrentTimePlusOneHour, invoke } from "../utils/tx.js";
 import { deployStellarAsset } from "../utils/contract.js";
 const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server, passphrase: string, limit?: string,) => {
   const loadedAccount: Horizon.AccountResponse = await rpc.loadAccount(account.publicKey());
-
+  console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
+  let userBalance = await invokeCustomContract(
+    asset.contractId(passphrase),
+    "balance",
+    [new Address(account.publicKey()).toScVal()],
+    account,
+    true
+  );
+  const balance = scValToNative(userBalance.result.retval)
+  console.log('⚖️ ', parseInt(balance))
+  if(parseInt(balance) > 0) { 
+      console.log('Trustline already set') 
+      return;
+    }
   const operation =  Operation.changeTrust({
     asset: asset,
     limit: limit || undefined
@@ -26,6 +39,9 @@ const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server,
   const keyPair = account;
   await transaction.sign(keyPair);
   const transactionResult = await rpc.submitTransaction(transaction);
+  if(transactionResult.successful) {
+    console.log(`✨Trustline for ${asset.code} set`)
+  }
   return transactionResult;
 }
 
@@ -77,6 +93,9 @@ const payment = async (destination: string, asset: Asset, amount: string, source
     .build();
     await transaction.sign(source);
   const transactionResult = await rpc.submitTransaction(transaction);
+  if(transactionResult.successful) {
+    console.log(`✨Payment of ${amount} ${asset.code} to ${destination} successful`)
+  }
   return transactionResult;
 }
 

@@ -66,11 +66,9 @@ const loadedConfig = config(network);
     console.log(`Setting trustline for ${asset.code}`)
     try{
       await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
-      console.log(`✨Trustline for ${asset.code} set`)
       console.log(`Minting ${asset.code}`)
       await payment(phoenixAdmin.publicKey(), asset, "15000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
-      console.log(`✨Minted $1500 ${asset.code}`)
-      console.log(`✨Deployed contract for ${asset.code}`)
+      console.log(`🚀Deploying contract for ${asset.code}...`)
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
     } catch(e:any){
       if(e.toString().includes('ExistingValue')){
