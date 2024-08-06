@@ -91,8 +91,8 @@ const loadedConfig = config(network);
   const addLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
-    nativeToScVal(15000000n, { type: "i128" }),
-    nativeToScVal(15000000n, { type: "i128" }),
+    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(150000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     new Address(testUser.publicKey()).toScVal(),
@@ -104,15 +104,15 @@ const loadedConfig = config(network);
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
   const factory_contract = new PhoenixFactoryContract.Client({
-    publicKey: testUser.publicKey()!,
+    publicKey: phoenixAdmin.publicKey()!,
     contractId: addressBook.getContractId("phoenix_factory"),
     networkPassphrase: loadedConfig.passphrase,
     rpcUrl: "https://soroban-testnet.stellar.org/",
-    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, testUser),
+    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
   });
 
   const tx = await factory_contract.create_liquidity_pool({
-    sender: testUser.publicKey(),
+    sender: phoenixAdmin.publicKey(),
     lp_init_info: {
       admin: aggregatorAdmin.publicKey(),
       fee_recipient: testUser.publicKey(),
@@ -127,8 +127,8 @@ const loadedConfig = config(network);
         min_reward: 3n
       },
       token_init_info: {
-        token_a: cID_A,
-        token_b: cID_B,
+        token_b: cID_A,
+        token_a: cID_B,
       }
     },
     share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
@@ -202,8 +202,8 @@ const loadedConfig = config(network);
   const aggregatorSwapParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(), 
-    nativeToScVal(10000000, {type: "i128"}),
-    nativeToScVal(0, {type: "i128"}),
+    nativeToScVal(10000000n, {type: "i128"}),
+    nativeToScVal(0n, {type: "i128"}),
     dexDistributionScValVec, 
     new Address(loadedConfig.testUser.publicKey()).toScVal(), 
     nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
