@@ -167,16 +167,16 @@ const loadedConfig = config(network);
   const dexDistributionScVal = dexDistributionRaw.map((distribution) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: nativeToScVal(distribution.protocol_id),
+        key: xdr.ScVal.scvSymbol('parts'),
+        val: nativeToScVal(distribution.parts, {type: "u32"}),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('path'),
         val: nativeToScVal(distribution.path.map((pathAddress) => new Address(pathAddress))),
       }),
       new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('parts'),
-        val: nativeToScVal(distribution.parts, {type: "u32"}),
+        key: xdr.ScVal.scvSymbol('protocol_id'),
+        val: nativeToScVal(distribution.protocol_id),
       }),
     ]);
   });
@@ -190,7 +190,7 @@ const loadedConfig = config(network);
     nativeToScVal(0, {type: "i128"}),
     dexDistributionScValVec, // proxy_addresses: Vec<ProxyAddressPair>,
     new Address(loadedConfig.admin.publicKey()).toScVal(), //admin: Address,
-    nativeToScVal(getCurrentTimePlusOneHour()), //deadline 
+    nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}), //deadline 
   ];
 
   console.log("Initializing Aggregator")
