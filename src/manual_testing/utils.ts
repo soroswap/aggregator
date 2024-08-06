@@ -8,7 +8,7 @@ import { getCurrentTimePlusOneHour, invoke } from "../utils/tx.js";
 import { deployStellarAsset } from "../utils/contract.js";
 const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server, passphrase: string, limit?: string,) => {
   const loadedAccount: Horizon.AccountResponse = await rpc.loadAccount(account.publicKey());
-  console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
+/*   console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
   let userBalance = await invokeCustomContract(
     asset.contractId(passphrase),
     "balance",
@@ -21,7 +21,7 @@ const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server,
   if(parseInt(balance) > 0) { 
       console.log('Trustline already set') 
       return;
-    }
+    } */
   const operation =  Operation.changeTrust({
     asset: asset,
     limit: limit || undefined
