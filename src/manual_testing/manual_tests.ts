@@ -36,8 +36,11 @@ const loadedConfig = config(network);
   );
   console.log("XTAR USER BALANCE:", scValToNative(xtarUserBalance.result.retval)); */
 
+
   const aggregatorManualTest = async ()=>{
+  //To-do: Clear console.logs
   const networkPassphrase = loadedConfig.passphrase
+
   //Issue #57 Create tokens
   console.log("-------------------------------------------------------");
   console.log("Creating new tokens");
@@ -63,6 +66,8 @@ const loadedConfig = config(network);
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
   const assets = [assetA, assetB, assetC]
+  //To-do: Add a check to see if the trustline is already set
+  //To-do: Add a check to see if the contract is already deployed
   for(let asset of assets){
     console.log(`Setting trustline for ${asset.code}`)
     try{
@@ -83,7 +88,8 @@ const loadedConfig = config(network);
  
   //Issue #58 Add liquidity in Phoenix and Soroswap
   const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address
-  
+  //To-do: Change hardcoded ammounts for a variable
+  //To-do: Add liquidity to all pools
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Soroswap");
   console.log("-------------------------------------------------------");
@@ -91,8 +97,8 @@ const loadedConfig = config(network);
   const addSoroswapLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
-    nativeToScVal(150000000n, { type: "i128" }),
-    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(10000000000000n, { type: "i128" }),
+    nativeToScVal(10000000000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     new Address(testUser.publicKey()).toScVal(),
@@ -100,6 +106,9 @@ const loadedConfig = config(network);
   ];
   const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addSoroswapLiquidityParams, testUser)
   console.log('Soroswap Pair:', soroswapInvoke)
+
+  //To-do: Change hardcoded ammounts for a variable
+  //To-do: Add liquidity to all pools
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
@@ -156,14 +165,17 @@ const loadedConfig = config(network);
   console.log('Adding liquidity')
   const addPhoenixLiquidityParams: xdr.ScVal[] = [
     new Address(phoenixAdmin.publicKey()).toScVal(),
-    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(100000000n, { type: "i128" }),
     nativeToScVal(null),
-    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(100000000n, { type: "i128" }),
     nativeToScVal(null),
     nativeToScVal(null)
   ]
   
   await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
+
+  
+  //To-do: refactor agregator swap, add swapMethod (exact-tokens/tokens-exact)
   console.log('-------------------------------------------------------');
   console.log('Testing Soroswap Aggregator');
   console.log('-------------------------------------------------------');
@@ -233,16 +245,19 @@ const loadedConfig = config(network);
   ];
 
   console.log("Initializing Aggregator")
-  await invokeContract(
+  const aggregatorResponse = await invokeContract(
     'aggregator',
     addressBook,
     'swap_exact_tokens_for_tokens',
     aggregatorSwapParams,
-    loadedConfig.admin
+    testUser
   );
-  //Issue #59 Get the optimal route in the aggregator
+
+  //To-do: parse response
+  console.log(aggregatorResponse.status)
+  console.log(scValToNative(aggregatorResponse.returnValue))
   
-  //Issue #60 Swap tokens using the aggregator
+
 }
 
 aggregatorManualTest()
