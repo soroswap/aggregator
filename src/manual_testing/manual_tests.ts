@@ -88,7 +88,7 @@ const loadedConfig = config(network);
   console.log("Creating pairs in Soroswap");
   console.log("-------------------------------------------------------");
   console.log('To:', testUser.publicKey())
-  const addLiquidityParams: xdr.ScVal[] = [
+  const addSoroswapLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
     nativeToScVal(150000000n, { type: "i128" }),
@@ -98,7 +98,7 @@ const loadedConfig = config(network);
     new Address(testUser.publicKey()).toScVal(),
     nativeToScVal(getCurrentTimePlusOneHour(), { type: "u64" }),
   ];
-  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addLiquidityParams, testUser)
+  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addSoroswapLiquidityParams, testUser)
   console.log('Soroswap Pair:', soroswapInvoke)
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
@@ -136,11 +136,34 @@ const loadedConfig = config(network);
   });
   try {
     const result = await tx.signAndSend();
-    console.log('🚀 « result:', result);
-  } catch (error) {
-    console.log('🚀 « error:', error);
+    console.log('🚀 « result:', result.getTransactionResponse);
+  } catch (error:any) {
+    if(error.toString().includes('ExistingValue')){
+      console.log('Pool already exists')
+    } else {
+      console.log('🚀 « error:', error);
+    }
   }
 
+  console.log("Getting pair address")
+  const getPairParams: xdr.ScVal[] = [
+    new Address(cID_A).toScVal(),
+    new Address(cID_B).toScVal()
+  ]
+  const pairAddress = await invokeContract('phoenix_factory', addressBook, 'query_for_pool_by_token_pair', getPairParams, phoenixAdmin, true)
+  console.log('🚀 « pairAddress:', scValToNative(pairAddress.result.retval));
+
+  console.log('Adding liquidity')
+  const addPhoenixLiquidityParams: xdr.ScVal[] = [
+    new Address(phoenixAdmin.publicKey()).toScVal(),
+    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(null),
+    nativeToScVal(150000000n, { type: "i128" }),
+    nativeToScVal(null),
+    nativeToScVal(null)
+  ]
+  
+  await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
   console.log('-------------------------------------------------------');
   console.log('Testing Soroswap Aggregator');
   console.log('-------------------------------------------------------');
