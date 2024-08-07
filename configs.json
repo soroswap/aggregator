@@ -20,6 +20,7 @@
             "soroban_network_passphrase": "Test SDF Future Network ; October 2022"
         },    {
             "network": "testnet",
+            "horizon_rpc_url": "https://horizon-testnet.stellar.org",
             "friendbot_url": "https://friendbot.stellar.org/",
             "soroban_rpc_url": "https://soroban-testnet.stellar.org/",
             "soroban_network_passphrase": "Test SDF Network ; September 2015"
