@@ -13,24 +13,6 @@ import { deployStellarAsset } from "../utils/contract.js";
 
 const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server, passphrase: string, limit?: string,) => {
   const loadedAccount: Horizon.AccountResponse = await rpc.loadAccount(account.publicKey());
-  console.log('Getting balance for: ', asset.code, 'in account: ', account.publicKey())
- /*  try{
-    let userBalance = await invokeCustomContract(
-      asset.contractId(passphrase),
-      "balance",
-      [new Address(account.publicKey()).toScVal()],
-      account,
-      true
-    );
-    const balance = scValToNative(userBalance.result.retval)
-    console.log('⚖️ ', parseInt(balance))
-    if(parseInt(balance) > 0) { 
-        console.log('Trustline already set') 
-        return;
-      }
-  } catch {
-    console.log('No balance found')
-  } */ 
   const operation =  Operation.changeTrust({
     asset: asset,
     limit: limit || undefined

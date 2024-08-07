@@ -49,9 +49,9 @@ const loadedConfig = config(network);
   const phoenixAdmin = loadedConfig.phoenixAdmin
   const aggregatorAdmin = loadedConfig.admin
   const testUser = loadedConfig.testUser
-  const assetA = new Asset('PLT1', tokenAdmin.publicKey())
-  const assetB = new Asset('PLT2', tokenAdmin.publicKey())
-  const assetC = new Asset('PLT3', tokenAdmin.publicKey())
+  const assetA = new Asset('AAAA', tokenAdmin.publicKey())
+  const assetB = new Asset('AAAB', tokenAdmin.publicKey())
+  const assetC = new Asset('AABB', tokenAdmin.publicKey())
   const cID_A = assetA.contractId(networkPassphrase)
   const cID_B = assetB.contractId(networkPassphrase)
   const cID_C = assetC.contractId(networkPassphrase)
@@ -69,23 +69,72 @@ const loadedConfig = config(network);
   //To-do: Add a check to see if the trustline is already set
   //To-do: Add a check to see if the contract is already deployed
   for(let asset of assets){
-    console.log(`Setting trustline for ${asset.code}`)
-    try{
-      await setTrustline(asset, testUser, loadedConfig.horizonRpc, loadedConfig.passphrase)
-      console.log(`Minting ${asset.code}`)
-      await payment(testUser.publicKey(), asset, "150000000", loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    try {
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
-      console.log(`🚀Deploying contract for ${asset.code}...`)
-    } catch(e:any){
-      if(e.toString().includes('ExistingValue')){
-        console.log('Contract alredy deployed')
+
+    } catch (error:any) {
+      if(error.toString().includes('ExistingValue')){
+        console.log(`Contract for ${asset.code} already exists`)
       } else {
-        console.log(`❌Error setting trustline for ${asset.code}`)
-        console.log(e)
+        console.error(error)
       }
     }
-  } 
- 
+
+    try {
+      console.log('🟡 Checking trustline for user')
+      const userHasTrustline  = await invokeCustomContract(
+        asset.contractId(networkPassphrase),
+        "balance",
+        [new Address(testUser.publicKey()).toScVal()],
+        testUser,
+        true
+      );
+      if(!!userHasTrustline.result.retval.value()){
+        console.log(`🟢Trustline for ${asset.code} already exists`)
+      }
+    } catch (error:any) {
+      console.log(`🆙 Trustline for ${asset.code} not set`)
+      if(error.toString().includes('#13')){
+        try{
+          console.log('Setting trustline...')
+          await setTrustline(asset, testUser, loadedConfig.horizonRpc, loadedConfig.passphrase)
+        } catch(e:any){
+          console.error(e)
+        }      
+      }
+    }
+
+    try {
+      console.log('🟡 Checking trustline for phoenix')
+      const phoenixHasTrustline  =  await invokeCustomContract(
+        asset.contractId(networkPassphrase),
+        "balance",
+        [new Address(phoenixAdmin.publicKey()).toScVal()],
+        phoenixAdmin,
+        true
+      )
+      if(!!phoenixHasTrustline.result.retval.value()){
+        console.log(`🟢Trustline for ${asset.code} already exists`)
+      }
+    } catch (error:any){
+      console.log(`🆙 Trustline for ${asset.code} not set`)
+      if(error.toString().includes('#13')){
+        try{
+          console.log('Setting trustline...')
+          await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+        } catch(e:any){
+          console.error(e)
+        }
+      }
+    }
+    
+      
+    
+    console.log(`Minting ${asset.code}`)
+    await payment(testUser.publicKey(), asset, "1500000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    await payment(phoenixAdmin.publicKey(), asset, "1500000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    
+  }
   //Issue #58 Add liquidity in Phoenix and Soroswap
   const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address
   //To-do: Change hardcoded ammounts for a variable
@@ -97,15 +146,19 @@ const loadedConfig = config(network);
   const addSoroswapLiquidityParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
-    nativeToScVal(10000000000000n, { type: "i128" }),
-    nativeToScVal(10000000000000n, { type: "i128" }),
+    nativeToScVal(150000000000n, { type: "i128" }),
+    nativeToScVal(150000000000n, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     nativeToScVal(0, { type: "i128" }),
     new Address(testUser.publicKey()).toScVal(),
     nativeToScVal(getCurrentTimePlusOneHour(), { type: "u64" }),
   ];
   const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addSoroswapLiquidityParams, testUser)
-  console.log('Soroswap Pair:', soroswapInvoke)
+  if(soroswapInvoke.status === 'SUCCESS'){
+    console.log('✨Soroswap pool created successfully')
+  } else {
+    console.log('🚀 « soroswapInvoke:', soroswapInvoke);
+  }
 
   //To-do: Change hardcoded ammounts for a variable
   //To-do: Add liquidity to all pools
@@ -123,21 +176,21 @@ const loadedConfig = config(network);
   const tx = await factory_contract.create_liquidity_pool({
     sender: phoenixAdmin.publicKey(),
     lp_init_info: {
-      admin: aggregatorAdmin.publicKey(),
+      admin: phoenixAdmin.publicKey(),
       fee_recipient: testUser.publicKey(),
       max_allowed_slippage_bps: 4000n,
       max_allowed_spread_bps: 400n,
       max_referral_bps: 5000n,
       swap_fee_bps: 0n,
       stake_init_info: {
-        manager: testUser.publicKey(),
+        manager: aggregatorAdmin.publicKey(),
         max_complexity: 10,
         min_bond: 6n,
         min_reward: 3n
       },
       token_init_info: {
-        token_b: cID_A,
-        token_a: cID_B,
+        token_a: cID_A,
+        token_b: cID_B,
       }
     },
     share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
@@ -145,12 +198,36 @@ const loadedConfig = config(network);
   });
   try {
     const result = await tx.signAndSend();
-    console.log('🚀 « result:', result.getTransactionResponse);
+    console.log('🚀 « result:', result.getTransactionResponse?.status);
   } catch (error:any) {
     if(error.toString().includes('ExistingValue')){
       console.log('Pool already exists')
     } else {
       console.log('🚀 « error:', error);
+      const tx = await factory_contract.create_liquidity_pool({
+        sender: phoenixAdmin.publicKey(),
+        lp_init_info: {
+          admin: phoenixAdmin.publicKey(),
+          fee_recipient: testUser.publicKey(),
+          max_allowed_slippage_bps: 4000n,
+          max_allowed_spread_bps: 400n,
+          max_referral_bps: 5000n,
+          swap_fee_bps: 0n,
+          stake_init_info: {
+            manager: aggregatorAdmin.publicKey(),
+            max_complexity: 10,
+            min_bond: 6n,
+            min_reward: 3n
+          },
+          token_init_info: {
+            token_a: cID_B,
+            token_b: cID_A,
+          }
+        },
+        share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
+        share_token_symbol: `PLP-${assetA.code}/${assetB.code}`,
+      });
+      await tx.signAndSend();
     }
   }
 
@@ -165,14 +242,19 @@ const loadedConfig = config(network);
   console.log('Adding liquidity')
   const addPhoenixLiquidityParams: xdr.ScVal[] = [
     new Address(phoenixAdmin.publicKey()).toScVal(),
-    nativeToScVal(100000000n, { type: "i128" }),
+    nativeToScVal(15000000000000n, { type: "i128" }),
     nativeToScVal(null),
-    nativeToScVal(100000000n, { type: "i128" }),
+    nativeToScVal(15000000000000n, { type: "i128" }),
     nativeToScVal(null),
     nativeToScVal(null)
   ]
   
-  await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
+  const provide_liquidity = await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
+  if(provide_liquidity.status === 'SUCCESS'){
+    console.log('✨Successfully added liquidity to phoenix pool')
+  } else {
+    console.log('🚀 « provide_liquidity:', provide_liquidity)
+  }
 
   
   //To-do: refactor agregator swap, add swapMethod (exact-tokens/tokens-exact)
@@ -237,10 +319,10 @@ const loadedConfig = config(network);
   const aggregatorSwapParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(), 
-    nativeToScVal(10000000n, {type: "i128"}),
+    nativeToScVal(15000000000n, {type: "i128"}),
     nativeToScVal(0n, {type: "i128"}),
     dexDistributionScValVec, 
-    new Address(loadedConfig.testUser.publicKey()).toScVal(), 
+    new Address(testUser.publicKey()).toScVal(), 
     nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
   ];
 
