@@ -1,18 +1,18 @@
 import { invokeContract, invokeCustomContract } from "../utils/contract.js";
-import {setTrustline, payment, deployStellarAsset} from "./utils.js";
+import {setTrustline, payment, deployStellarAsset, create_soroswap_liquidity_pool, create_phoenix_liquidity_pool, provide_phoenix_liquidity} from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
-import { LiquidityPoolInitInfo as phoenixLPInterface } from "../protocols/phoenix/bindgins/factory_bindings.js";
+
 import { getCurrentTimePlusOneHour, signWithKeypair } from "../utils/tx.js";
-import * as PhoenixFactoryContract from '../protocols/phoenix/bindgins/factory_bindings.js';
+
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
-  //Old code may not work
+//Old code may not work
 /*   console.log("-------------------------------------------------------");
   console.log("Starting Balances");
   console.log("-------------------------------------------------------");
@@ -66,15 +66,15 @@ const loadedConfig = config(network);
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
   const assets = [assetA, assetB, assetC]
-  //To-do: Add a check to see if the trustline is already set
-  //To-do: Add a check to see if the contract is already deployed
+
   for(let asset of assets){
     try {
+      console.log(`🟡 Deploying contract for ${asset.code}`)
       await deployStellarAsset(asset, loadedConfig.tokenAdmin)
 
     } catch (error:any) {
       if(error.toString().includes('ExistingValue')){
-        console.log(`Contract for ${asset.code} already exists`)
+        console.log(`🟢 Contract for ${asset.code} already exists`)
       } else {
         console.error(error)
       }
@@ -90,14 +90,14 @@ const loadedConfig = config(network);
         true
       );
       if(!!userHasTrustline.result.retval.value()){
-        console.log(`🟢Trustline for ${asset.code} already exists`)
+        console.log(`🟢 Trustline for ${asset.code} already exists`)
       }
     } catch (error:any) {
       console.log(`🆙 Trustline for ${asset.code} not set`)
       if(error.toString().includes('#13')){
         try{
           console.log('Setting trustline...')
-          await setTrustline(asset, testUser, loadedConfig.horizonRpc, loadedConfig.passphrase)
+          await setTrustline(asset, testUser, loadedConfig.horizonRpc)
         } catch(e:any){
           console.error(e)
         }      
@@ -114,14 +114,14 @@ const loadedConfig = config(network);
         true
       )
       if(!!phoenixHasTrustline.result.retval.value()){
-        console.log(`🟢Trustline for ${asset.code} already exists`)
+        console.log(`🟢 Trustline for ${asset.code} already exists`)
       }
     } catch (error:any){
       console.log(`🆙 Trustline for ${asset.code} not set`)
       if(error.toString().includes('#13')){
         try{
           console.log('Setting trustline...')
-          await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+          await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc)
         } catch(e:any){
           console.error(e)
         }
@@ -137,124 +137,32 @@ const loadedConfig = config(network);
   }
   //Issue #58 Add liquidity in Phoenix and Soroswap
   const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address
-  //To-do: Change hardcoded ammounts for a variable
+ 
   //To-do: Add liquidity to all pools
   console.log("-------------------------------------------------------");
-  console.log("Creating pairs in Soroswap");
+  console.log("Creating Soroswap liquidity pool");
   console.log("-------------------------------------------------------");
-  console.log('To:', testUser.publicKey())
-  const addSoroswapLiquidityParams: xdr.ScVal[] = [
-    new Address(cID_A).toScVal(),
-    new Address(cID_B).toScVal(),
-    nativeToScVal(150000000000n, { type: "i128" }),
-    nativeToScVal(150000000000n, { type: "i128" }),
-    nativeToScVal(0, { type: "i128" }),
-    nativeToScVal(0, { type: "i128" }),
-    new Address(testUser.publicKey()).toScVal(),
-    nativeToScVal(getCurrentTimePlusOneHour(), { type: "u64" }),
-  ];
-  const soroswapInvoke = await invokeCustomContract(soroswapRouterAddress, 'add_liquidity', addSoroswapLiquidityParams, testUser)
-  if(soroswapInvoke.status === 'SUCCESS'){
-    console.log('✨Soroswap pool created successfully')
-  } else {
-    console.log('🚀 « soroswapInvoke:', soroswapInvoke);
+  const poolParams = {
+    contractID_A: cID_A,
+    contractID_B: cID_B,
+    user: testUser,
+    amount_A: 1500,
+    amount_B: 1500,
   }
 
-  //To-do: Change hardcoded ammounts for a variable
+  await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams)
+
   //To-do: Add liquidity to all pools
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
-  const factory_contract = new PhoenixFactoryContract.Client({
-    publicKey: phoenixAdmin.publicKey()!,
-    contractId: addressBook.getContractId("phoenix_factory"),
-    networkPassphrase: loadedConfig.passphrase,
-    rpcUrl: "https://soroban-testnet.stellar.org/",
-    signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
-  });
 
-  const tx = await factory_contract.create_liquidity_pool({
-    sender: phoenixAdmin.publicKey(),
-    lp_init_info: {
-      admin: phoenixAdmin.publicKey(),
-      fee_recipient: testUser.publicKey(),
-      max_allowed_slippage_bps: 4000n,
-      max_allowed_spread_bps: 400n,
-      max_referral_bps: 5000n,
-      swap_fee_bps: 0n,
-      stake_init_info: {
-        manager: aggregatorAdmin.publicKey(),
-        max_complexity: 10,
-        min_bond: 6n,
-        min_reward: 3n
-      },
-      token_init_info: {
-        token_a: cID_A,
-        token_b: cID_B,
-      }
-    },
-    share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
-    share_token_symbol: `PLP-${assetA.code}/${assetB.code}`,
-  });
-  try {
-    const result = await tx.signAndSend();
-    console.log('🚀 « result:', result.getTransactionResponse?.status);
-  } catch (error:any) {
-    if(error.toString().includes('ExistingValue')){
-      console.log('Pool already exists')
-    } else {
-      console.log('🚀 « error:', error);
-      const tx = await factory_contract.create_liquidity_pool({
-        sender: phoenixAdmin.publicKey(),
-        lp_init_info: {
-          admin: phoenixAdmin.publicKey(),
-          fee_recipient: testUser.publicKey(),
-          max_allowed_slippage_bps: 4000n,
-          max_allowed_spread_bps: 400n,
-          max_referral_bps: 5000n,
-          swap_fee_bps: 0n,
-          stake_init_info: {
-            manager: aggregatorAdmin.publicKey(),
-            max_complexity: 10,
-            min_bond: 6n,
-            min_reward: 3n
-          },
-          token_init_info: {
-            token_a: cID_B,
-            token_b: cID_A,
-          }
-        },
-        share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
-        share_token_symbol: `PLP-${assetA.code}/${assetB.code}`,
-      });
-      await tx.signAndSend();
-    }
-  }
+  const pairAddress: any = await create_phoenix_liquidity_pool(phoenixAdmin, aggregatorAdmin, testUser, assetA, assetB)
+  console.log('🟢 Phoenix pair address:', pairAddress)
 
-  console.log("Getting pair address")
-  const getPairParams: xdr.ScVal[] = [
-    new Address(cID_A).toScVal(),
-    new Address(cID_B).toScVal()
-  ]
-  const pairAddress = await invokeContract('phoenix_factory', addressBook, 'query_for_pool_by_token_pair', getPairParams, phoenixAdmin, true)
-  console.log('🚀 « pairAddress:', scValToNative(pairAddress.result.retval));
-
-  console.log('Adding liquidity')
-  const addPhoenixLiquidityParams: xdr.ScVal[] = [
-    new Address(phoenixAdmin.publicKey()).toScVal(),
-    nativeToScVal(15000000000000n, { type: "i128" }),
-    nativeToScVal(null),
-    nativeToScVal(15000000000000n, { type: "i128" }),
-    nativeToScVal(null),
-    nativeToScVal(null)
-  ]
+  console.log('🟡 Adding liquidity')
   
-  const provide_liquidity = await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
-  if(provide_liquidity.status === 'SUCCESS'){
-    console.log('✨Successfully added liquidity to phoenix pool')
-  } else {
-    console.log('🚀 « provide_liquidity:', provide_liquidity)
-  }
+  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 1500, 1500)
 
   
   //To-do: refactor agregator swap, add swapMethod (exact-tokens/tokens-exact)
