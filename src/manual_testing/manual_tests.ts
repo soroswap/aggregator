@@ -1,5 +1,14 @@
 import { invokeContract, invokeCustomContract } from "../utils/contract.js";
-import {setTrustline, payment, deployStellarAsset, create_soroswap_liquidity_pool, create_phoenix_liquidity_pool, provide_phoenix_liquidity} from "./utils.js";
+import { 
+  setTrustline,
+  mintToken,
+  deployStellarAsset,
+  create_soroswap_liquidity_pool,
+  create_phoenix_liquidity_pool,
+  provide_phoenix_liquidity,
+  fetchAssetBalance,
+  fetchContractBalance
+} from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
@@ -42,6 +51,7 @@ const loadedConfig = config(network);
   const networkPassphrase = loadedConfig.passphrase
 
   //Issue #57 Create tokens
+
   console.log("-------------------------------------------------------");
   console.log("Creating new tokens");
   console.log("-------------------------------------------------------");
@@ -55,18 +65,21 @@ const loadedConfig = config(network);
   const cID_A = assetA.contractId(networkPassphrase)
   const cID_B = assetB.contractId(networkPassphrase)
   const cID_C = assetC.contractId(networkPassphrase)
-  console.log('----------------------')
-  console.log("----Contract ID's----")
-  console.log('----------------------')
-  console.log(cID_A)
-  console.log(cID_B)
-  console.log(cID_C)
-
+  console.log('------------------------')
+  console.log("----Using addresses:----")
+  console.log('------------------------')
+  console.log('🔎 Contract id for AAAB: ',cID_B)
+  console.log('🔎 Contract id for AAAA: ',cID_A)
+  console.log('🔎 Contract id for AABB: ',cID_C)
+  
+  console.log(`🔎 Test user: ${testUser.publicKey()}`)
+  console.log(`🔎 Phoenix admin: ${phoenixAdmin.publicKey()}`)
+  console.log(`🔎 Token admin: ${tokenAdmin.publicKey()}`)
+  console.log(`🔎 Aggregator admin: ${aggregatorAdmin.publicKey()}`)
   console.log("-------------------------------------------------------");
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
-  const assets = [assetA, assetB, assetC]
-
+  const assets = [assetA, assetB, assetC] 
   for(let asset of assets){
     try {
       console.log(`🟡 Deploying contract for ${asset.code}`)
@@ -80,59 +93,39 @@ const loadedConfig = config(network);
       }
     }
 
-    try {
-      console.log('🟡 Checking trustline for user')
-      const userHasTrustline  = await invokeCustomContract(
-        asset.contractId(networkPassphrase),
-        "balance",
-        [new Address(testUser.publicKey()).toScVal()],
-        testUser,
-        true
-      );
-      if(!!userHasTrustline.result.retval.value()){
-        console.log(`🟢 Trustline for ${asset.code} already exists`)
-      }
-    } catch (error:any) {
-      console.log(`🆙 Trustline for ${asset.code} not set`)
-      if(error.toString().includes('#13')){
-        try{
-          console.log('Setting trustline...')
-          await setTrustline(asset, testUser, loadedConfig.horizonRpc)
-        } catch(e:any){
-          console.error(e)
-        }      
-      }
+    const userHasTrustline = await fetchAssetBalance(asset, testUser)
+    if(!userHasTrustline){
+      console.log(`Missing trustline for ${asset.code} in ${testUser.publicKey()}`)
+      try{
+        await setTrustline(asset, testUser, loadedConfig.horizonRpc)
+      } catch(e:any){
+        console.error(e)
+      }  
+    } else {
+      console.log(`🟢 Trustline for ${asset.code} already exists in ${testUser.publicKey()}`)
+      console.log(`🟢 Balance: ${userHasTrustline}`)
+    }
+    const phoenixAdminHasTrustline = await fetchAssetBalance(asset, phoenixAdmin)
+    if(!phoenixAdminHasTrustline){
+      console.log(`Missing trustline for ${asset.code} in ${phoenixAdmin.publicKey()}`)
+      try{
+        await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc)
+      } catch(e:any){
+        console.error(e)
+      }  
+    } else {
+      console.log(`🟢 Trustline for ${asset.code} already exists in ${phoenixAdmin.publicKey()}`)
+      console.log(`🟢 Balance: ${phoenixAdminHasTrustline}`)
     }
 
-    try {
-      console.log('🟡 Checking trustline for phoenix')
-      const phoenixHasTrustline  =  await invokeCustomContract(
-        asset.contractId(networkPassphrase),
-        "balance",
-        [new Address(phoenixAdmin.publicKey()).toScVal()],
-        phoenixAdmin,
-        true
-      )
-      if(!!phoenixHasTrustline.result.retval.value()){
-        console.log(`🟢 Trustline for ${asset.code} already exists`)
-      }
-    } catch (error:any){
-      console.log(`🆙 Trustline for ${asset.code} not set`)
-      if(error.toString().includes('#13')){
-        try{
-          console.log('Setting trustline...')
-          await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc)
-        } catch(e:any){
-          console.error(e)
-        }
-      }
-    }
-    
-      
-    
-    console.log(`Minting ${asset.code}`)
-    await payment(testUser.publicKey(), asset, "1500000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
-    await payment(phoenixAdmin.publicKey(), asset, "1500000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    await mintToken(testUser.publicKey(), asset, "1500000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    const newUserBalance = await fetchAssetBalance(asset, testUser)
+    console.log(`🟢 Test user balance of ${asset.code}: ${newUserBalance}`)
+
+
+    await mintToken(phoenixAdmin.publicKey(), asset, "150000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase)
+    const newPhoenixBalance = await fetchAssetBalance(asset, phoenixAdmin)
+    console.log(`🟢 Phoenix balance of ${asset.code}: ${newPhoenixBalance}`)
     
   }
   //Issue #58 Add liquidity in Phoenix and Soroswap
@@ -146,11 +139,22 @@ const loadedConfig = config(network);
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 1500,
-    amount_B: 1500,
+    amount_A: 15000000,
+    amount_B: 15000000,
   }
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams)
+
+  const fetchPoolParams: xdr.ScVal[] = [
+    new Address(cID_A).toScVal(),
+    new Address(cID_B).toScVal(),
+  ]
+
+  const soroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchPoolParams, testUser, true)
+  const soroswapPoolCID = scValToNative(soroswapPool.result.retval)
+  console.log('🟢 Soroswap pair address:', soroswapPoolCID)
+  const soroswapPoolBalance = await fetchContractBalance(soroswapPoolCID, testUser)
+  console.log(`🟢 Soroswap pair balance: ${(soroswapPoolBalance)}`)
 
   //To-do: Add liquidity to all pools
   console.log("-------------------------------------------------------");
@@ -161,9 +165,11 @@ const loadedConfig = config(network);
   console.log('🟢 Phoenix pair address:', pairAddress)
 
   console.log('🟡 Adding liquidity')
-  
-  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 1500, 1500)
-
+  const initialPhoenixPoolBalance = await await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true)
+  console.log(`🟢 Initial Phoenix pool balance: ${initialPhoenixPoolBalance}`)
+  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000000, 100000000000)
+  const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true)
+  console.log(`🟢 Phoenix pool balance: ${nativeToScVal(phoenixPoolBalance)}`)
   
   //To-do: refactor agregator swap, add swapMethod (exact-tokens/tokens-exact)
   console.log('-------------------------------------------------------');

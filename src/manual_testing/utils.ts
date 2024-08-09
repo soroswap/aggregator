@@ -21,13 +21,67 @@ const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
+const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
+  console.log("-------------------------------------------------------");
+  console.log(`Fetching ${asset.code} balance in ${account.publicKey()}`);
+  console.log("-------------------------------------------------------");
+  let balance;
+  try {
+    balance = await invokeCustomContract(
+      asset.contractId(loadedConfig.passphrase),
+      "balance",
+      [new Address(account.publicKey()).toScVal()],
+      account,
+      true
+    );
+  } catch (error:any) {
+    if(error.toString().includes('#13')){
+      console.log(`🔴 Missing ${asset.code} trustline in ${account.publicKey}`)
+      return undefined;
+    } else {
+      throw new Error("🔴 Can't set trustline", error)
+    }
+  } 
+  if(balance != undefined){
+    const parsedBalance: bigint = scValToNative(balance.result.retval);
+    return parsedBalance / BigInt(10000000);
+  }
+}
+
+const fetchContractBalance = async (contractID: string, account: Keypair) => {
+  console.log("-------------------------------------------------------");
+  console.log(`Fetching ${contractID} balance in ${account.publicKey()}`);
+  console.log("-------------------------------------------------------");
+  let balance;
+  try {
+    balance = await invokeCustomContract(
+      contractID,
+      "balance",
+      [new Address(account.publicKey()).toScVal()],
+      account,
+      true
+    );
+  } catch (error:any) {
+    if(error.toString().includes('MissingValue')){
+      console.log(`🔴 contract not deployed or balance not found`)
+      return 0;
+    } else {
+      throw new Error("🔴 Can't set trustline", error)
+    }
+  } 
+  if(balance != undefined){
+    const parsedBalance: bigint = scValToNative(balance.result.retval);
+    return parsedBalance / BigInt(10000000);
+  }
+}
+
 const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server, limit?: string,) => {
+  console.log(`🟡 Setting trustline for ${asset.code} with account ${account.publicKey()}`)
   const loadedAccount: Horizon.AccountResponse = await rpc.loadAccount(account.publicKey());
   const operation =  Operation.changeTrust({
     asset: asset,
     limit: limit || undefined
   })
-
   const transaction = new TransactionBuilder(loadedAccount, {
     fee: Number(BASE_FEE).toString(),
     timebounds: { minTime: 0, maxTime: 0 },
@@ -36,9 +90,7 @@ const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server,
     .addOperation(operation)
     .setTimeout(300)
     .build();
-
-  const keyPair = account;
-  await transaction.sign(keyPair);
+  await transaction.sign(account);
   const transactionResult = await rpc.submitTransaction(transaction);
   if(transactionResult.successful) {
     console.log(`✨Trustline for ${asset.code} set`)
@@ -46,7 +98,10 @@ const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server,
   return transactionResult;
 }
 
-const payment = async (destination: string, asset: Asset, amount: string, source: Keypair, rpc: Horizon.Server, passphrase: string,) => {
+const mintToken = async (destination: string, asset: Asset, amount: string, source: Keypair, rpc: Horizon.Server, passphrase: string,) => {
+  console.log('-------------------------------------------------------');
+  console.log(`Minting ${amount} ${asset.code} to ${destination}`);
+  console.log('-------------------------------------------------------');
   const loadedSource = await rpc.loadAccount(source.publicKey());
   const operation = Operation.payment({
     destination: destination,
@@ -69,6 +124,10 @@ const payment = async (destination: string, asset: Asset, amount: string, source
   return transactionResult;
 }
 
+const formatAmmount = (amount: number) => {
+  const formattedAmmount = BigInt(amount * 10000000).toString();
+  return formattedAmmount
+}
 interface CreatePoolParams {
   contractID_A: string,
   contractID_B: string,
@@ -76,17 +135,17 @@ interface CreatePoolParams {
   amount_A: number,
   amount_B: number,
 }
-const formatAmmount = (amount: number) => {
-  const formattedAmmount = BigInt(amount * 1000000).toString();
-  return formattedAmmount
-}
 
 const create_soroswap_liquidity_pool = async (
     router:string,  
     poolParams: CreatePoolParams,
   ) => {
   console.log('🟡 Creating soroswap liquidity pool')
-  console.log('🚀 « poolParams:', poolParams);  
+  const parsedPoolParams = {
+    ...poolParams,
+    user: poolParams.user.publicKey()
+  }
+  console.log('🚀 « poolParams:', parsedPoolParams);  
   const addSoroswapLiquidityParams: xdr.ScVal[] = [
     new Address(poolParams.contractID_A).toScVal(),
     new Address(poolParams.contractID_B).toScVal(),
@@ -109,15 +168,24 @@ const create_soroswap_liquidity_pool = async (
 const create_phoenix_pool_transaction = async (
   factory_contract: PhoenixFactoryContract.Client, 
   phoenixAdmin: Keypair, 
-  testUser: Keypair, 
   aggregatorAdmin:Keypair, 
   assetA:Asset, 
   assetB:Asset)=>{
+ 
+  let firstAsset: Asset;
+  let secondAsset: Asset;
+  if(assetA.contractId(loadedConfig.passphrase) > assetB.contractId(loadedConfig.passphrase)){
+    firstAsset = assetA;
+    secondAsset = assetB;
+  } else {
+    firstAsset = assetB;
+    secondAsset = assetA;
+  }
   const tx = await factory_contract.create_liquidity_pool({
     sender: phoenixAdmin.publicKey(),
     lp_init_info: {
       admin: phoenixAdmin.publicKey(),
-      fee_recipient: testUser.publicKey(),
+      fee_recipient: loadedConfig.testUser.publicKey(),
       max_allowed_slippage_bps: 4000n,
       max_allowed_spread_bps: 400n,
       max_referral_bps: 5000n,
@@ -129,12 +197,12 @@ const create_phoenix_pool_transaction = async (
         min_reward: 3n
       },
       token_init_info: {
-        token_a: assetA.contractId(loadedConfig.passphrase),
-        token_b: assetB.contractId(loadedConfig.passphrase),
+        token_a: secondAsset.contractId(loadedConfig.passphrase),
+        token_b: firstAsset.contractId(loadedConfig.passphrase),
       }
     },
-    share_token_name: `TOKEN-LP-${assetA.code}/${assetB.code}`,
-    share_token_symbol: `PLP-${assetA.code}/${assetB.code}`,
+    share_token_name: `TOKEN-LP-${firstAsset.code}/${secondAsset.code}`,
+    share_token_symbol: `PLP-${firstAsset.code}/${secondAsset.code}`,
   });
   return await tx.signAndSend().catch((error:any)=>{
     throw new Error(error)
@@ -149,30 +217,14 @@ const create_phoenix_liquidity_pool = async (phoenixAdmin: Keypair, aggregatorAd
     rpcUrl: "https://soroban-testnet.stellar.org/",
     signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
   });
-  let shouldRetry = false;
   try {
     console.log('creating phoenix pool transaction')
-    await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, testUser, aggregatorAdmin, assetA, assetB)
+    await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, aggregatorAdmin, assetA, assetB)
   } catch (error:any) {
-    if(error.toString().includes('#5')){
-      console.log('Asset A greater than asset B, should retry')
-      shouldRetry = true;  
-    } else if(error.toString().includes('ExistingValue')){
+    if(error.toString().includes('ExistingValue')){
       console.log('Pool already exists')
+    } else {
       console.log('🚀 « error:', error)
-    }
-  }
-  if(shouldRetry){
-    console.log('Retrying to create phoenix pool')
-    try {
-      await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, testUser, aggregatorAdmin, assetB, assetA)
-    }
-     catch(error:any) {
-      if(error.toString().includes('ExistingValue')){
-        console.log('Pool already exists, continuing')
-      } else {
-        console.log('🚀 « error:', error)
-      }
     }
   }
   
@@ -212,10 +264,12 @@ const provide_phoenix_liquidity = async (phoenixAdmin: Keypair, pairAddress:stri
 }
 
 export {
+  fetchAssetBalance,
+  fetchContractBalance,
   setTrustline,
-  payment, 
+  mintToken, 
   deployStellarAsset,
   create_soroswap_liquidity_pool,
   create_phoenix_liquidity_pool,
-  provide_phoenix_liquidity
+  provide_phoenix_liquidity,
 }
