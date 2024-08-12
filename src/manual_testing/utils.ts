@@ -44,7 +44,7 @@ const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
   } 
   if(balance != undefined){
     const parsedBalance: bigint = scValToNative(balance.result.retval);
-    return parsedBalance / BigInt(10000000);
+    return (parsedBalance / BigInt(10000000)).toString();
   }
 }
 
