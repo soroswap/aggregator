@@ -24,32 +24,8 @@ const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
-//Old code may not work
-/*   console.log("-------------------------------------------------------");
-  console.log("Starting Balances");
-  console.log("-------------------------------------------------------");
-  let usdcUserBalance = await invokeCustomContract(
-    usdc_address,
-    "balance",
-    [new Address(loadedConfig.admin.publicKey()).toScVal()],
-    loadedConfig.admin,
-    true
-  );
-  console.log(
-    "USDC USER BALANCE:",
-    scValToNative(usdcUserBalance.result.retval)
-  );
-  let xtarUserBalance = await invokeCustomContract(
-    xtar_address,
-    "balance",
-    [new Address(loadedConfig.admin.publicKey()).toScVal()],
-    loadedConfig.admin,
-    true
-  );
-  console.log("XTAR USER BALANCE:", scValToNative(xtarUserBalance.result.retval)); */
 
-
-  const aggregatorManualTest = async ()=>{
+const aggregatorManualTest = async ()=>{
   //To-do: Clear console.logs
   const networkPassphrase = loadedConfig.passphrase
 
@@ -202,12 +178,33 @@ const loadedConfig = config(network);
   ];
 
   const dexDistributionVec = await createDexDistribution(dexDistributionRaw)
+
+  const asset_A_first_balance = await fetchAssetBalance(assetA, testUser)
+  const asset_B_first_balance = await fetchAssetBalance(assetB, testUser)
+
+  console.log('🟡 Initial balances')
+  console.log('🔎 Asset A:', asset_A_first_balance)
+  console.log('🔎 Asset B:', asset_B_first_balance)
   
-  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 15000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT)
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 150000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT)
   console.log('🟡 Swap exact in:', swapExactIn)
 
-  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 15000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT)
+  const asset_A_second_balance = await fetchAssetBalance(assetA, testUser)
+  const asset_B_second_balance = await fetchAssetBalance(assetB, testUser)
+
+  console.log('🟡 Test user balances after exact input swap')
+  console.log('🔎 Asset A:', asset_A_second_balance)
+  console.log('🔎 Asset B:', asset_B_second_balance)
+
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 150000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT)
   console.log('🟡 Swap exact out:', swapExactOut)
+
+  const asset_A_third_balance = await fetchAssetBalance(assetA, testUser)
+  const asset_B_third_balance = await fetchAssetBalance(assetB, testUser)
+  
+  console.log('🟡 Test user balances after exact output swap')
+  console.log('🔎 Asset A:', asset_A_third_balance)
+  console.log('🔎 Asset B:', asset_B_third_balance)
 }
 
 aggregatorManualTest()
