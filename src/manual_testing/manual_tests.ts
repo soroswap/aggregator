@@ -203,10 +203,10 @@ const loadedConfig = config(network);
 
   const dexDistributionVec = await createDexDistribution(dexDistributionRaw)
   
-  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 1000000000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT)
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 15000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT)
   console.log('🟡 Swap exact in:', swapExactIn)
 
-  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 1000000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT)
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 15000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT)
   console.log('🟡 Swap exact out:', swapExactOut)
 }
 

@@ -172,15 +172,15 @@ const create_phoenix_pool_transaction = async (
   assetA:Asset, 
   assetB:Asset)=>{
  
-  let firstAsset: Asset;
-  let secondAsset: Asset;
-  if(assetA.contractId(loadedConfig.passphrase) > assetB.contractId(loadedConfig.passphrase)){
+  let firstAsset: Asset = assetA
+  let secondAsset: Asset = assetB
+ /*  if(assetA.contractId(loadedConfig.passphrase) > assetB.contractId(loadedConfig.passphrase)){
     firstAsset = assetB;
     secondAsset = assetA;
   } else {
     firstAsset = assetA;
     secondAsset = assetB;
-  }
+  } */
   const tx = await factory_contract.create_liquidity_pool({
     sender: phoenixAdmin.publicKey(),
     lp_init_info: {
@@ -217,14 +217,32 @@ const create_phoenix_liquidity_pool = async (phoenixAdmin: Keypair, aggregatorAd
     rpcUrl: "https://soroban-testnet.stellar.org/",
     signTransaction: (tx: string) => signWithKeypair(tx, loadedConfig.passphrase, phoenixAdmin),
   });
+  let needRetry: boolean = false;
   try {
     console.log('creating phoenix pool transaction')
     await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, aggregatorAdmin, assetA, assetB)
   } catch (error:any) {
     if(error.toString().includes('ExistingValue')){
       console.log('Pool already exists')
-    } else {
+    }
+    if(error.toString().includes('#5')){
+      console.log('Token A bigger than token B, retrying with token B as first asset')
+      needRetry = true;
+    } 
+    else {
       console.log('🚀 « error:', error)
+    }
+  }
+
+  if(needRetry){
+    try {
+      await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, aggregatorAdmin, assetB, assetA)
+    } catch (error:any) {
+      if(error.toString().includes('ExistingValue')){
+        console.log('Pool already exists')
+      } else {
+        console.log('🚀 « error:', error)
+      }
     }
   }
   
