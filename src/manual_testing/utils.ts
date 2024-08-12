@@ -16,6 +16,7 @@ import { getCurrentTimePlusOneHour, signWithKeypair } from "../utils/tx.js";
 import * as PhoenixFactoryContract from '../protocols/phoenix/bindgins/factory_bindings.js';
 import { AddressBook } from '../utils/address_book.js';
 import { config } from "../utils/env_config.js";
+import path from "path";
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -42,9 +43,6 @@ const generateRandomAsset = () => {
 
 
 const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
-  console.log("-------------------------------------------------------");
-  console.log(`Fetching ${asset.code} balance in ${account.publicKey()}`);
-  console.log("-------------------------------------------------------");
   let balance;
   try {
     balance = await invokeCustomContract(
@@ -69,9 +67,6 @@ const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
 }
 
 const fetchContractBalance = async (contractID: string, account: Keypair) => {
-  console.log("-------------------------------------------------------");
-  console.log(`Fetching ${contractID} balance in ${account.publicKey()}`);
-  console.log("-------------------------------------------------------");
   let balance;
   try {
     balance = await invokeCustomContract(
@@ -113,7 +108,7 @@ const setTrustline = async (asset: Asset, account: Keypair, rpc: Horizon.Server,
   await transaction.sign(account);
   const transactionResult = await rpc.submitTransaction(transaction);
   if(transactionResult.successful) {
-    console.log(`✨Trustline for ${asset.code} set`)
+    console.log(`🟢 Trustline for ${asset.code} set`)
   }
   return transactionResult;
 }
@@ -139,7 +134,7 @@ const mintToken = async (destination: string, asset: Asset, amount: string, sour
     await transaction.sign(source);
   const transactionResult = await rpc.submitTransaction(transaction);
   if(transactionResult.successful) {
-    console.log(`✨Payment of ${amount} ${asset.code} to ${destination} successful`)
+    console.log(`🟢 Payment of ${amount} ${asset.code} to ${destination} successful`)
   }
   return transactionResult;
 }
@@ -165,7 +160,7 @@ const create_soroswap_liquidity_pool = async (
     ...poolParams,
     user: poolParams.user.publicKey()
   }
-  console.log('🚀 « poolParams:', parsedPoolParams);  
+  console.log('🔎 poolParams:', parsedPoolParams);  
   const addSoroswapLiquidityParams: xdr.ScVal[] = [
     new Address(poolParams.contractID_A).toScVal(),
     new Address(poolParams.contractID_B).toScVal(),
@@ -180,7 +175,7 @@ const create_soroswap_liquidity_pool = async (
   if(soroswapInvoke.status === 'SUCCESS'){
     console.log('🟢 Soroswap pool created successfully')
   } else {
-    console.log('🚀 « soroswapInvoke:', soroswapInvoke);
+    console.log('🔎 soroswapInvoke:', soroswapInvoke);
   }
   return soroswapInvoke;
 }
@@ -250,7 +245,7 @@ const create_phoenix_liquidity_pool = async (phoenixAdmin: Keypair, aggregatorAd
       needRetry = true;
     } 
     else {
-      console.log('🚀 « error:', error)
+      console.log('🔴 error:', error)
     }
   }
 
@@ -259,9 +254,9 @@ const create_phoenix_liquidity_pool = async (phoenixAdmin: Keypair, aggregatorAd
       await create_phoenix_pool_transaction(factory_contract, phoenixAdmin, aggregatorAdmin, assetB, assetA)
     } catch (error:any) {
       if(error.toString().includes('ExistingValue')){
-        console.log('Pool already exists')
+        console.log('🟡 Pool already exists')
       } else {
-        console.log('🚀 « error:', error)
+        console.log('🔴 error:', error)
       }
     }
   }
@@ -333,14 +328,14 @@ export enum SwapMethod {
   EXACT_OUTPUT = 'swap_tokens_for_exact_tokens',
 }
 const callAggregatorSwap = async (asset_a:string, asset_b:string, max_amount: number, dexDistributionScValVec: xdr.ScVal, user: Keypair, method: SwapMethod ) => {
-//  fn swap_exact_tokens_for_tokens(
-//    token_in: Address,
-//    token_out: Address,
-//    amount_in: i128,
-//    amount_out_min: i128,
-//    distribution: Vec<DexDistribution>,
-//    to: Address,
-//    deadline: u64,
+// fn swap_exact_tokens_for_tokens(
+//   token_in: Address,
+//   token_out: Address,
+//   amount_in: i128,
+//   amount_out_min: i128,
+//   distribution: Vec<DexDistribution>,
+//   to: Address,
+//   deadline: u64,
 //)
 
 //fn swap_tokens_for_exact_tokens(
@@ -354,6 +349,7 @@ const callAggregatorSwap = async (asset_a:string, asset_b:string, max_amount: nu
 //)
 
 let aggregatorSwapParams: xdr.ScVal[];
+let parsedAggregatorSwapParams: any;
 switch (method) {
   case SwapMethod.EXACT_INPUT:
     aggregatorSwapParams = [
@@ -365,6 +361,21 @@ switch (method) {
       new Address(user.publicKey()).toScVal(), 
       nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
     ];
+    parsedAggregatorSwapParams = {
+      token_in: scValToNative(aggregatorSwapParams[0]),
+      token_out: scValToNative(aggregatorSwapParams[1]),
+      amount_in: scValToNative(aggregatorSwapParams[2]),
+      amount_out_min: scValToNative(aggregatorSwapParams[3]),
+      distribution: scValToNative(aggregatorSwapParams[4]).map((distribution: any)=>{
+        return {
+          protocol_id: distribution.protocol_id,
+          parts: distribution.parts,
+          path: distribution.path.toString()
+        }
+      }),
+      to: scValToNative(aggregatorSwapParams[5]),
+      deadline: scValToNative(aggregatorSwapParams[6]),
+    }
     break;
   case SwapMethod.EXACT_OUTPUT:
     aggregatorSwapParams = [
@@ -376,12 +387,31 @@ switch (method) {
       new Address(user.publicKey()).toScVal(), 
       nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
     ];
+    parsedAggregatorSwapParams = {
+      token_in: scValToNative(aggregatorSwapParams[0]),
+      token_out: scValToNative(aggregatorSwapParams[1]),
+      amount_out: scValToNative(aggregatorSwapParams[2]),
+      amount_in_max: scValToNative(aggregatorSwapParams[3]),
+      distribution: scValToNative(aggregatorSwapParams[4]).map((distribution: any)=>{
+        return {
+          protocol_id: distribution.protocol_id,
+          parts: distribution.parts,
+          path: distribution.path.toString()
+        }
+      }),
+      to: scValToNative(aggregatorSwapParams[5]),
+      deadline: scValToNative(aggregatorSwapParams[6]),
+    }
     break;
   default:
     throw new Error('Invalid swap method');
 }
 
   console.log(`🟡 Calling aggregator ${method}`)
+
+  console.log('🔎 aggregatorSwapParams:');
+  
+  console.log(parsedAggregatorSwapParams);
   const aggregatorResponse = await invokeContract(
     'aggregator',
     addressBook,
@@ -390,7 +420,7 @@ switch (method) {
     user
   );
   if(aggregatorResponse.status === 'SUCCESS'){
-    console.log(`✨ Aggregator ${method} successful`)
+    console.log(`🟢 Aggregator ${method} successful`)
     const parsedResponse = scValToNative(aggregatorResponse.returnValue)
     return parsedResponse;
   } else {
