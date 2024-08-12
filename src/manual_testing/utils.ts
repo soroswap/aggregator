@@ -175,11 +175,11 @@ const create_phoenix_pool_transaction = async (
   let firstAsset: Asset;
   let secondAsset: Asset;
   if(assetA.contractId(loadedConfig.passphrase) > assetB.contractId(loadedConfig.passphrase)){
-    firstAsset = assetA;
-    secondAsset = assetB;
-  } else {
     firstAsset = assetB;
     secondAsset = assetA;
+  } else {
+    firstAsset = assetA;
+    secondAsset = assetB;
   }
   const tx = await factory_contract.create_liquidity_pool({
     sender: phoenixAdmin.publicKey(),
@@ -255,11 +255,108 @@ const provide_phoenix_liquidity = async (phoenixAdmin: Keypair, pairAddress:stri
   const provide_liquidity = await invokeCustomContract(pairAddress, 'provide_liquidity', addPhoenixLiquidityParams, phoenixAdmin)
 
   if(provide_liquidity.status === 'SUCCESS'){
-    console.log('✨🟢 Successfully added liquidity to phoenix pool')
+    console.log('🟢 Successfully added liquidity to phoenix pool')
     return provide_liquidity;
   } else {
     console.log('🔴 error providing liquidity:', provide_liquidity)
     return provide_liquidity;
+  }
+}
+
+interface DexDistributionRaw {
+  protocol_id: string,
+  path: string[],
+  parts: number,
+}
+const createDexDistribution = async (dexDistributionRaw: DexDistributionRaw[]) => {
+  const dexDistributionScVal = dexDistributionRaw.map((distribution) => {
+    return xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('parts'),
+        val: nativeToScVal(distribution.parts, {type: "u32"}),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('path'),
+        val: xdr.ScVal.scvVec(distribution.path.map((pathAddress) => new Address(pathAddress).toScVal())),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('protocol_id'),
+        val: nativeToScVal(distribution.protocol_id),
+      }),
+    ]);
+  });
+
+  const dexDistributionScValVec = xdr.ScVal.scvVec(dexDistributionScVal);
+  return dexDistributionScValVec;
+}
+
+export enum SwapMethod {
+  EXACT_INPUT = 'swap_exact_tokens_for_tokens',
+  EXACT_OUTPUT = 'swap_tokens_for_exact_tokens',
+}
+const callAggregatorSwap = async (asset_a:string, asset_b:string, max_amount: number, dexDistributionScValVec: xdr.ScVal, user: Keypair, method: SwapMethod ) => {
+//  fn swap_exact_tokens_for_tokens(
+//    token_in: Address,
+//    token_out: Address,
+//    amount_in: i128,
+//    amount_out_min: i128,
+//    distribution: Vec<DexDistribution>,
+//    to: Address,
+//    deadline: u64,
+//)
+
+//fn swap_tokens_for_exact_tokens(
+//  token_in: Address,
+//  token_out: Address,
+//  amount_out: i128,
+//  amount_in_max: i128,
+//  distribution: Vec<DexDistribution>,
+//  to: Address,
+//  deadline: u64,
+//)
+
+let aggregatorSwapParams: xdr.ScVal[];
+switch (method) {
+  case SwapMethod.EXACT_INPUT:
+    aggregatorSwapParams = [
+      new Address(asset_a).toScVal(),
+      new Address(asset_b).toScVal(), 
+      nativeToScVal(formatAmmount(max_amount), {type: "i128"}),
+      nativeToScVal(formatAmmount(0), {type: "i128"}),
+      dexDistributionScValVec, 
+      new Address(user.publicKey()).toScVal(), 
+      nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
+    ];
+    break;
+  case SwapMethod.EXACT_OUTPUT:
+    aggregatorSwapParams = [
+      new Address(asset_a).toScVal(),
+      new Address(asset_b).toScVal(), 
+      nativeToScVal(formatAmmount(max_amount), {type: "i128"}),
+      nativeToScVal(formatAmmount(max_amount+20000000), {type: "i128"}),
+      dexDistributionScValVec, 
+      new Address(user.publicKey()).toScVal(), 
+      nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
+    ];
+    break;
+  default:
+    throw new Error('Invalid swap method');
+}
+
+  console.log(`🟡 Calling aggregator ${method}`)
+  const aggregatorResponse = await invokeContract(
+    'aggregator',
+    addressBook,
+    method,
+    aggregatorSwapParams,
+    user
+  );
+  if(aggregatorResponse.status === 'SUCCESS'){
+    console.log(`✨ Aggregator ${method} successful`)
+    const parsedResponse = scValToNative(aggregatorResponse.returnValue)
+    return parsedResponse;
+  } else {
+    console.log('🔴 error calling aggregator:', aggregatorResponse)
   }
 }
 
@@ -272,4 +369,6 @@ export {
   create_soroswap_liquidity_pool,
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
+  createDexDistribution,
+  callAggregatorSwap
 }

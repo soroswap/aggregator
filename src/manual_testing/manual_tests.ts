@@ -7,7 +7,10 @@ import {
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
   fetchAssetBalance,
-  fetchContractBalance
+  fetchContractBalance,
+  createDexDistribution,
+  callAggregatorSwap,
+  SwapMethod
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
@@ -150,9 +153,12 @@ const loadedConfig = config(network);
     new Address(cID_B).toScVal(),
   ]
 
+  console.log('🟡 Fetching Soroswap pair address')
   const soroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchPoolParams, testUser, true)
   const soroswapPoolCID = scValToNative(soroswapPool.result.retval)
   console.log('🟢 Soroswap pair address:', soroswapPoolCID)
+
+  console.log('🟡 Fetching liquidity pool balance')
   const soroswapPoolBalance = await fetchContractBalance(soroswapPoolCID, testUser)
   console.log(`🟢 Soroswap pair balance: ${(soroswapPoolBalance)}`)
 
@@ -160,16 +166,17 @@ const loadedConfig = config(network);
   console.log("-------------------------------------------------------");
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
-
+  
   const pairAddress: any = await create_phoenix_liquidity_pool(phoenixAdmin, aggregatorAdmin, testUser, assetA, assetB)
   console.log('🟢 Phoenix pair address:', pairAddress)
 
+  const initialPhoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true)
+  console.log('🔎 Current Phoenix liquidity pool balances:',scValToNative(initialPhoenixPoolBalance.result.retval))
+  
   console.log('🟡 Adding liquidity')
-  const initialPhoenixPoolBalance = await await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true)
-  console.log(`🟢 Initial Phoenix pool balance: ${initialPhoenixPoolBalance}`)
   await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000000, 100000000000)
   const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true)
-  console.log(`🟢 Phoenix pool balance: ${nativeToScVal(phoenixPoolBalance)}`)
+  console.log('🔎 New Phoenix liquidity pool balances:',scValToNative(phoenixPoolBalance.result.retval))
   
   //To-do: refactor agregator swap, add swapMethod (exact-tokens/tokens-exact)
   console.log('-------------------------------------------------------');
@@ -186,74 +193,21 @@ const loadedConfig = config(network);
       protocol_id: "soroswap",
       path: [cID_A, cID_B],
       parts: 50,
-      is_exact_in: true,
     },
     {
       protocol_id: "phoenix",
       path: [cID_A, cID_B],
       parts: 50,
-      is_exact_in: true,
     },
   ];
 
-//  pub struct DexDistribution {
-//    pub protocol_id: String,
-//    pub path: Vec<Address>,
-//    pub parts: u32,
-//  }
-
-  const dexDistributionScVal = dexDistributionRaw.map((distribution) => {
-    return xdr.ScVal.scvMap([
-      new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('parts'),
-        val: nativeToScVal(distribution.parts, {type: "u32"}),
-      }),
-      new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('path'),
-        val: xdr.ScVal.scvVec(distribution.path.map((pathAddress) => new Address(pathAddress).toScVal())),
-      }),
-      new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: nativeToScVal(distribution.protocol_id),
-      }),
-    ]);
-  });
-
-  const dexDistributionScValVec = xdr.ScVal.scvVec(dexDistributionScVal);
-
-//  fn swap_exact_tokens_for_tokens(
-//    token_in: Address,
-//    token_out: Address,
-//    amount_in: i128,
-//    amount_out_min: i128,
-//    distribution: Vec<DexDistribution>,
-//    to: Address,
-//    deadline: u64,
-//) 
-  const aggregatorSwapParams: xdr.ScVal[] = [
-    new Address(cID_A).toScVal(),
-    new Address(cID_B).toScVal(), 
-    nativeToScVal(15000000000n, {type: "i128"}),
-    nativeToScVal(0n, {type: "i128"}),
-    dexDistributionScValVec, 
-    new Address(testUser.publicKey()).toScVal(), 
-    nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),
-  ];
-
-  console.log("Initializing Aggregator")
-  const aggregatorResponse = await invokeContract(
-    'aggregator',
-    addressBook,
-    'swap_exact_tokens_for_tokens',
-    aggregatorSwapParams,
-    testUser
-  );
-
-  //To-do: parse response
-  console.log(aggregatorResponse.status)
-  console.log(scValToNative(aggregatorResponse.returnValue))
+  const dexDistributionVec = await createDexDistribution(dexDistributionRaw)
   
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 1000000000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT)
+  console.log('🟡 Swap exact in:', swapExactIn)
 
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 1000000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT)
+  console.log('🟡 Swap exact out:', swapExactOut)
 }
 
 aggregatorManualTest()
