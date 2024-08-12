@@ -21,6 +21,26 @@ const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
+const name_parts = [
+  "zim", "lay", "veo", "tak", "rud", "pia", "nov", "kul", "jor", "fyx",
+  "bax", "wun", "voe", "quy", "pyr", "otz", "mil", "kra", "jix", "gex",
+  "dex", "uxi", "tro", "siv", "rya", "nef", "laz", "kev", "jam", "fiz",
+  "cyo", "vax", "uvi", "tez", "rog", "peq", "nyl", "lom", "kib", "jah"
+];
+
+const generateRandomCode = () => {
+  const part1 = name_parts[Math.floor(Math.random() * name_parts.length)];
+  const part2 = name_parts[Math.floor(Math.random() * name_parts.length)];
+  const formatCode = (part1+part2).toUpperCase().substring(0, 4);
+  return formatCode; 
+}
+
+const generateRandomAsset = () => {
+  const asset = new Asset(generateRandomCode(), loadedConfig.tokenAdmin.publicKey());
+  return asset;
+}
+
+
 const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
   console.log("-------------------------------------------------------");
   console.log(`Fetching ${asset.code} balance in ${account.publicKey()}`);
@@ -388,5 +408,6 @@ export {
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
   createDexDistribution,
-  callAggregatorSwap
+  callAggregatorSwap,
+  generateRandomAsset
 }

@@ -1,5 +1,6 @@
 import { invokeCustomContract } from "../utils/contract.js";
 import { 
+  generateRandomAsset,
   setTrustline,
   mintToken,
   deployStellarAsset,
@@ -33,23 +34,24 @@ const aggregatorManualTest = async ()=>{
   const phoenixAdmin = loadedConfig.phoenixAdmin;
   const aggregatorAdmin = loadedConfig.admin;
   const testUser = loadedConfig.testUser;
-  const assetA = new Asset('AAAA', tokenAdmin.publicKey());
-  const assetB = new Asset('AAAB', tokenAdmin.publicKey());
-  const assetC = new Asset('AABB', tokenAdmin.publicKey());
+  
+  const assetA = generateRandomAsset();
+  const assetB = generateRandomAsset();
+  const assetC = generateRandomAsset();
   const cID_A = assetA.contractId(networkPassphrase);
   const cID_B = assetB.contractId(networkPassphrase);
   const cID_C = assetC.contractId(networkPassphrase);
   console.log('------------------------')
   console.log("----Using addresses:----")
   console.log('------------------------')
-  console.log('🔎 Contract id for AAAB: ',cID_B);
-  console.log('🔎 Contract id for AAAA: ',cID_A);
-  console.log('🔎 Contract id for AABB: ',cID_C);
+  console.log(`🔎 Contract ID for ${assetA.code} => ${cID_A}`)
+  console.log(`🔎 Contract ID for ${assetB.code} => ${cID_B}`)
+  console.log(`🔎 Contract ID for ${assetC.code} => ${cID_C}`)
   
-  console.log(`🔎 Test user: ${testUser.publicKey()}`);
-  console.log(`🔎 Phoenix admin: ${phoenixAdmin.publicKey()}`);
-  console.log(`🔎 Token admin: ${tokenAdmin.publicKey()}`);
-  console.log(`🔎 Aggregator admin: ${aggregatorAdmin.publicKey()}`);
+  console.log(`🔎 Test user => ${testUser.publicKey()}`);
+  console.log(`🔎 Phoenix admin => ${phoenixAdmin.publicKey()}`);
+  console.log(`🔎 Token admin => ${tokenAdmin.publicKey()}`);
+  console.log(`🔎 Aggregator admin => ${aggregatorAdmin.publicKey()}`);
   console.log("-------------------------------------------------------");
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
