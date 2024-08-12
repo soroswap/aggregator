@@ -91,13 +91,17 @@ class EnvConfig {
       rpc_url === undefined ||
       horizon_rpc_url === undefined ||
       (network != "mainnet" && friendbot_url === undefined) ||
-      passphrase === undefined ||
+      passphrase === undefined
+      ) {
+      throw new Error('Error: Configuration is missing required fields, include <network>');
+    }
+    if (   
       admin === undefined ||
       tokenAdmin === undefined ||
       phoenixAdmin === undefined ||
       testUser === undefined
-      ) {
-      throw new Error('Error: Configuration is missing required fields, include <network>');
+    ) {
+      throw new Error('Error: Configuration is missing required fields, please read .env.example to set up the required fields');
     }
 
     const allowHttp = network === "standalone";
