@@ -371,7 +371,7 @@ switch (method) {
       new Address(asset_a).toScVal(),
       new Address(asset_b).toScVal(), 
       nativeToScVal(formatAmmount(max_amount), {type: "i128"}),
-      nativeToScVal(formatAmmount(max_amount+20000000), {type: "i128"}),
+      nativeToScVal(formatAmmount(max_amount+200000000), {type: "i128"}),
       dexDistributionScValVec, 
       new Address(user.publicKey()).toScVal(), 
       nativeToScVal(getCurrentTimePlusOneHour(), {type:'u64'}),

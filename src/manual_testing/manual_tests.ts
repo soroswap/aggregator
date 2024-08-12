@@ -15,8 +15,9 @@ import {
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, Asset, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Friendbot, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
+import { error } from "console";
 
 
 const network = process.argv[2];
@@ -56,7 +57,38 @@ const aggregatorManualTest = async ()=>{
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
   
-  const assets = [assetA, assetB, assetC] ;
+  const assets = [assetA, assetB, assetC];
+
+  const isTokenAdminFound = await loadedConfig.horizonRpc.loadAccount(tokenAdmin.publicKey()).catch(()=>false)
+
+  if(!!!isTokenAdminFound){
+    console.log(`🟡 Founding token admin`);
+    const friendbot = await loadedConfig.horizonRpc.friendbot(tokenAdmin.publicKey());
+    await friendbot.call().then(()=>{
+      console.log(`🟢 Token admin funded`);
+    })
+  }
+  
+  const isTestUserFound = await loadedConfig.horizonRpc.loadAccount(testUser.publicKey()).catch(()=>false)
+
+  if(!!!isTestUserFound){
+    console.log(`🟡 Founding test user`);
+    const friendbot = await loadedConfig.horizonRpc.friendbot(testUser.publicKey());
+    await friendbot.call().then(()=>{
+      console.log(`🟢 Test user funded`);
+    })
+  }
+ /*  const paths = [];
+  for (let i = 0; i < assets.length - 1; i++) {
+    paths.push([assets[i].contractId(networkPassphrase), assets[i + 1].contractId(networkPassphrase)]);
+    if(i === assets.length - 2){
+      paths.push([assets[i + 1].contractId(networkPassphrase), assets[0].contractId(networkPassphrase)]);
+    }
+  }
+  console.log(paths.length)
+  for(let path of paths){
+    console.log(path)
+  } */
   
   for(let asset of assets){
     try {
@@ -185,7 +217,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Asset A:', asset_A_first_balance);
   console.log('🔎 Asset B:', asset_B_first_balance);
   
-  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 150000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 15000000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
   console.log('🟡 Swap exact in:', swapExactIn);
 
   const asset_A_second_balance = await fetchAssetBalance(assetA, testUser);
@@ -195,7 +227,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Asset A:', asset_A_second_balance);
   console.log('🔎 Asset B:', asset_B_second_balance);
 
-  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 150000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 15000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
   console.log('🟡 Swap exact out:', swapExactOut);
 
   const asset_A_third_balance = await fetchAssetBalance(assetA, testUser);
