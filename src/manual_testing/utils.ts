@@ -331,6 +331,14 @@ const provide_phoenix_liquidity = async (phoenixAdmin: Keypair, pairAddress:stri
   }
 }
 
+const getPhoenixBalanceForContract = (contractID:string, balancesObject: any)=>{
+  for(let asset in balancesObject)  {
+    if(balancesObject[asset].address === contractID){
+      return balancesObject[asset].amount;
+    }
+  }  
+}
+
 interface DexDistributionRaw {
   protocol_id: string,
   path: string[],
@@ -474,5 +482,6 @@ export {
   provide_phoenix_liquidity,
   createDexDistribution,
   callAggregatorSwap,
-  generateRandomAsset
+  generateRandomAsset,
+  getPhoenixBalanceForContract
 }
