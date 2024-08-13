@@ -48,8 +48,8 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   const soroswapAdapterAddress = scValToNative(response.returnValue)[0]
   console.log('🚀 « soroswapAdapterAddress:', soroswapAdapterAddress);
-  addressBook.setContractId("soroswap_adapter", soroswapAdapterAddress)
   // SAVE ADDRES IN ADDRESS BOOK
+  addressBook.setContractId("soroswap_adapter", soroswapAdapterAddress)
 
   console.log('-------------------------------------------------------');
   console.log('Deploying Aggregator');
