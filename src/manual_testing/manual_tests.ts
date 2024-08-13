@@ -1,9 +1,7 @@
-import { invokeCustomContract } from "../utils/contract.js";
+import { deployStellarAsset, invokeCustomContract } from "../utils/contract.js";
 import { 
   generateRandomAsset,
-  setTrustline,
-  mintToken,
-  deployStellarAsset,
+  deployAndMint,
   create_soroswap_liquidity_pool,
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
@@ -11,11 +9,13 @@ import {
   fetchContractBalance,
   createDexDistribution,
   callAggregatorSwap,
-  SwapMethod
+  SwapMethod,
+  setTrustline,
+  mintToken
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, Keypair, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
 
 
@@ -25,9 +25,9 @@ const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
 
-const aggregatorManualTest = async ()=>{
+const swapExactInputAggregatorTest = async ()=>{
   const networkPassphrase = loadedConfig.passphrase;
-
+  const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address;
   console.log("-------------------------------------------------------");
   console.log("Creating new tokens");
   console.log("-------------------------------------------------------");
@@ -78,70 +78,11 @@ const aggregatorManualTest = async ()=>{
       console.log(`🟢 Test user funded`);
     })
   }
- /*  const paths = [];
-  for (let i = 0; i < assets.length - 1; i++) {
-    paths.push([assets[i].contractId(networkPassphrase), assets[i + 1].contractId(networkPassphrase)]);
-    if(i === assets.length - 2){
-      paths.push([assets[i + 1].contractId(networkPassphrase), assets[0].contractId(networkPassphrase)]);
-    }
-  }
-  console.log(paths.length)
-  for(let path of paths){
-    console.log(path)
-  } */
-  
   for(let asset of assets){
-    try {
-      console.log(`🟡 Deploying contract for ${asset.code}`);
-      await deployStellarAsset(asset, loadedConfig.tokenAdmin);
-
-    } catch (error:any) {
-      if(error.toString().includes('ExistingValue')){
-        console.log(`🟢 Contract for ${asset.code} already exists`);
-      } else {
-        console.error(error);
-      }
-    };
-
-    const userHasTrustline = await fetchAssetBalance(asset, testUser);
-    if(!userHasTrustline){
-      console.log(`Missing trustline for ${asset.code} in ${testUser.publicKey()}`);
-      try{
-        await setTrustline(asset, testUser, loadedConfig.horizonRpc);
-      } catch(e:any){
-        console.error(e);
-      }  
-    } else {
-      console.log(`🟢 Trustline for ${asset.code} already exists in ${testUser.publicKey()}`);
-      console.log(`🟢 Balance: ${userHasTrustline}`);
-    }
-    const phoenixAdminHasTrustline = await fetchAssetBalance(asset, phoenixAdmin);
-    if(!phoenixAdminHasTrustline){
-      console.log(`Missing trustline for ${asset.code} in ${phoenixAdmin.publicKey()}`);
-      try{
-        await setTrustline(asset, phoenixAdmin, loadedConfig.horizonRpc);
-      } catch(e:any){
-        console.error(e);
-      }  
-    } else {
-      console.log(`🟢 Trustline for ${asset.code} already exists in ${phoenixAdmin.publicKey()}`);
-      console.log(`🟢 Balance: ${phoenixAdminHasTrustline}`);
-    }
-
-    await mintToken(testUser.publicKey(), asset, "40000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
-    const newUserBalance = await fetchAssetBalance(asset, testUser);
-    console.log(`🟢 Test user balance of ${asset.code}: ${newUserBalance}`);
-
-
-    await mintToken(phoenixAdmin.publicKey(), asset, "40000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
-    const newPhoenixBalance = await fetchAssetBalance(asset, phoenixAdmin);
-    console.log(`🟢 Phoenix balance of ${asset.code}: ${newPhoenixBalance}`);
-    
+    await deployAndMint(asset, testUser, "40000000000");
+    await deployAndMint(asset, phoenixAdmin, "40000000000");
   }
-  //Issue #58 Add liquidity in Phoenix and Soroswap
-  const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address;
- 
-  //To-do: Add liquidity to all pools
+
   console.log("-------------------------------------------------------");
   console.log("Creating Soroswap liquidity pool");
   console.log("-------------------------------------------------------");
@@ -242,23 +183,6 @@ const aggregatorManualTest = async ()=>{
   const phoenixPoolBalanceAfterExactIn = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactIn.result.retval));
 
-  /* const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 123456789000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
-  console.log('🟡 Swap exact out:', swapExactOut);
-
-  const asset_A_third_balance = await fetchAssetBalance(assetA, testUser);
-  const asset_B_third_balance = await fetchAssetBalance(assetB, testUser);
-  
-  console.log(' -------------- Test user balances after exact output swap -------------');
-  console.log('🔎 Asset A:', asset_A_third_balance);
-  console.log('🔎 Asset B:', asset_B_third_balance);
-
-  console.log(' -------------- Soroswap pool balances after exact output swap -------------');
-  const soroswapPoolBalanceAfterExactOut = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
-  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactOut.result.retval));
-
-  console.log(' -------------- Phoenix pool balances after exact output swap -------------');
-  const phoenixPoolBalanceAfterExactOut = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
-  console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactOut.result.retval)); */
   const phoenix_before_assets = scValToNative(phoenixPoolBalance.result.retval);
   const phoenix_after_assets = scValToNative(phoenixPoolBalanceAfterExactIn.result.retval);
   const getPhoenixBalanceForContract = (contractID:string, balancesObject: any)=>{
@@ -268,12 +192,13 @@ const aggregatorManualTest = async ()=>{
       }
     }  
   }
-
   console.log("--------------Contract ID's-----------------")
-  console.log(`Contract Asset A: ${cID_A}`);
-  console.log(`Contract Asset B: ${cID_B}`);
-  console.log(`Contract Soroswap: ${soroswapPoolCID}`);
-  console.log(`Contract Phoenix: ${pairAddress}`);
+  console.table({
+    'Contract Asset A': cID_A,
+    'Contract Asset B': cID_B,
+    'Contract Soroswap': soroswapPoolCID,
+    'Contract Phoenix': pairAddress,
+  })
 
 
   console.log(' -------------- Asset balances table -------------')
@@ -295,7 +220,35 @@ const aggregatorManualTest = async ()=>{
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
     },
   })
-
+  if(
+    swapExactIn[0][0] === 30864197n && 
+    swapExactIn[0][1] === 123086415n &&
+    swapExactIn[1][0] === 92592592n &&
+    swapExactIn[1][1] === 92592592n
+  ){
+    console.log('🟢 Aggregator test swap exact input passed')
+  } else {
+    throw new Error('🔴 Aggregator test swap exact input failed')
+  }
 }
 
-aggregatorManualTest();
+swapExactInputAggregatorTest();
+
+
+  /* const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 123456789000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
+  console.log('🟡 Swap exact out:', swapExactOut);
+
+  const asset_A_third_balance = await fetchAssetBalance(assetA, testUser);
+  const asset_B_third_balance = await fetchAssetBalance(assetB, testUser);
+  
+  console.log(' -------------- Test user balances after exact output swap -------------');
+  console.log('🔎 Asset A:', asset_A_third_balance);
+  console.log('🔎 Asset B:', asset_B_third_balance);
+
+  console.log(' -------------- Soroswap pool balances after exact output swap -------------');
+  const soroswapPoolBalanceAfterExactOut = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactOut.result.retval));
+
+  console.log(' -------------- Phoenix pool balances after exact output swap -------------');
+  const phoenixPoolBalanceAfterExactOut = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
+  console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactOut.result.retval)); */

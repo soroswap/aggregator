@@ -23,10 +23,11 @@ const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
 const name_parts = [
-  "zim", "lay", "veo", "tak", "rud", "pia", "nov", "kul", "jor", "fyx",
-  "bax", "wun", "voe", "quy", "pyr", "otz", "mil", "kra", "jix", "gex",
-  "dex", "uxi", "tro", "siv", "rya", "nef", "laz", "kev", "jam", "fiz",
-  "cyo", "vax", "uvi", "tez", "rog", "peq", "nyl", "lom", "kib", "jah"
+  "zi", "ay", "vo", "ak", "rd", "pi", "nv", "ku", "or", "fx",
+  "ba", "un", "ve", "uy", "pr", "ot", "ml", "kr", "ix", "gx",
+  "de", "xi", "to", "iv", "ra", "ne", "lz", "ke", "am", "fz",
+  "cy", "ax", "ui", "ez", "rg", "pe", "nl", "lo", "ib", "jh",
+  "gu", "ep", "ww", "tv", "su", "rx", "nu", "ox", "kx",
 ];
 
 const generateRandomCode = () => {
@@ -138,6 +139,38 @@ const mintToken = async (destination: string, asset: Asset, amount: string, sour
     console.log(`🟢 Payment of ${amount} ${asset.code} to ${destination} successful`)
   }
   return transactionResult;
+}
+
+const deployAndMint = async (asset: Asset, user: Keypair, amount:string)=>{
+  try {
+    console.log(`🟡 Deploying contract for ${asset.code}`);
+    await deployStellarAsset(asset, loadedConfig.tokenAdmin);
+
+  } catch (error:any) {
+    if(error.toString().includes('ExistingValue')){
+      console.log(`🟢 Contract for ${asset.code} already exists`);
+    } else {
+      console.error(error);
+    }
+  };
+
+  const userHasTrustline = await fetchAssetBalance(asset, user);
+  if(!userHasTrustline){
+    console.log(`Missing trustline for ${asset.code} in ${user.publicKey()}`);
+    try{
+      await setTrustline(asset, user, loadedConfig.horizonRpc);
+    } catch(e:any){
+      console.error(e);
+    }  
+  } else {
+    console.log(`🟢 Trustline for ${asset.code} already exists in ${user.publicKey()}`);
+    console.log(`🟢 Balance: ${userHasTrustline}`);
+  }
+  
+
+  await mintToken(user.publicKey(), asset, amount, loadedConfig.tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
+  const newUserBalance = await fetchAssetBalance(asset, user);
+  console.log(`🟢 Test user balance of ${asset.code}: ${newUserBalance}`);
 }
 
 const formatAmmount = (amount: number) => {
@@ -434,8 +467,8 @@ export {
   fetchAssetBalance,
   fetchContractBalance,
   setTrustline,
-  mintToken, 
-  deployStellarAsset,
+  mintToken,
+  deployAndMint,
   create_soroswap_liquidity_pool,
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
