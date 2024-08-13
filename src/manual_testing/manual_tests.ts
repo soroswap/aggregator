@@ -57,7 +57,7 @@ const aggregatorManualTest = async ()=>{
   console.log("Setting trustlines");
   console.log("-------------------------------------------------------");
   
-  const assets = [assetA, assetB, assetC];
+  const assets = [assetA, assetB];
 
   const isTokenAdminFound = await loadedConfig.horizonRpc.loadAccount(tokenAdmin.publicKey()).catch(()=>false)
 
@@ -128,12 +128,12 @@ const aggregatorManualTest = async ()=>{
       console.log(`🟢 Balance: ${phoenixAdminHasTrustline}`);
     }
 
-    await mintToken(testUser.publicKey(), asset, "150", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
+    await mintToken(testUser.publicKey(), asset, "40000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
     const newUserBalance = await fetchAssetBalance(asset, testUser);
     console.log(`🟢 Test user balance of ${asset.code}: ${newUserBalance}`);
 
 
-    await mintToken(phoenixAdmin.publicKey(), asset, "150", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
+    await mintToken(phoenixAdmin.publicKey(), asset, "40000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
     const newPhoenixBalance = await fetchAssetBalance(asset, phoenixAdmin);
     console.log(`🟢 Phoenix balance of ${asset.code}: ${newPhoenixBalance}`);
     
@@ -149,8 +149,8 @@ const aggregatorManualTest = async ()=>{
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 100000000,
-    amount_B: 400000000,
+    amount_A: 100000000000000000,
+    amount_B: 400000000000000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams);
@@ -182,7 +182,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Current Phoenix liquidity pool balances:',scValToNative(initialPhoenixPoolBalance.result.retval));
   
   console.log('🟡 Adding liquidity');
-  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000, 100000000);
+  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000000000000, 100000000000000000);
   const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 New Phoenix liquidity pool balances:',scValToNative(phoenixPoolBalance.result.retval));
   
@@ -224,7 +224,7 @@ const aggregatorManualTest = async ()=>{
   console.log(' ------------ Phoenix pool balances --------------')
   console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalance.result.retval));
   
-  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 12345678, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 123456789, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
   console.log('🟡 Swap exact in:', swapExactIn);
 
   const asset_A_second_balance = await fetchAssetBalance(assetA, testUser);
