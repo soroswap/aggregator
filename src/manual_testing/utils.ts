@@ -140,8 +140,9 @@ const mintToken = async (destination: string, asset: Asset, amount: string, sour
 }
 
 const formatAmmount = (amount: number) => {
-  const formattedAmmount = BigInt(amount * 10000000).toString();
-  return formattedAmmount
+  //const formattedAmmount = BigInt(amount * 10000000).toString();
+  //return formattedAmmount
+  return amount
 }
 interface CreatePoolParams {
   contractID_A: string,

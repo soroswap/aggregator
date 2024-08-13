@@ -149,8 +149,8 @@ const aggregatorManualTest = async ()=>{
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 10000000000,
-    amount_B: 40000000000,
+    amount_A: 10000000000000000,
+    amount_B: 40000000000000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams);
@@ -182,7 +182,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Current Phoenix liquidity pool balances:',scValToNative(initialPhoenixPoolBalance.result.retval));
   
   console.log('🟡 Adding liquidity');
-  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 1000000000, 1000000000);
+  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 10000000000000000, 10000000000000000);
   const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 New Phoenix liquidity pool balances:',scValToNative(phoenixPoolBalance.result.retval));
   
@@ -200,12 +200,12 @@ const aggregatorManualTest = async ()=>{
     {
       protocol_id: "soroswap",
       path: [cID_A, cID_B],
-      parts: 50,
+      parts: 1,
     },
     {
       protocol_id: "phoenix",
       path: [cID_A, cID_B],
-      parts: 50,
+      parts: 3,
     },
   ];
 
@@ -219,7 +219,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Asset B:', asset_B_first_balance);
 
   console.log(' ------------ Soroswap pool balances --------------');
-  console.log('🔎 Soroswap pool balance:', scValToNative(soroswapPoolBalance.result.retval));
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalance.result.retval));
 
   console.log(' ------------ Phoenix pool balances --------------')
   console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalance.result.retval));
@@ -236,13 +236,13 @@ const aggregatorManualTest = async ()=>{
 
   console.log(' -------------- Soroswap pool balances after exact input swap -------------');
   const soroswapPoolBalanceAfterExactIn = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
-  console.log('🔎 Soroswap pool balance after swap exact in:', scValToNative(soroswapPoolBalanceAfterExactIn.result.retval))
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactIn.result.retval))
   
   console.log(' -------------- Phoenix pool balances after exact input swap -------------');
   const phoenixPoolBalanceAfterExactIn = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
-  console.log('🔎 Phoenix pool balance after swap exact in:', scValToNative(phoenixPoolBalanceAfterExactIn.result.retval));
+  console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactIn.result.retval));
 
-  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 30000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 123456789000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
   console.log('🟡 Swap exact out:', swapExactOut);
 
   const asset_A_third_balance = await fetchAssetBalance(assetA, testUser);
@@ -254,7 +254,7 @@ const aggregatorManualTest = async ()=>{
 
   console.log(' -------------- Soroswap pool balances after exact output swap -------------');
   const soroswapPoolBalanceAfterExactOut = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
-  console.log('🔎 Soroswap pool balance:', scValToNative(soroswapPoolBalanceAfterExactOut.result.retval));
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactOut.result.retval));
 
   console.log(' -------------- Phoenix pool balances after exact output swap -------------');
   const phoenixPoolBalanceAfterExactOut = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
