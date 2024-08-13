@@ -16,7 +16,7 @@ import { getCurrentTimePlusOneHour, signWithKeypair } from "../utils/tx.js";
 import * as PhoenixFactoryContract from '../protocols/phoenix/bindgins/factory_bindings.js';
 import { AddressBook } from '../utils/address_book.js';
 import { config } from "../utils/env_config.js";
-import path from "path";
+
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -41,7 +41,6 @@ const generateRandomAsset = () => {
   return asset;
 }
 
-
 const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
   let balance;
   try {
@@ -62,7 +61,8 @@ const fetchAssetBalance = async (asset: Asset, account: Keypair) => {
   } 
   if(balance != undefined){
     const parsedBalance: bigint = scValToNative(balance.result.retval);
-    return (parsedBalance / BigInt(10000000)).toString();
+    //return (parsedBalance / BigInt(10000000)).toString();
+    return parsedBalance;
   }
 }
 
@@ -86,7 +86,8 @@ const fetchContractBalance = async (contractID: string, account: Keypair) => {
   } 
   if(balance != undefined){
     const parsedBalance: bigint = scValToNative(balance.result.retval);
-    return parsedBalance / BigInt(10000000);
+    //return parsedBalance / BigInt(10000000);
+    return parsedBalance;
   }
 }
 
@@ -203,7 +204,7 @@ const create_phoenix_pool_transaction = async (
       admin: phoenixAdmin.publicKey(),
       fee_recipient: loadedConfig.testUser.publicKey(),
       max_allowed_slippage_bps: 4000n,
-      max_allowed_spread_bps: 400n,
+      max_allowed_spread_bps: 4000n,
       max_referral_bps: 5000n,
       swap_fee_bps: 0n,
       stake_init_info: {

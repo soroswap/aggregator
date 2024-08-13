@@ -128,12 +128,12 @@ const aggregatorManualTest = async ()=>{
       console.log(`🟢 Balance: ${phoenixAdminHasTrustline}`);
     }
 
-    await mintToken(testUser.publicKey(), asset, "150000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
+    await mintToken(testUser.publicKey(), asset, "150", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
     const newUserBalance = await fetchAssetBalance(asset, testUser);
     console.log(`🟢 Test user balance of ${asset.code}: ${newUserBalance}`);
 
 
-    await mintToken(phoenixAdmin.publicKey(), asset, "150000000000", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
+    await mintToken(phoenixAdmin.publicKey(), asset, "150", tokenAdmin, loadedConfig.horizonRpc, loadedConfig.passphrase);
     const newPhoenixBalance = await fetchAssetBalance(asset, phoenixAdmin);
     console.log(`🟢 Phoenix balance of ${asset.code}: ${newPhoenixBalance}`);
     
@@ -149,8 +149,8 @@ const aggregatorManualTest = async ()=>{
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 10000000000000000,
-    amount_B: 40000000000000000,
+    amount_A: 100000000,
+    amount_B: 400000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams);
@@ -182,7 +182,7 @@ const aggregatorManualTest = async ()=>{
   console.log('🔎 Current Phoenix liquidity pool balances:',scValToNative(initialPhoenixPoolBalance.result.retval));
   
   console.log('🟡 Adding liquidity');
-  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 10000000000000000, 10000000000000000);
+  await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000, 100000000);
   const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 New Phoenix liquidity pool balances:',scValToNative(phoenixPoolBalance.result.retval));
   
@@ -242,7 +242,7 @@ const aggregatorManualTest = async ()=>{
   const phoenixPoolBalanceAfterExactIn = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactIn.result.retval));
 
-  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 123456789000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
+  /* const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 123456789000000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
   console.log('🟡 Swap exact out:', swapExactOut);
 
   const asset_A_third_balance = await fetchAssetBalance(assetA, testUser);
@@ -258,48 +258,42 @@ const aggregatorManualTest = async ()=>{
 
   console.log(' -------------- Phoenix pool balances after exact output swap -------------');
   const phoenixPoolBalanceAfterExactOut = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
-  console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactOut.result.retval));
+  console.log('🔎 Phoenix pool balance:', scValToNative(phoenixPoolBalanceAfterExactOut.result.retval)); */
+  const phoenix_before_assets = scValToNative(phoenixPoolBalance.result.retval);
+  const phoenix_after_assets = scValToNative(phoenixPoolBalanceAfterExactIn.result.retval);
+  const getPhoenixBalanceForContract = (contractID:string, balancesObject: any)=>{
+    for(let asset in balancesObject)  {
+      if(balancesObject[asset].address === contractID){
+        return balancesObject[asset].amount;
+      }
+    }  
+  }
+
+  console.log("--------------Contract ID's-----------------")
+  console.log(`Contract Asset A: ${cID_A}`);
+  console.log(`Contract Asset B: ${cID_B}`);
+  console.log(`Contract Soroswap: ${soroswapPoolCID}`);
+  console.log(`Contract Phoenix: ${pairAddress}`);
+
 
   console.log(' -------------- Asset balances table -------------')
   console.table({
-    'Asset A': {
-      'Initial balance': asset_A_first_balance,
-      'Balance after exact input swap': asset_A_second_balance,
-      'Balance after exact output swap': asset_A_third_balance,
+    'Initial balance': {
+      'User Asset A': asset_A_first_balance,
+      'User Asset B': asset_B_first_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalance.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalance.result.retval)[1],
+      'Phoenix Asset A': getPhoenixBalanceForContract(cID_A, phoenix_before_assets),
+      'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_before_assets),
     },
-    'Asset B': {
-      'Initial balance': asset_B_first_balance,
-      'Balance after exact input swap': asset_B_second_balance,
-      'Balance after exact output swap': asset_B_third_balance,
-    }
-  })
-
-  console.log(' -------------- Soroswap pool balances table -------------');
-  console.table({
-    'Asset A': {
-      'Initial balance': scValToNative(soroswapPoolBalance.result.retval)[0],
-      'Balance after exact input swap': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[0],
-      'Balance after exact output swap': scValToNative(soroswapPoolBalanceAfterExactOut.result.retval)[0],
+    'Balance after exact input swap': {
+      'User Asset A': asset_A_second_balance,
+      'User Asset B': asset_B_second_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[1],
+      'Phoenix Asset A': getPhoenixBalanceForContract(cID_A, phoenix_after_assets),
+      'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
     },
-    'Asset B': {
-      'Initial balance': scValToNative(soroswapPoolBalance.result.retval)[1],
-      'Balance after exact input swap': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[1],
-      'Balance after exact output swap': scValToNative(soroswapPoolBalanceAfterExactOut.result.retval)[1],
-    }
-  })
-
-  console.log(' -------------- Phoenix pool balances table -------------');
-  console.table({
-    'Asset A': {
-      'Initial balance': scValToNative(phoenixPoolBalance.result.retval).asset_a.amount,
-      'Balance after exact input swap': scValToNative(phoenixPoolBalanceAfterExactIn.result.retval).asset_a.amount,
-      'Balance after exact output swap': scValToNative(phoenixPoolBalanceAfterExactOut.result.retval).asset_a.amount,
-    },
-    'Asset B': {
-      'Initial balance': scValToNative(phoenixPoolBalance.result.retval).asset_b.amount,
-      'Balance after exact input swap': scValToNative(phoenixPoolBalanceAfterExactIn.result.retval).asset_b.amount,
-      'Balance after exact output swap': scValToNative(phoenixPoolBalanceAfterExactOut.result.retval).asset_b.amount,
-    }
   })
 
 }
