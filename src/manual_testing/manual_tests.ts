@@ -13,10 +13,8 @@ import {
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, Asset, Keypair, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
-
-
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -138,6 +136,9 @@ const prepareTestEnvironment = async ()=>{
 }
 
 const swapExactInputAggregatorTest = async ()=>{
+  console.log("-------------------------------------------------------");
+  console.log("Testing exact input swap");
+  console.log("-------------------------------------------------------");
   const { 
     assetA,
     assetB, 
@@ -152,7 +153,7 @@ const swapExactInputAggregatorTest = async ()=>{
   } = await prepareTestEnvironment();
 
   console.log('-------------------------------------------------------');
-  console.log('Testing Soroswap Aggregator');
+  console.log('Aggregator exact input swap test');
   console.log('-------------------------------------------------------');
 
   const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
@@ -236,11 +237,15 @@ const swapExactInputAggregatorTest = async ()=>{
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
     },
   })
+  const expectedAmountIn0 = 30864197n;
+  const expectedAmountIn1 = 92592592n;
+  const expectedAmountOut0 = 123086415n;
+  const expectedAmountOut1 = 92592592n;
   if(
-    swapExactIn[0][0] === 30864197n && 
-    swapExactIn[0][1] === 123086415n &&
-    swapExactIn[1][0] === 92592592n &&
-    swapExactIn[1][1] === 92592592n
+    swapExactIn[0][0] === expectedAmountIn0 && 
+    swapExactIn[0][1] === expectedAmountOut0 &&
+    swapExactIn[1][0] === expectedAmountIn1 &&
+    swapExactIn[1][1] === expectedAmountOut1
   ){
     console.log('🟢 Aggregator test swap exact input passed')
     return true;
@@ -251,6 +256,9 @@ const swapExactInputAggregatorTest = async ()=>{
 }
 
 const swapExactOutputAggregatorTest = async ()=>{
+  console.log("-------------------------------------------------------");
+  console.log("Testing exact output swap");
+  console.log("-------------------------------------------------------");
   const { 
     assetA,
     assetB, 
@@ -265,7 +273,7 @@ const swapExactOutputAggregatorTest = async ()=>{
   } = await prepareTestEnvironment();
 
   console.log('-------------------------------------------------------');
-  console.log('Testing Soroswap Aggregator');
+  console.log('Aggregator exact output test');
   console.log('-------------------------------------------------------');
 
   const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
@@ -367,5 +375,20 @@ const swapExactOutputAggregatorTest = async ()=>{
   }
 }
 
-await swapExactInputAggregatorTest();
-await swapExactOutputAggregatorTest();
+const main = async ()=>{
+  const exactInputResult = await swapExactInputAggregatorTest();
+  const exactOutputResult = await swapExactOutputAggregatorTest();
+  console.log("-------------------------------------------------------");
+  console.log("Test results");
+  console.log("-------------------------------------------------------");
+  console.table({
+    'Exact input test': {
+      'Status': exactInputResult ? '🟢 Passed' : '🔴 Failed',
+    },
+    'Exact output test': {
+      'Status': exactOutputResult ? '🟢 Passed' : '🔴 Failed',
+    }
+  })
+}
+
+main();
