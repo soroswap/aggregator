@@ -16,7 +16,7 @@ git clone --recurse-submodules http://github.com/soroswap/aggregator.git
 ```bash
 cp .env.example .env
 ```
-For `AGGREGATOR_DEPLOYER_ADMIN_SECRET_KEY`, you can create an account and private keys in https://laboratory.stellar.org/#account-creator?network=test.
+For the **secret keys**, you can create an account and private keys in https://laboratory.stellar.org/#account-creator?network=test.
 For `MAINNET_RPC_URL`, you will need to subscribe to one of the Stellar Mainnet RPC providers: https://app.validationcloud.io/, https://nownodes.io/ or others (ask in the Stellar Discord)
 
 
@@ -61,7 +61,17 @@ cd /workspace/contracts/adapters/soroswap
 cargo scout-audit
 ```
 
-## 3.- Deployment
+## 3.- Integration Test in Public Testnet.
+Its important to allways test contracts in a live testnet Blockchain.
+We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
+
+```
+bash scripts/quickstart.sh standalone
+bash scripts/run.sh
+yarn dev testnet
+```
+
+## 4.- Deployment
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
