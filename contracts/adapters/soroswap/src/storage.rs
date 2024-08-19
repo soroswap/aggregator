@@ -1,5 +1,5 @@
 use soroban_sdk::{contracttype, Env, Address, String};
-use adapter_interface::{AdapterError};
+use adapter_interface::AdapterError;
 
 #[derive(Clone)]
 #[contracttype]
