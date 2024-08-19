@@ -121,7 +121,7 @@ export async function invokeCustomContract(
   source: Keypair,
   simulation?: boolean,
 ) {
-  console.log('Invoking contract: ', contractId, ' with method: ', method);
+  //console.log('Invoking contract: ', contractId, ' with method: ', method);
   const contractInstance = new Contract(contractId);
 
   const contractOperation = contractInstance.call(method, ...params);
