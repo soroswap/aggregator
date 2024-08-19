@@ -394,9 +394,10 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         admin: Address,
         adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError> {
-        if is_initialized(&e) {
+        if check_initialized(&e).is_ok() {
             return Err(AggregatorError::AlreadyInitialized);
         }
+        
         admin.require_auth();
 
         for adapter in adapter_vec.iter() {

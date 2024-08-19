@@ -69,7 +69,7 @@ impl AdapterTrait for SoroswapAggregatorPhoenixAdapter {
         protocol_id: String,
         protocol_address: Address,
     ) -> Result<(), AdapterError> {
-        if is_initialized(&e) {
+        if check_initialized(&e).is_ok() {
             return Err(AdapterError::AlreadyInitialized);
         }
     
