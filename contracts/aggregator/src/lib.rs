@@ -79,7 +79,10 @@ fn calculate_distribution_amounts(
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
 ) -> Result<Vec<i128>, AggregatorError> {
-    let total_parts: u32 = distribution.iter().map(|dist| dist.parts).sum();
+    let total_parts: u32 = distribution.iter().try_fold(0u32, |acc, dist| {
+        acc.checked_add(dist.parts).ok_or(AggregatorError::ArithmeticError)
+    })?;
+
     let total_parts: i128 = total_parts.into();
     let mut total_swapped = 0;
     let mut swap_amounts = soroban_sdk::Vec::new(env);
@@ -94,7 +97,9 @@ fn calculate_distribution_amounts(
                 .checked_mul(dist.parts.into())
                 .and_then(|prod| prod.checked_div(total_parts))
                 .ok_or(AggregatorError::ArithmeticError)?;
-            total_swapped += amount;
+            total_swapped = total_swapped
+                .checked_add(amount)
+                .ok_or(AggregatorError::ArithmeticError)?;
             amount
         };
 
