@@ -7,6 +7,7 @@
     "build": "tsc",
     "deploy": "tsc && node dist/deploy.js",
     "test": "tsc && node dist/test.js",
+    "test:manual": "tsc && node dist/manual_testing/manual_tests.js",
     "publish_addresses": "tsc && node dist/publish_addresses.js",
     "test_adapter": "tsc && node dist/test_soroswap_adapter.js",
     "test_phoenix_adapter": "tsc && node dist/test_phoenix_adapter.js",
@@ -22,7 +23,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "prettier": "^3.2.5",
-    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
