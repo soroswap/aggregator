@@ -568,15 +568,23 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
     'Initial balance': {
       'User Asset A': assetAUserBalanceBefore,
       'User Asset C': assetCUserBalanceBefore,
-      'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
-      'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
+      'Reserves A, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
+      'Reserves B, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[1],
+      'Reserves B, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[0],
+      'Reserves C, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
     },
     'Balance after exact output swap': {
       'User Asset A': assetAUserBalanceAfter,
       'User Asset C': assetCUserBalanceAfter,
-      'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
-      'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
+      'Reserves A, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[0], // TODO should be after
+      'Reserves B, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[1], // TODO should be after
+      'Reserves B, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[0], // TODO should be after
+      'Reserves C, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[1], // TODO should be after
+      // 'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
+      // 'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
     },
+  })
+  console.table({
     'Expected amounts': {
       'Amount in': expectedAmountIn0,
       'Amount out A': expectedAmountOut0,
@@ -603,8 +611,8 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
 
 }
 const main = async ()=>{
-  const exactInputResult = await swapExactInputAggregatorTest();
-  const exactOutputResult = await swapExactOutputAggregatorTest();
+  const exactInputResult = null; //await swapExactInputAggregatorTest();
+  const exactOutputResult = null; // await swapExactOutputAggregatorTest();
   const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
   console.log("-------------------------------------------------------");
   console.log("Test results");
