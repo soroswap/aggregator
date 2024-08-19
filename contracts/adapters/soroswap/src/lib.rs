@@ -19,7 +19,7 @@ use adapter_interface::{AdapterTrait, AdapterError};
 use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
     protocol_swap_tokens_for_exact_tokens};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
+fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
         Err(AdapterError::NegativeNotAllowed)
     } else {

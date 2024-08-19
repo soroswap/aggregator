@@ -17,7 +17,7 @@ use storage::{
     put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
 };
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
+fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
     if amount < 0 {
         Err(AggregatorError::NegativeNotAllowed)
     } else {
