@@ -97,7 +97,11 @@ If you want to publish the json files that are in the ignored `.soroban` folder,
 ```bash
 yarn publish_addresses <network>
 ```
-
+## 5.- Test the Aggregator methods
+You can test the Aggregator methods by running the following command:
+```
+yarn test:manual <network>
+```
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
 
