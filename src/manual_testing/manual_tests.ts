@@ -256,7 +256,11 @@ const swapExactInputAggregatorTest = async ()=>{
       'Soroswap Asset B': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[1],
       'Phoenix Asset A': getPhoenixBalanceForContract(cID_A, phoenix_after_assets),
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
-    },
+    }
+  })
+  console.log(' -------------- result table -------------')
+  console.table({
+
     'Expected amounts': {
       'Amount in asset A': expectedAmountIn0,
       'Amount out asset A': expectedAmountOut0,
@@ -389,7 +393,12 @@ const swapExactOutputAggregatorTest = async ()=>{
       'Soroswap Asset B': scValToNative(soroswapPoolBalanceAfter.result.retval)[1],
       'Phoenix Asset A': getPhoenixBalanceForContract(cID_A, phoenix_after_assets),
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
-    },
+    }
+  })
+
+  console.log(' -------------- result table -------------')
+  console.table({
+
     'Expected amounts': {
       'Amount in asset A': expectedAmountIn0,
       'Amount out asset A': expectedAmountOut0,
@@ -631,6 +640,8 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
 const main = async ()=>{
   console.log(test)
   console.log(network)
+
+  //To-do: Add switch case for running specific tests
   /* let exactInputResult: Boolean = false;
   let exactOutputResult: Boolean = false;
   let exactInputOneProtocolTwoHops: Boolean = false;
