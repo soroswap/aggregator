@@ -1,12 +1,6 @@
-[submodule "contracts/aggregator/protocols/phoenix"]
-	path = contracts/aggregator/protocols/phoenix
-	url = https://github.com/Phoenix-Protocol-Group/phoenix-contracts.git
-[submodule "contracts/protocols/phoenix"]
-	path = protocols/phoenix
-	url = https://github.com/Phoenix-Protocol-Group/phoenix-contracts.git
-[submodule "contracts/protocols/soroswap"]
-	path = protocols/soroswap
-	url = https://github.com/soroswap/core.git
 [submodule "protocols/soroswap"]
 	path = protocols/soroswap
 	url = https://github.com/soroswap/core
+[submodule "protocols/phoenix-contracts"]
+	path = protocols/phoenix-contracts
+	url = https://github.com/Phoenix-Protocol-Group/phoenix-contracts/

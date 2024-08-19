@@ -49,7 +49,7 @@ export async function phoenixSetup(loadedConfig: any, addressBook: any) {
       new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
     ];
   
-    console.log("Initializing Soroswap Adapter")
+    console.log("Initializing Phoenix Adapter")
     await invokeContract(
       'phoenix_adapter',
       addressBook,
