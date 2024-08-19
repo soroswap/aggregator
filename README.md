@@ -61,17 +61,7 @@ cd /workspace/contracts/adapters/soroswap
 cargo scout-audit
 ```
 
-## 3.- Integration Test in Public Testnet.
-Its important to allways test contracts in a live testnet Blockchain.
-We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
-
-```
-bash scripts/quickstart.sh standalone
-bash scripts/run.sh
-yarn dev testnet
-```
-
-## 4.- Deployment
+## 3.- Deployment
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
@@ -97,11 +87,18 @@ If you want to publish the json files that are in the ignored `.soroban` folder,
 ```bash
 yarn publish_addresses <network>
 ```
-## 5.- Test the Aggregator methods
+
+## 5.- Integration Test in Public Testnet. 
+Its important to allways test contracts in a live testnet Blockchain.
+We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
+
 You can test the Aggregator methods by running the following command:
 ```
+bash scripts/quickstart.sh standalone
+bash scripts/run.sh
 yarn test:manual <network>
 ```
+
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
 
