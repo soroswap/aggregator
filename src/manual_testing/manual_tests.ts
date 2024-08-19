@@ -17,8 +17,23 @@ import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
 import { Address, Asset, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
+const args = process.argv;
 
-const network = process.argv[2];
+let network: string;
+let test: string;
+
+switch(args.length){
+  case 3:
+    network = args[2];
+    test = 'all';
+    break;
+  case 4:
+    network = args[3];
+    test = args[2];
+    break;
+  default:
+    throw new Error('Invalid number of arguments, please run the script with the following format: yarn test:manual <test> <network>');
+}
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
@@ -404,15 +419,6 @@ const swapExactOutputAggregatorTest = async ()=>{
 } 
 
 const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
- /*  const { 
-    assets,
-    contracts,
-    testUser,
-    phoenixAdmin,
-    soroswap_liquidity_pools,
-    phoenix_pools
-  } = await prepareTestEnvironment(3); */
-
   const networkPassphrase = loadedConfig.passphrase;
   const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address;
   console.log("-------------------------------------------------------");
@@ -601,25 +607,74 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
     return false;
   }
 
-}
+} 
 const main = async ()=>{
-  const exactInputResult = await swapExactInputAggregatorTest();
-  const exactOutputResult = await swapExactOutputAggregatorTest();
-  const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
-  console.log("-------------------------------------------------------");
-  console.log("Test results");
-  console.log("-------------------------------------------------------");
-  console.table({
-    'Exact input test': {
-      'Status': exactInputResult ? '🟢 Passed' : '🔴 Failed',
-    },
-    'Exact output test': {
-      'Status': exactOutputResult ? '🟢 Passed' : '🔴 Failed',
-    },
-    'Exact input one protocol two hops': {
-      'Status': exactInputOneProtocolTwoHops ? '🟢 Passed' : '🔴 Failed',
-    }
-  })
+  console.log(test)
+  console.log(network)
+  /* let exactInputResult: Boolean = false;
+  let exactOutputResult: Boolean = false;
+  let exactInputOneProtocolTwoHops: Boolean = false;
+  switch(test){
+    case 'all':
+      console.log('Running all tests');
+      exactInputResult = await swapExactInputAggregatorTest();
+      exactOutputResult = await swapExactOutputAggregatorTest();
+      exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
+      console.log("-------------------------------------------------------");
+      console.log("Test results");
+      console.log("-------------------------------------------------------");
+      console.table({
+        'Exact input test': {
+          'Status': exactInputResult ? '🟢 Passed' : '🔴 Failed',
+        },
+        'Exact output test': {
+          'Status': exactOutputResult ? '🟢 Passed' : '🔴 Failed',
+        },
+        'Exact input one protocol two hops': {
+          'Status': exactInputOneProtocolTwoHops ? '🟢 Passed' : '🔴 Failed',
+        }
+      })
+      break;
+    case 'exact_input':
+      console.log('Running exact input test');
+      console.log('Running all tests');
+      const exactInputResult = await swapExactInputAggregatorTest();
+      console.log("-------------------------------------------------------");
+      console.log("Test results");
+      console.log("-------------------------------------------------------");
+      console.table({
+        'Exact input test': {
+          'Status': exactInputResult ? '🟢 Passed' : '🔴 Failed',
+        },
+      })
+      break;
+    case 'exact_output':
+      console.log('Running exact output test');
+      break;
+    case 'one_protocol_two_hops':
+      console.log('Running one protocol two hops test');
+      break;
+    default:
+      throw new Error('Invalid test name');
+  } */
+    const exactInputResult = await swapExactInputAggregatorTest();
+    const exactOutputResult = await swapExactOutputAggregatorTest();
+    const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
+    console.log("-------------------------------------------------------");
+    console.log("Test results");
+    console.log("-------------------------------------------------------");
+    console.table({
+      'Exact input test': {
+        'Status': exactInputResult ? '🟢 Passed' : '🔴 Failed',
+      },
+      'Exact output test': {
+        'Status': exactOutputResult ? '🟢 Passed' : '🔴 Failed',
+      },
+      'Exact input one protocol two hops': {
+        'Status': exactInputOneProtocolTwoHops ? '🟢 Passed' : '🔴 Failed',
+      }
+    })
+
 }
 
 main();
