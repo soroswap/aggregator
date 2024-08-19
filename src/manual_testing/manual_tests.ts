@@ -90,8 +90,8 @@ const prepareTestEnvironment = async ()=>{
   }
   for(let asset of assets){
     console.log(asset)
-    await deployAndMint(asset, testUser, "40000000000");
-    await deployAndMint(asset, phoenixAdmin, "40000000000");
+    await deployAndMint(asset, testUser, "400000000000");
+    await deployAndMint(asset, phoenixAdmin, "400000000000");
   }
 
   console.log("-------------------------------------------------------");
@@ -101,8 +101,8 @@ const prepareTestEnvironment = async ()=>{
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 100000000000000000,
-    amount_B: 400000000000000000,
+    amount_A: 1000000000000000000,
+    amount_B: 4000000000000000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams);
@@ -474,6 +474,12 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
   for(let asset of assets){
     console.log(asset)
     await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
+    await deployAndMint(asset, testUser, "120000000000");
   }
 
   console.log("-------------------------------------------------------");
@@ -484,8 +490,8 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
     contractID_A: cID_A,
     contractID_B: cID_B,
     user: testUser,
-    amount_A: 100000000000000000,
-    amount_B: 400000000000000000,
+    amount_A: 1000000000000000000,
+    amount_B: 4000000000000000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, firstPoolParams);
@@ -512,8 +518,8 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
     contractID_A: cID_B,
     contractID_B: cID_C,
     user: testUser,
-    amount_A: 400000000000000000,
-    amount_B: 800000000000000000,
+    amount_A: 4000000000000000000,
+    amount_B: 8000000000000000000,
   };
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, secondPoolParams);
@@ -562,8 +568,8 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
   const balance_LP_A_B_after = await invokeCustomContract(firstSoroswapPoolCID, 'get_reserves', [], testUser, true);
   const balance_LP_B_C_after = await invokeCustomContract(secondSoroswapPoolCID, 'get_reserves', [], testUser, true);
 
-  console.log('🟡Pool A-B balances:', balance_LP_A_B_after)
-  console.log('🟡Pool B-C balances:', balance_LP_B_C_after)
+  console.log('🟡Pool A-B balances:', scValToNative(balance_LP_A_B_after.result.retval))
+  console.log('🟡Pool B-C balances:', scValToNative(balance_LP_B_C_after.result.retval))
 
   const assetAUserBalanceAfter = await fetchAssetBalance(assets[0], testUser);
   console.log('🔎 Asset A user balance after swap:', assetAUserBalanceAfter);
@@ -671,8 +677,8 @@ const main = async ()=>{
     default:
       throw new Error('Invalid test name');
   } */
-    const exactInputResult = null; //await swapExactInputAggregatorTest();
-    const exactOutputResult = null; // await swapExactOutputAggregatorTest();
+    const exactInputResult = await swapExactInputAggregatorTest();
+    const exactOutputResult = await swapExactOutputAggregatorTest();
     const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
     console.log("-------------------------------------------------------");
     console.log("Test results");
