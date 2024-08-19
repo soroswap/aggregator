@@ -559,6 +559,12 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
   const swapExactIn = await callAggregatorSwap(cID_A, cID_C, 123456789, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
   console.log('🟡 Swap exact in one protocol two hops:', swapExactIn);
 
+  const balance_LP_A_B_after = await invokeCustomContract(firstSoroswapPoolCID, 'get_reserves', [], testUser, true);
+  const balance_LP_B_C_after = await invokeCustomContract(secondSoroswapPoolCID, 'get_reserves', [], testUser, true);
+
+  console.log('🟡Pool A-B balances:', balance_LP_A_B_after)
+  console.log('🟡Pool B-C balances:', balance_LP_B_C_after)
+
   const assetAUserBalanceAfter = await fetchAssetBalance(assets[0], testUser);
   console.log('🔎 Asset A user balance after swap:', assetAUserBalanceAfter);
 
@@ -582,10 +588,10 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
     'Balance after exact output swap': {
       'User Asset A': assetAUserBalanceAfter,
       'User Asset C': assetCUserBalanceAfter,
-      'Reserves A, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[0], // TODO should be after
-      'Reserves B, LP A-B': scValToNative(firstSoroswapPoolBalance.result.retval)[1], // TODO should be after
-      'Reserves B, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[0], // TODO should be after
-      'Reserves C, LP B-C': scValToNative(secondSoroswapPoolBalance.result.retval)[1], // TODO should be after
+      'Reserves A, LP A-B': scValToNative(balance_LP_A_B_after.result.retval)[0], // TODO should be after
+      'Reserves B, LP A-B': scValToNative(balance_LP_A_B_after.result.retval)[1], // TODO should be after
+      'Reserves B, LP B-C': scValToNative(balance_LP_B_C_after.result.retval)[0], // TODO should be after
+      'Reserves C, LP B-C': scValToNative(balance_LP_B_C_after.result.retval)[1], // TODO should be after
       // 'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
       // 'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
     },
