@@ -14,8 +14,8 @@ use storage::{
     set_protocol_address,
     get_protocol_address,
 };
-use soroswap_aggregator_adapter_interface::{
-    SoroswapAggregatorAdapterTrait, AdapterError
+use adapter_interface::{
+    AdapterTrait, AdapterError
 };
 use protocol_interface::{
     protocol_swap_exact_tokens_for_tokens,
@@ -51,7 +51,7 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 struct SoroswapAggregatorPhoenixAdapter;
 
 #[contractimpl]
-impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorPhoenixAdapter {
+impl AdapterTrait for SoroswapAggregatorPhoenixAdapter {
     
     /// Initializes the contract and sets the Phoenix multihop address.
     ///

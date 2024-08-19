@@ -11,7 +11,7 @@ homepage = "https://github.com/soroswap/aggregator"
 
 [workspace.dependencies]
 soroban-sdk = "21.0.1-preview.3"
-soroswap-aggregator-adapter-interface={path="./adapters/interface", package="soroswap-aggregator-adapter-interface"}
+adapter-interface={path="./adapters/interface", package="adapter-interface"}
 
 [profile.release]
 opt-level = "z"

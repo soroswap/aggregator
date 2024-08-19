@@ -1,5 +1,5 @@
 [package]
-name = "soroswap-aggregator-adapter-interface"
+name = "adapter-interface"
 authors = ["coderipper <joaquin@paltalabs.io>, esteblock"]
 version = { workspace = true }
 edition = { workspace = true }

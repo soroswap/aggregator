@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, vec, Vec, String};
 use soroban_sdk::testutils::Ledger;
 use crate::test::{SoroswapAggregatorAdapterTest};
-use soroswap_aggregator_adapter_interface::{AdapterError};
+use adapter_interface::{AdapterError};
 
 
 #[test]

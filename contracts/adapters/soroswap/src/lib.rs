@@ -15,7 +15,7 @@ use storage::{
     set_protocol_address, 
     get_protocol_address, 
 };
-use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
+use adapter_interface::{AdapterTrait, AdapterError};
 use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
     protocol_swap_tokens_for_exact_tokens};
 
@@ -48,7 +48,7 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 struct SoroswapAggregatorAdapter;
 
 #[contractimpl]
-impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
+impl AdapterTrait for SoroswapAggregatorAdapter {
     fn initialize(
         e: Env,
         protocol_id: String,

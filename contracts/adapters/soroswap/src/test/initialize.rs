@@ -1,6 +1,6 @@
 use soroban_sdk::{String};
 use crate::test::{SoroswapAggregatorAdapterTest};
-use soroswap_aggregator_adapter_interface::{AdapterError};
+use adapter_interface::{AdapterError};
 
 #[test]
 fn test_initialize_and_get_values() {

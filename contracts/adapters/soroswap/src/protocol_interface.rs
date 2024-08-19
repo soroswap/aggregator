@@ -1,6 +1,6 @@
 use soroban_sdk::{Env, Address, Vec};
 use crate::storage::{get_protocol_address};
-use soroswap_aggregator_adapter_interface::{AdapterError};
+use adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
     file = "./soroswap_contracts/soroswap_router.wasm"
