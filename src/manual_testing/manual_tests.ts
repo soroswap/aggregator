@@ -219,6 +219,10 @@ const swapExactInputAggregatorTest = async ()=>{
     'Contract Soroswap': soroswapPoolCID,
     'Contract Phoenix': pairAddress,
   })
+  const expectedAmountIn0 = 30864197n;
+  const expectedAmountIn1 = 92592592n;
+  const expectedAmountOut0 = 123086415n;
+  const expectedAmountOut1 = 92592592n;
 
   console.log(' -------------- Asset balances table -------------')
   console.table({
@@ -238,11 +242,20 @@ const swapExactInputAggregatorTest = async ()=>{
       'Phoenix Asset A': getPhoenixBalanceForContract(cID_A, phoenix_after_assets),
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
     },
+    'Expected amounts': {
+      'Amount in asset A': expectedAmountIn0,
+      'Amount out asset A': expectedAmountOut0,
+      'Amount in asset B': expectedAmountIn1,
+      'Amount out asset B': expectedAmountOut1,
+    },
+    'Swap result': {
+      'Amount in asset A': swapExactIn[0][0],
+      'Amount out asset A': swapExactIn[0][1],
+      'Amount in asset B': swapExactIn[1][0],
+      'Amount out asset B': swapExactIn[1][1],
+    }
   })
-  const expectedAmountIn0 = 30864197n;
-  const expectedAmountIn1 = 92592592n;
-  const expectedAmountOut0 = 123086415n;
-  const expectedAmountOut1 = 92592592n;
+
   if(
     swapExactIn[0][0] === expectedAmountIn0 && 
     swapExactIn[0][1] === expectedAmountOut0 &&
@@ -363,10 +376,10 @@ const swapExactOutputAggregatorTest = async ()=>{
       'Phoenix Asset B': getPhoenixBalanceForContract(cID_B, phoenix_after_assets),
     },
     'Expected amounts': {
-      'Expected amount in asset A': expectedAmountIn0,
-      'Expected amount out asset A': expectedAmountOut0,
-      'Expected amount in asset B': expectedAmountIn1,
-      'Expected amount out asset B': expectedAmountOut1,
+      'Amount in asset A': expectedAmountIn0,
+      'Amount out asset A': expectedAmountOut0,
+      'Amount in asset B': expectedAmountIn1,
+      'Amount out asset B': expectedAmountOut1,
     },
     'Swap result': {
       'Amount in asset A': swapExactOut[0][0],
@@ -565,9 +578,9 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
       'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
     },
     'Expected amounts': {
-      'Expected amount in': expectedAmountIn0,
-      'Expected amount out A': expectedAmountOut0,
-      'Expected amount out C': expectedAmountOut1,
+      'Amount in': expectedAmountIn0,
+      'Amount out A': expectedAmountOut0,
+      'Amount out C': expectedAmountOut1,
     },
     'Swap result': {
       'Amount in': swapExactIn[0][0],
