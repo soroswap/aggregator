@@ -7,19 +7,19 @@ use soroban_sdk::{
     Address, 
     
 };
-use crate::{SoroswapAggregatorAdapter, AdapterClient};
+use crate::{SoroswapAggregatorAdapter, SoroswapAggregatorAdapterClient};
 use soroswap_setup::{SoroswapTest, router, factory, token::TokenClient};
 use factory::SoroswapFactoryClient;
 use router::SoroswapRouterClient;
 
 // SoroswapAggregatorAdapter Contract
-fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> AdapterClient<'a> {
-    AdapterClient::new(e, &e.register_contract(None, SoroswapAggregatorAdapter {}))
+fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterClient<'a> {
+    SoroswapAggregatorAdapterClient::new(e, &e.register_contract(None, SoroswapAggregatorAdapter {}))
 }
 
 pub struct SoroswapAggregatorAdapterTest<'a> {
     env: Env,
-    adapter_contract: AdapterClient<'a>,
+    adapter_contract: SoroswapAggregatorAdapterClient<'a>,
     router_contract: SoroswapRouterClient<'a>,
     factory_contract: SoroswapFactoryClient<'a>,
     token_0: TokenClient<'a>,
