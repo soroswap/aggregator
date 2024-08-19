@@ -17,23 +17,6 @@ use storage::{
     put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
 };
 
-fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
-    if amount < 0 {
-        Err(AggregatorError::NegativeNotAllowed)
-    } else {
-        Ok(())
-    }
-}
-
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AggregatorError> {
-    let ledger_timestamp = e.ledger().timestamp();
-    if ledger_timestamp >= timestamp {
-        Err(AggregatorError::DeadlineExpired)
-    } else {
-        Ok(())
-    }
-}
-
 fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     if is_initialized(e) {
         Ok(())
@@ -50,17 +33,11 @@ fn check_admin(e: &Env) -> Result<(), AggregatorError> {
 
 fn check_parameters(
     e: &Env,
-    amount_0: i128,
-    amount_1: i128,
     to: Address,
-    deadline: u64,
     distribution: Vec<DexDistribution>,
 ) -> Result<(), AggregatorError> {
     check_initialized(e)?;
-    check_nonnegative_amount(amount_0)?;
-    check_nonnegative_amount(amount_1)?;
     to.require_auth();
-    ensure_deadline(e, deadline)?;
 
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
         return Err(AggregatorError::DistributionLengthExceeded);
@@ -581,10 +558,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
-            amount_in,
-            amount_out_min,
             to.clone(),
-            deadline,
             distribution.clone(),
         )?;
 
@@ -673,10 +647,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
-            amount_out,
-            amount_in_max,
             to.clone(),
-            deadline,
             distribution.clone(),
         )?;
 
