@@ -2,18 +2,20 @@ import { invokeCustomContract } from "../utils/contract.js";
 import { 
   generateRandomAsset,
   deployAndMint,
-  create_soroswap_liquidity_pool,
+  createSoroswapLP,
   create_phoenix_liquidity_pool,
   provide_phoenix_liquidity,
   fetchAssetBalance,
   createDexDistribution,
   callAggregatorSwap,
   SwapMethod,
-  getPhoenixBalanceForContract
+  getPhoenixBalanceForContract,
+  SoroswapPool,
+  create_soroswap_liquidity_pool
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
 
 const network = process.argv[2];
@@ -90,13 +92,13 @@ const prepareTestEnvironment = async ()=>{
 
   await create_soroswap_liquidity_pool(soroswapRouterAddress, poolParams);
 
-  const fetchPoolParams: xdr.ScVal[] = [
+  const fetchPoolSecondParams: xdr.ScVal[] = [
     new Address(cID_A).toScVal(),
     new Address(cID_B).toScVal(),
   ];
 
   console.log('🟡 Fetching Soroswap pair address');
-  const soroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchPoolParams, testUser, true);
+  const soroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchPoolSecondParams, testUser, true);
   const soroswapPoolCID = scValToNative(soroswapPool.result.retval);
   console.log('🟢 Soroswap pair address:', soroswapPoolCID)
 
@@ -110,7 +112,7 @@ const prepareTestEnvironment = async ()=>{
   console.log("Creating pairs in Phoenix");
   console.log("-------------------------------------------------------");
   
-  const pairAddress: string = await create_phoenix_liquidity_pool(phoenixAdmin, aggregatorAdmin, testUser, assetA, assetB);
+  const pairAddress: string = await create_phoenix_liquidity_pool(phoenixAdmin, aggregatorAdmin, assetA, assetB);
   console.log('🟢 Phoenix pair address:', pairAddress);
 
   const initialPhoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
@@ -373,11 +375,201 @@ const swapExactOutputAggregatorTest = async ()=>{
     console.error('🔴 Aggregator test swap exact output failed')
     return false;
   }
-}
+} 
 
+const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
+ /*  const { 
+    assets,
+    contracts,
+    testUser,
+    phoenixAdmin,
+    soroswap_liquidity_pools,
+    phoenix_pools
+  } = await prepareTestEnvironment(3); */
+
+  const networkPassphrase = loadedConfig.passphrase;
+  const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address;
+  console.log("-------------------------------------------------------");
+  console.log("Creating new tokens");
+  console.log("-------------------------------------------------------");
+  const tokenAdmin = loadedConfig.tokenAdmin;
+  const phoenixAdmin = loadedConfig.phoenixAdmin;
+  const aggregatorAdmin = loadedConfig.admin;
+  const testUser = loadedConfig.testUser;
+  
+  const assetA = generateRandomAsset();
+  const assetB = generateRandomAsset();
+  const assetC = generateRandomAsset();
+
+  const cID_A = assetA.contractId(networkPassphrase);
+  const cID_B = assetB.contractId(networkPassphrase);
+  const cID_C = assetC.contractId(networkPassphrase);
+
+  console.log('------------------------')
+  console.log("----Using addresses:----")
+  console.log('------------------------')
+  console.log(`🔎 Contract ID for ${assetA.code} => ${cID_A}`)
+  console.log(`🔎 Contract ID for ${assetB.code} => ${cID_B}`)
+  
+  console.log(`🔎 Test user => ${testUser.publicKey()}`);
+  console.log(`🔎 Phoenix admin => ${phoenixAdmin.publicKey()}`);
+  console.log(`🔎 Token admin => ${tokenAdmin.publicKey()}`);
+  console.log("-------------------------------------------------------");
+  console.log("Setting trustlines");
+  console.log("-------------------------------------------------------");
+  
+  const assets = [assetA, assetB, assetC];
+
+  const isTokenAdminFound = await loadedConfig.horizonRpc.loadAccount(tokenAdmin.publicKey()).catch(()=>false)
+
+  if(!!!isTokenAdminFound){
+    console.log(`🟡 Founding token admin`);
+    const friendbot = await loadedConfig.horizonRpc.friendbot(tokenAdmin.publicKey());
+    await friendbot.call().then(()=>{
+      console.log(`🟢 Token admin funded`);
+    })
+  }
+  
+  const isTestUserFound = await loadedConfig.horizonRpc.loadAccount(testUser.publicKey()).catch(()=>false)
+
+  if(!!!isTestUserFound){
+    console.log(`🟡 Founding test user`);
+    const friendbot = await loadedConfig.horizonRpc.friendbot(testUser.publicKey());
+    await friendbot.call().then(()=>{
+      console.log(`🟢 Test user funded`);
+    })
+  }
+  for(let asset of assets){
+    console.log(asset)
+    await deployAndMint(asset, testUser, "120000000000");
+  }
+
+  console.log("-------------------------------------------------------");
+  console.log("Creating Soroswap liquidity pool");
+  console.log("-------------------------------------------------------");
+  console.log('🟡 Creating first Soroswap liquidity pool');
+  const firstPoolParams = {
+    contractID_A: cID_A,
+    contractID_B: cID_B,
+    user: testUser,
+    amount_A: 100000000000000000,
+    amount_B: 400000000000000000,
+  };
+
+  await create_soroswap_liquidity_pool(soroswapRouterAddress, firstPoolParams);
+
+  const fetchFirstPoolParams: xdr.ScVal[] = [
+    new Address(cID_A).toScVal(),
+    new Address(cID_B).toScVal(),
+  ];
+
+  console.log('🟡 Fetching Soroswap pair address');
+  const firstSoroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchFirstPoolParams, testUser, true);
+  const firstSoroswapPoolCID = scValToNative(firstSoroswapPool.result.retval);
+  console.log('🟢 Soroswap pair address:', firstSoroswapPoolCID)
+
+  console.log('🟡 Fetching liquidity pool balance');
+  const firstSoroswapPoolBalance = await invokeCustomContract(firstSoroswapPoolCID, 'get_reserves', [], testUser, true);
+  console.log(scValToNative(firstSoroswapPoolBalance.result.retval));
+  console.log(`🟢 Soroswap pair balance: ${scValToNative(firstSoroswapPoolBalance.result.retval)}`);
+
+
+  console.log('-------------------------------------------------------');
+  console.log('🟡 Creating second Soroswap liquidity pool');
+  const secondPoolParams = {
+    contractID_A: cID_B,
+    contractID_B: cID_C,
+    user: testUser,
+    amount_A: 400000000000000000,
+    amount_B: 800000000000000000,
+  };
+
+  await create_soroswap_liquidity_pool(soroswapRouterAddress, secondPoolParams);
+
+  const fetchPoolSecondParams: xdr.ScVal[] = [
+    new Address(cID_B).toScVal(),
+    new Address(cID_C).toScVal(),
+  ];
+
+  console.log('🟡 Fetching Soroswap pair address');
+  const secondSoroswapPool = await invokeCustomContract(soroswapRouterAddress, 'router_pair_for', fetchPoolSecondParams, testUser, true);
+  const secondSoroswapPoolCID = scValToNative(secondSoroswapPool.result.retval);
+  console.log('🟢 Soroswap pair address:', secondSoroswapPoolCID)
+
+  console.log('🟡 Fetching liquidity pool balance');
+  const secondSoroswapPoolBalance = await invokeCustomContract(secondSoroswapPoolCID, 'get_reserves', [], testUser, true);
+  console.log(scValToNative(secondSoroswapPoolBalance.result.retval));
+  console.log(`🟢 Soroswap pair balance: ${scValToNative(secondSoroswapPoolBalance.result.retval)}`);
+
+  
+  console.log('-------------------------------------------------------');
+  console.log('Aggregator exact swap one protcol two hops test');
+  console.log('-------------------------------------------------------');
+
+  const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
+  console.log('soroswapAdapter:', soroswapAdapter);
+
+  const dexDistributionRaw = [
+    {
+      protocol_id: "soroswap",
+      path: [cID_A, cID_B, cID_C],
+      parts: 1,
+    },
+  ];
+
+  const assetAUserBalanceBefore = await fetchAssetBalance(assets[0], testUser);
+  console.log('🔎 Asset A user balance before swap:', assetAUserBalanceBefore);
+
+  const assetCUserBalanceBefore = await fetchAssetBalance(assets[2], testUser);
+  console.log('🔎 Asset C user balance before swap:', assetCUserBalanceBefore);
+
+  const dexDistributionVec = await createDexDistribution(dexDistributionRaw);
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_C, 123456789, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
+  console.log('🟡 Swap exact in one protocol two hops:', swapExactIn);
+
+  const assetAUserBalanceAfter = await fetchAssetBalance(assets[0], testUser);
+  console.log('🔎 Asset A user balance after swap:', assetAUserBalanceAfter);
+
+  const assetCUserBalanceAfter = await fetchAssetBalance(assets[2], testUser);
+  console.log('🔎 Asset C user balance after swap:', assetCUserBalanceAfter);
+
+  const expectedAmountIn0 = 123456789n;
+  const expectedAmountOut0 = 492345671n;
+  const expectedAmountOut1 = 981737265n;
+
+  console.log(' -------------- Asset balances table -------------')
+  console.table({
+    'Initial balance': {
+      'User Asset A': assetAUserBalanceBefore,
+      'User Asset C': assetCUserBalanceBefore,
+      'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
+      'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
+    },
+    'Balance after exact output swap': {
+      'User Asset A': assetAUserBalanceAfter,
+      'User Asset C': assetCUserBalanceAfter,
+      'Soroswap Asset A': scValToNative(firstSoroswapPoolBalance.result.retval)[0],
+      'Soroswap Asset C': scValToNative(secondSoroswapPoolBalance.result.retval)[1],
+    },
+  })
+
+  if(
+    swapExactIn[0] === expectedAmountIn0 && 
+    swapExactIn[1] === expectedAmountOut0 &&
+    swapExactIn[2] === expectedAmountOut1
+  ){
+    console.log('🟢 Aggregator test swap exact input one protocol two hops passed')
+    return true;
+  } else {
+    console.error('🔴 Aggregator test swap exact input one protocol two hops failed')
+    return false;
+  }
+
+}
 const main = async ()=>{
   const exactInputResult = await swapExactInputAggregatorTest();
   const exactOutputResult = await swapExactOutputAggregatorTest();
+  const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
   console.log("-------------------------------------------------------");
   console.log("Test results");
   console.log("-------------------------------------------------------");
@@ -387,6 +579,9 @@ const main = async ()=>{
     },
     'Exact output test': {
       'Status': exactOutputResult ? '🟢 Passed' : '🔴 Failed',
+    },
+    'Exact input one protocol two hops': {
+      'Status': exactInputOneProtocolTwoHops ? '🟢 Passed' : '🔴 Failed',
     }
   })
 }
