@@ -425,7 +425,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the adapters are successfully updated.
     fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         for adapter in adapter_vec.iter() {
@@ -454,7 +453,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
     fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         remove_adapter(&e, protocol_id.clone());
@@ -474,7 +472,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
     fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         set_pause_protocol(&e, protocol_id.clone(), paused)?;
@@ -501,7 +498,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the operation is successful.
     fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         let admin: Address = get_admin(&e)?;
@@ -528,7 +524,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the upgrade is successful.
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
