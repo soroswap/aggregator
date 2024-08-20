@@ -11,7 +11,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
     test.env.budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_client.try_swap_tokens_for_exact_tokens(
+    let result = test.adapter_client_not_initialized.try_swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -28,13 +28,13 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_client.try_swap_tokens_for_exact_tokens(
+    let result = test.adapter_client_not_initialized.try_swap_tokens_for_exact_tokens(
         &-1,       // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -53,13 +53,13 @@ fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_client.try_swap_tokens_for_exact_tokens(
+    let result = test.adapter_client_not_initialized.try_swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &-1,       // amount_in_max
         &path,     // path
@@ -77,13 +77,13 @@ fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
 fn swap_tokens_for_exact_tokens_expired() {
     let test = PhoenixAggregatorAdapterTest::setup();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_client.try_swap_tokens_for_exact_tokens(
+    let result = test.adapter_client_not_initialized.try_swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -103,7 +103,7 @@ fn swap_tokens_for_exact_tokens_expired() {
 fn try_swap_tokens_for_exact_tokens_invalid_path() {
     let test = PhoenixAggregatorAdapterTest::setup();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -111,7 +111,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
     
     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
 
-    test.adapter_client.swap_tokens_for_exact_tokens( // add try_ to test the error
+    test.adapter_client_not_initialized.swap_tokens_for_exact_tokens( // add try_ to test the error
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -130,7 +130,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
 fn try_swap_tokens_for_exact_tokens_pair_does_not_exist() {
     let test = PhoenixAggregatorAdapterTest::setup();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -140,7 +140,7 @@ fn try_swap_tokens_for_exact_tokens_pair_does_not_exist() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_3.address.clone());
 
-    test.adapter_client.swap_tokens_for_exact_tokens(
+    test.adapter_client_not_initialized.swap_tokens_for_exact_tokens(
         &1, //amount_out
         &0,  // amount_in_max
         &path, // path
@@ -154,7 +154,7 @@ fn try_swap_tokens_for_exact_tokens_pair_does_not_exist() {
 fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
     let test = PhoenixAggregatorAdapterTest::setup();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -166,7 +166,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
 
 
     test.env.budget().reset_unlimited();
-    test.adapter_client.swap_tokens_for_exact_tokens(
+    test.adapter_client_not_initialized.swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
@@ -182,7 +182,7 @@ fn try_swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -196,7 +196,7 @@ fn try_swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
     // From Phoenix tests
     let amount_in_should = 50;
 
-    test.adapter_client.swap_tokens_for_exact_tokens(
+    test.adapter_client_not_initialized.swap_tokens_for_exact_tokens(
         &expected_amount_out, // amount_out
         &(amount_in_should-1),                   // amount_in_max
         &path,                // path
@@ -217,7 +217,7 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -234,7 +234,7 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
     let initial_user_balance_0 = test.token_0.balance(&test.user);
     let initial_user_balance_1 = test.token_1.balance(&test.user);
 
-    let amounts = test.adapter_client.swap_tokens_for_exact_tokens(
+    let amounts = test.adapter_client_not_initialized.swap_tokens_for_exact_tokens(
         &expected_amount_out, //amount_out
         &(amount_in_should),  // amount_in_max
         &path, // path
@@ -256,7 +256,7 @@ fn swap_tokens_for_exact_tokens_3_hops() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
+    test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "phoenix"),
         &test.multihop_client.address);
 
@@ -282,7 +282,7 @@ fn swap_tokens_for_exact_tokens_3_hops() {
     let initial_user_balance_2 = test.token_2.balance(&test.user);
     let initial_user_balance_3 = test.token_3.balance(&test.user);
 
-    let amounts = test.adapter_client.swap_tokens_for_exact_tokens(
+    let amounts = test.adapter_client_not_initialized.swap_tokens_for_exact_tokens(
         &expected_amount_out, //amount_out
         &amount_in_should,  // amount_in_max
         &path, // path
