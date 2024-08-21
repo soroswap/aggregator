@@ -385,15 +385,16 @@ fn swap_exact_tokens_for_tokens_event() {
     let mut path: Vec<Address> = Vec::new(&test.env);
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
+    
+    let amount_in = 1_000_000;
 
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: amount_in,
     };
     distribution_vec.push_back(distribution_0);
 
-    let amount_in = 1_000_000;
     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
     let expected_amount_out = 3987999;
 
@@ -445,14 +446,15 @@ fn swap_tokens_for_exact_tokens_event() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
+    let expected_amount_out = 5_000_000;
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
-        parts: 1,
+        amount: expected_amount_out,
     };
     distribution_vec.push_back(distribution_0);
 
-    let expected_amount_out = 5_000_000;
     let amount_in_should = test
         .soroswap_router_contract
         .router_get_amounts_in(&expected_amount_out, &path)

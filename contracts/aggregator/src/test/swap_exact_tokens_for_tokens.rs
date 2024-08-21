@@ -112,7 +112,7 @@ fn swap_exact_tokens_for_tokens_distribution_over_max() {
         let distribution = DexDistribution {
             protocol_id: String::from_str(&test.env, "protocol_id"),
             path: Vec::new(&test.env),
-            parts: 1,
+            amount: 1,
         };
         distribution_vec.push_back(distribution);
     }
@@ -144,12 +144,12 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "protocol_id"),
         path: Vec::new(&test.env),
-        parts: 1,
+        amount: 1,
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "protocol_id"),
         path: Vec::new(&test.env),
-        parts: 0,
+        amount: 0,
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -184,7 +184,7 @@ fn swap_exact_tokens_for_tokens_protocol_not_found() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "protocol"),
         path,
-        parts: 1,
+        amount: 1,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -219,7 +219,7 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: 1,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -259,7 +259,7 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_start() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: 1,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -299,7 +299,7 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: 1,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -320,6 +320,8 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
 }
 
+
+
 #[test]
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let test = SoroswapAggregatorTest::setup();
@@ -335,14 +337,15 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
+    let amount_in = 1_000_000;
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: amount_in,
     };
     distribution_vec.push_back(distribution_0);
 
-    let amount_in = 1_000_000;
     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
     let expected_amount_out = 3987999;
 
@@ -374,14 +377,15 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
+    let amount_in = 1_000_000;
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: amount_in,
     };
     distribution_vec.push_back(distribution_0);
 
-    let amount_in = 1_000_000;
     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
     let expected_amount_out = 3987999;
 
@@ -499,11 +503,13 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
     path.push_back(test.token_2.address.clone());
+    
+    let amount_in = 123_456_789;
 
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: amount_in,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -512,7 +518,6 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
     // let amount_1: i128 = 4_000_000_000_000_000_000;
     // let amount_2: i128 = 8_000_000_000_000_000_000;
 
-    let amount_in = 123_456_789;
     // fee = 123456789 * 3 /1000 =  370370,367 = 370371 // USE CEILING
     // amount_in less fee = 123456789- 370371 = 123086418
     // First out = (123086418*4000000000000000000)/(1000000000000000000 + 123086418) = 492345671.939398935 = 492345671
@@ -574,19 +579,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
     path.push_back(test.token_1.address.clone());
     let mut distribution_vec = Vec::new(&test.env);
 
-    let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
-        path: path.clone(),
-        parts: 1,
-    };
-    let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
-        path: path.clone(),
-        parts: 3,
-    };
-    distribution_vec.push_back(distribution_0);
-    distribution_vec.push_back(distribution_1);
-
+    
     let total_expected_amount_in = 123_456_789;
 
     // The total expected amount will come from 2 different trades:
@@ -596,6 +589,23 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         .checked_mul(1)
         .unwrap();
     let expected_amount_in_1 = total_expected_amount_in - expected_amount_in_0;
+
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        amount: expected_amount_in_0,
+    };
+    let distribution_1 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        amount: expected_amount_in_1,
+    };
+    distribution_vec.push_back(distribution_0);
+    distribution_vec.push_back(distribution_1);
+
+
+
 
     // reserve_0 = 1_000_000_000_000_000_000;
     // reserve_1 = 4_000_000_000_000_000_000;
@@ -701,18 +711,6 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
     path.push_back(test.token_1.address.clone());
     let mut distribution_vec = Vec::new(&test.env);
 
-    let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
-        path: path.clone(),
-        parts: 1,
-    };
-    let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "phoenix"),
-        path: path.clone(),
-        parts: 3,
-    };
-    distribution_vec.push_back(distribution_0);
-    distribution_vec.push_back(distribution_1);
 
     let total_expected_amount_in = 123_456_789;
 
@@ -724,6 +722,20 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
     //     .unwrap();
     let expected_amount_in_0 = 30864197;
     let expected_amount_in_1 = 92592592;// total_expected_amount_in - expected_amount_in_0;
+
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        amount: expected_amount_in_0,
+    };
+    let distribution_1 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "phoenix"),
+        path: path.clone(),
+        amount: expected_amount_in_1,
+    };
+    distribution_vec.push_back(distribution_0);
+    distribution_vec.push_back(distribution_1);
 
     // FOR SOROSWAP:
     // reserve_0 = 1_000_000_000_000_000_000;

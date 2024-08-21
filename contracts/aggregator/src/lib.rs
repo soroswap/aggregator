@@ -50,6 +50,9 @@ fn check_admin(e: &Env) -> Result<(), AggregatorError> {
 
 fn check_parameters(
     e: &Env,
+    token_in: Address,
+    token_out: Address,
+    total_amount: i128,
     amount_0: i128,
     amount_1: i128,
     to: Address,
@@ -65,29 +68,17 @@ fn check_parameters(
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
         return Err(AggregatorError::DistributionLengthExceeded);
     }
-    for dist in distribution {
-        if dist.parts == 0 {
-            return Err(AggregatorError::ZeroDistributionPart);
-        }
+    let total_amounts: i128 = distribution.iter().map(|dist| dist.amount).sum();
+    // total amount should be ewqual to total amounts
+    if total_amounts != total_amount {
+        return Err(AggregatorError::ArithmeticError); // TODO change error
     }
 
-    Ok(())
-}
-
-fn calculate_distribution_amounts_and_check_paths( 
-    env: &Env,
-    token_in: &Address,
-    token_out: &Address,
-    total_amount: i128,
-    distribution: &Vec<DexDistribution>,
-) -> Result<Vec<i128>, AggregatorError> {
-    let total_parts: u32 = distribution.iter().map(|dist| dist.parts).sum();
-    let total_parts: i128 = total_parts.into();
-    let mut total_swapped = 0;
-    let mut swap_amounts = soroban_sdk::Vec::new(env);
-
-    for (index, dist) in distribution.iter().enumerate() {
-        // Check that all paths start with same token
+    for dist in distribution {
+        // each amount should be positive
+        if dist.amount <= 0 {
+            return Err(AggregatorError::NegativeNotAllowed); //change error
+        }
         if dist.path.get(0) != Some(token_in.clone()) {
             return Err(AggregatorError::InvalidPath);
         }
@@ -95,24 +86,9 @@ fn calculate_distribution_amounts_and_check_paths(
         if dist.path.last() != Some(token_out.clone()) {
             return Err(AggregatorError::InvalidPath);
         }
-
-        let swap_amount = if index == (distribution.len() - 1) as usize {
-            total_amount
-                .checked_sub(total_swapped)
-                .ok_or(AggregatorError::ArithmeticError)?
-        } else {
-            let amount = total_amount
-                .checked_mul(dist.parts.into())
-                .and_then(|prod| prod.checked_div(total_parts))
-                .ok_or(AggregatorError::ArithmeticError)?;
-            total_swapped += amount;
-            amount
-        };
-
-        swap_amounts.push_back(swap_amount);
     }
-
-    Ok(swap_amounts)
+    
+    Ok(())
 }
 
 pub fn get_adapter_client(
@@ -581,6 +557,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
+            token_in.clone(),
+            token_out.clone(),
+            amount_in, //total amount
             amount_in,
             amount_out_min,
             to.clone(),
@@ -588,20 +567,17 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_in, &distribution)?;
+        
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial out balance
         let initial_token_out_balance = TokenClient::new(&e, &token_out).balance(&to);
 
-        for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution
-                .get(index as u32)
-                .ok_or(AggregatorError::ArithmeticError)?;
+        for (index, dist) in distribution.iter().enumerate() {
             let protocol_id = dist.protocol_id;
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
             let response = adapter_client.swap_exact_tokens_for_tokens(
-                &swap_amount, // amount_in
+                &dist.amount, // amount_in
                 &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
                 &dist.path,
                 &to,
@@ -673,6 +649,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
+            token_in.clone(),
+            token_out.clone(),
+            amount_out, //total amount
             amount_out,
             amount_in_max,
             to.clone(),
@@ -680,20 +659,17 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_out, &distribution)?;
+        
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial in balance
         let initial_token_in_balance = TokenClient::new(&e, &token_in).balance(&to);
 
-        for (index, swap_amount) in swap_amounts.iter().enumerate() {
-            let dist = distribution
-                .get(index as u32)
-                .ok_or(AggregatorError::ArithmeticError)?;
+        for (index, dist) in distribution.iter().enumerate() {
             let protocol_id = dist.protocol_id;
             let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
             let response = adapter_client.swap_tokens_for_exact_tokens(
-                &swap_amount, // amount_out
+                &dist.amount, // amount_out
                 &i128::MAX,   // amount_in_max
                 &dist.path,   //path
                 &to,          //to

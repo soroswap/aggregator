@@ -73,15 +73,19 @@ fn budget() {
     path.push_back(test.token_1.address.clone());
     let mut distribution_vec = Vec::new(&test.env);
 
+    let expected_amount_in_0 = 30864197;
+    let expected_amount_in_1 = 92592592;// total_expected_amount_in - expected_amount_in_0;
+
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
-        parts: 1,
+        amount: expected_amount_in_0,
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "phoenix"),
         path: path.clone(),
-        parts: 1,
+        amount: expected_amount_in_1,
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -108,10 +112,11 @@ fn budget() {
     path.push_back(test.token_1.address.clone());
     let mut distribution_vec = Vec::new(&test.env);
 
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
-        parts: 1,
+        amount: 123,
     };
 
     for n in 1..7 {
@@ -120,7 +125,7 @@ fn budget() {
         test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
-            &total_expected_amount_in,
+            &(123*n),
             &(0),
             &distribution_vec,
             &test.user.clone(),
@@ -146,7 +151,7 @@ fn budget() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
-        parts: 1,
+        amount: 123,
     };
     let amount_in = 123_456_789;
 
@@ -156,7 +161,7 @@ fn budget() {
         test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
-            &amount_in,
+            &(123*n),
             &(0),
             &distribution_vec.clone(),
             &test.user.clone(),
@@ -178,7 +183,7 @@ fn budget() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
-        parts: 1,
+        amount: 123,
     };
     let expected_amount_out = 123_456_789;
 
@@ -188,7 +193,7 @@ fn budget() {
         test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
-            &expected_amount_out,
+            &(123*n),
             &i128::MAX,
             &distribution_vec,
             &test.user.clone(),
@@ -213,7 +218,7 @@ fn budget() {
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
-        parts: 1,
+        amount: 123,
     };
 
     // makle FOR cycl N from 1 to 5r
@@ -223,7 +228,7 @@ fn budget() {
         test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
-            &expected_amount_out,
+            &(123*n),
             &i128::MAX,
             &distribution_vec,
             &test.user.clone(),

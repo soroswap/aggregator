@@ -31,8 +31,8 @@ use soroban_sdk::{contracttype, Address, String, Vec};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DexDistribution {
     pub protocol_id: String,
-    pub path: Vec<Address>,
-    pub parts: u32,
+    pub path: Vec<Address>, 
+    pub amount: i128,
 }
 
 #[contracttype]

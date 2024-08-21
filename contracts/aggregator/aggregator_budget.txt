@@ -4,38 +4,38 @@ initialize()                                             | cpu: 162666,      mem
 update_adapters()                                        | cpu: 186891,      mem: 57648
 set_pause()                                              | cpu: 206883,      mem: 62091
 set_admin()                                              | cpu: 179489,      mem: 59268
-swap_exact_tokens_for_tokens(s_p_protocol_one_hop)       | cpu: 22706373,    mem: 13806897
+swap_exact_tokens_for_tokens(s_p_protocol_one_hop)       | cpu: 22701138,    mem: 13806649
 -----------------------------------
-swap_exact_tokens_for_tokens(1_protocol_one_hop)       | cpu: 12642395,    mem: 7178668
-swap_exact_tokens_for_tokens(2_protocol_one_hop)       | cpu: 24998018,    mem: 14272561
-swap_exact_tokens_for_tokens(3_protocol_one_hop)       | cpu: 37345807,    mem: 21368238
-swap_exact_tokens_for_tokens(4_protocol_one_hop)       | cpu: 49725961,    mem: 28465699
-swap_exact_tokens_for_tokens(5_protocol_one_hop)       | cpu: 62082489,    mem: 35564944
-swap_exact_tokens_for_tokens(6_protocol_one_hop)       | cpu: 74449626,    mem: 42665973
+swap_exact_tokens_for_tokens(1_protocol_one_hop)       | cpu: 12636861,    mem: 7178516
+swap_exact_tokens_for_tokens(2_protocol_one_hop)       | cpu: 24987451,    mem: 14272313
+swap_exact_tokens_for_tokens(3_protocol_one_hop)       | cpu: 37330421,    mem: 21367886
+swap_exact_tokens_for_tokens(4_protocol_one_hop)       | cpu: 49706570,    mem: 28465235
+swap_exact_tokens_for_tokens(5_protocol_one_hop)       | cpu: 62059435,    mem: 35564360
+swap_exact_tokens_for_tokens(6_protocol_one_hop)       | cpu: 74422259,    mem: 42665261
 -----------------------------------
-swap_exact_tokens_for_tokens(1_protocol_two_hop)       | cpu: 20241401,    mem: 11011410
-swap_exact_tokens_for_tokens(2_protocol_two_hop)       | cpu: 40178453,    mem: 21936793
-swap_exact_tokens_for_tokens(3_protocol_two_hop)       | cpu: 60112936,    mem: 32865048
-swap_exact_tokens_for_tokens(4_protocol_two_hop)       | cpu: 80065106,    mem: 43796175
-swap_exact_tokens_for_tokens(5_protocol_two_hop)       | cpu: 100003375,    mem: 54730174
-swap_exact_tokens_for_tokens(6_protocol_two_hop)       | cpu: 119890055,    mem: 65667045
+swap_exact_tokens_for_tokens(1_protocol_two_hop)       | cpu: 20233139,    mem: 11011258
+swap_exact_tokens_for_tokens(2_protocol_two_hop)       | cpu: 40162190,    mem: 21936545
+swap_exact_tokens_for_tokens(3_protocol_two_hop)       | cpu: 60089030,    mem: 32864696
+swap_exact_tokens_for_tokens(4_protocol_two_hop)       | cpu: 80034971,    mem: 43795711
+swap_exact_tokens_for_tokens(5_protocol_two_hop)       | cpu: 99966961,    mem: 54729590
+swap_exact_tokens_for_tokens(6_protocol_two_hop)       | cpu: 119847584,    mem: 65666333
 -----------------------------------
-swap_tokens_for_exact_tokens(1_protocol_one_hop)       | cpu: 12675051,    mem: 7194308
-swap_tokens_for_exact_tokens(2_protocol_one_hop)       | cpu: 25043954,    mem: 14299097
-swap_tokens_for_exact_tokens(3_protocol_one_hop)       | cpu: 37409667,    mem: 21405670
-swap_tokens_for_exact_tokens(4_protocol_one_hop)       | cpu: 49810777,    mem: 28514027
-swap_tokens_for_exact_tokens(5_protocol_one_hop)       | cpu: 62190171,    mem: 35624168
-swap_tokens_for_exact_tokens(6_protocol_one_hop)       | cpu: 74503404,    mem: 42736093
+swap_tokens_for_exact_tokens(1_protocol_one_hop)       | cpu: 12666341,    mem: 7194156
+swap_tokens_for_exact_tokens(2_protocol_one_hop)       | cpu: 25027155,    mem: 14298849
+swap_tokens_for_exact_tokens(3_protocol_one_hop)       | cpu: 37383769,    mem: 21405318
+swap_tokens_for_exact_tokens(4_protocol_one_hop)       | cpu: 49777794,    mem: 28513563
+swap_tokens_for_exact_tokens(5_protocol_one_hop)       | cpu: 62147653,    mem: 35623584
+swap_tokens_for_exact_tokens(6_protocol_one_hop)       | cpu: 74453269,    mem: 42735381
 -----------------------------------
-swap_tokens_for_exact_tokens(1_protocol_two_hop)       | cpu: 20267633,    mem: 11033578
-swap_tokens_for_exact_tokens(2_protocol_two_hop)       | cpu: 40212723,    mem: 21976385
-swap_tokens_for_exact_tokens(3_protocol_two_hop)       | cpu: 60163422,    mem: 32922064
-swap_tokens_for_exact_tokens(4_protocol_two_hop)       | cpu: 80125402,    mem: 43870615
-swap_tokens_for_exact_tokens(5_protocol_two_hop)       | cpu: 100084329,    mem: 54822038
-swap_tokens_for_exact_tokens(6_protocol_two_hop)       | cpu: 120089739,    mem: 65776333
+swap_tokens_for_exact_tokens(1_protocol_two_hop)       | cpu: 20252275,    mem: 11033426
+swap_tokens_for_exact_tokens(2_protocol_two_hop)       | cpu: 40184404,    mem: 21976137
+swap_tokens_for_exact_tokens(3_protocol_two_hop)       | cpu: 60119236,    mem: 32921712
+swap_tokens_for_exact_tokens(4_protocol_two_hop)       | cpu: 80071011,    mem: 43870151
+swap_tokens_for_exact_tokens(5_protocol_two_hop)       | cpu: 100013971,    mem: 54821454
+swap_tokens_for_exact_tokens(6_protocol_two_hop)       | cpu: 120006508,    mem: 65775621
 -----------------------------------
 remove_adapter()                                         | cpu: 258224,      mem: 76105
 test test::budget_cpu_mem::budget ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 3.90s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 56 filtered out; finished in 3.95s
 
