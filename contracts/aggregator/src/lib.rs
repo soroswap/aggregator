@@ -74,8 +74,10 @@ fn check_parameters(
     Ok(())
 }
 
-fn calculate_distribution_amounts(
+fn calculate_distribution_amounts_and_check_paths( 
     env: &Env,
+    token_in: &Address,
+    token_out: &Address,
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
 ) -> Result<Vec<i128>, AggregatorError> {
@@ -85,6 +87,15 @@ fn calculate_distribution_amounts(
     let mut swap_amounts = soroban_sdk::Vec::new(env);
 
     for (index, dist) in distribution.iter().enumerate() {
+        // Check that all paths start with same token
+        if dist.path.get(0) != Some(token_in.clone()) {
+            return Err(AggregatorError::InvalidPath);
+        }
+        // check that all paths end with token_out
+        if dist.path.last() != Some(token_out.clone()) {
+            return Err(AggregatorError::InvalidPath);
+        }
+
         let swap_amount = if index == (distribution.len() - 1) as usize {
             total_amount
                 .checked_sub(total_swapped)
@@ -577,7 +588,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution)?;
+        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_in, &distribution)?;
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial out balance
@@ -669,7 +680,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution)?;
+        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_out, &distribution)?;
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial in balance

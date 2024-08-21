@@ -168,9 +168,13 @@ fn swap_tokens_for_exact_tokens_protocol_not_found() {
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "protocol_id"),
-        path: Vec::new(&test.env),
+        protocol_id: String::from_str(&test.env, "protocol"),
+        path,
         parts: 1,
     };
     distribution_vec.push_back(distribution_0);
@@ -199,9 +203,13 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
-        path: Vec::new(&test.env),
+        path,
         parts: 1,
     };
     distribution_vec.push_back(distribution_0);
