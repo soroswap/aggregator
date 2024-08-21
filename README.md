@@ -61,7 +61,17 @@ cd /workspace/contracts/adapters/soroswap
 cargo scout-audit
 ```
 
-## 3.- Deployment
+## 3.- Check CPU Instructios and Memory Usage
+```
+cd /workspace/contracts/aggregator
+cargo test budget -- --nocapture
+```
+Export it into a file that you will save together with your changes
+```
+cargo test budget -- --nocapture > aggregator_budget.txt
+```
+
+## 4.- Deployment
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
@@ -81,14 +91,14 @@ You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Ima
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
-## 4.- Publish deployed address.
+## 5.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
 
 ```bash
 yarn publish_addresses <network>
 ```
 
-## 5.- Integration Test in Public Testnet. 
+## 6.- Integration Test in Public Testnet. 
 Its important to allways test contracts in a live testnet Blockchain.
 We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
 

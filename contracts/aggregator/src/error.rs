@@ -14,6 +14,7 @@ pub enum AggregatorError {
     ZeroDistributionPart = 612,
     ArithmeticError = 613,
     Unauthorized = 614,
+    InvalidPath = 615,
 
     // checks of the desired amount.
     // if at the end, the total output is too low (insufficient) for what we expected as amount_out_min

@@ -20,6 +20,8 @@ import { createTxBuilder, invoke, invokeTransaction } from './tx.js';
 
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
+  deployer:
+    '../../contracts/target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm',
   aggregator:
     '../../contracts/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
   soroswap_adapter: '../../contracts/target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm',
