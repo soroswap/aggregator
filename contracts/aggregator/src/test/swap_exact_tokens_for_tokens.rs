@@ -280,6 +280,46 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_start() {
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
 }
 
+
+#[test]
+fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    test.aggregator_contract
+        .initialize(&test.admin, &initialize_aggregator_addresses);
+    
+    let mut distribution_vec = Vec::new(&test.env);
+
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_0.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let amount_in = 1_000_000;
+    //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
+    let expected_amount_out = 3987999;
+
+    let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &amount_in,
+        &(expected_amount_out),
+        &distribution_vec,                      
+        &test.user.clone(),
+        &deadline,
+    );
+    // compare the error
+    assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
+}
+
 #[test]
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let test = SoroswapAggregatorTest::setup();
