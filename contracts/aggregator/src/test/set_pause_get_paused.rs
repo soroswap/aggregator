@@ -52,7 +52,7 @@ fn test_set_pause_true_false() {
     // check is_paused
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "soroswap"));
     assert_eq!(is_protocol_paused, true);
 
@@ -114,17 +114,17 @@ fn test_set_pause_true_false() {
     assert_eq!(updated_protocols, expected_new_protocols);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "soroswap"));
     assert_eq!(is_protocol_paused, true);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_0"));
     assert_eq!(is_protocol_paused, false);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_1"));
     assert_eq!(is_protocol_paused, true);
 
@@ -152,17 +152,17 @@ fn test_set_pause_true_false() {
     assert_eq!(updated_protocols, expected_new_protocols);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "soroswap"));
     assert_eq!(is_protocol_paused, true);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_0"));
     assert_eq!(is_protocol_paused, false);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_1"));
     assert_eq!(is_protocol_paused, false);
 
@@ -190,17 +190,17 @@ fn test_set_pause_true_false() {
     assert_eq!(updated_protocols, expected_new_protocols);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "soroswap"));
     assert_eq!(is_protocol_paused, false);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_0"));
     assert_eq!(is_protocol_paused, false);
 
     is_protocol_paused = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .get_paused(&String::from_str(&test.env, "new_protocol_1"));
     assert_eq!(is_protocol_paused, false);
 }
