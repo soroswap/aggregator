@@ -1,5 +1,6 @@
 use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use crate::test::{create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, SoroswapAggregatorTest};
+use super::soroswap_aggregator_contract::AggregatorError as AggregatorErrorDeployer;
 
 #[test]
 fn test_initialize_and_get_values() {
@@ -50,5 +51,21 @@ fn test_initialize_twice() {
     assert_eq!(
         result_second_init,
         (Err(Ok(AggregatorError::AlreadyInitialized)))
+    );
+}
+
+#[test]
+fn test_initialize_twice_deployer() {
+    let test = SoroswapAggregatorTest::setup();
+
+    //Initialize aggregator
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+
+    let result_second_init = test
+        .aggregator_contract
+        .try_initialize(&test.admin, &initialize_aggregator_addresses);
+    assert_eq!(
+        result_second_init,
+        (Err(Ok(AggregatorErrorDeployer::AlreadyInitialized)))
     );
 }
