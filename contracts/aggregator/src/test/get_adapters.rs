@@ -1,17 +1,17 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
+use crate::test::{SoroswapAggregatorTest, create_soroswap_phoenix_addresses_for_deployer};
 
 #[test]
 fn test_get_adapters() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract_not_initialized
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let result = test.aggregator_contract_not_initialized.get_adapters();
+    let result = test.aggregator_contract.get_adapters();
 
     assert_eq!(result, initialize_aggregator_addresses);
 }

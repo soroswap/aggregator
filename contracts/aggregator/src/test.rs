@@ -46,7 +46,7 @@ pub mod soroswap_aggregator_contract {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm");
     pub type SoroswapAggregatorClientFromWasm<'a> = Client<'a>;
 }
-use soroswap_aggregator_contract::SoroswapAggregatorClientFromWasm;
+use soroswap_aggregator_contract::{SoroswapAggregatorClientFromWasm, Adapter as AdapterFromWasm};
 
 
 // Token Contract
@@ -95,15 +95,15 @@ pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<A
     ]
 }
 
-pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address) -> Vec<Adapter> {
+pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address) -> Vec<AdapterFromWasm> {
     vec![
         env,
-        Adapter {
+        AdapterFromWasm {
             protocol_id: String::from_str(env, "soroswap"),
             address: soroswap_adapter.clone(),
             paused: false,
         },
-        Adapter {
+        AdapterFromWasm {
             protocol_id: String::from_str(env, "phoenix"),
             address: phoenix_adapter.clone(),
             paused: false,
