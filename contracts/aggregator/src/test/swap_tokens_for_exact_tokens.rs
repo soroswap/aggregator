@@ -537,10 +537,10 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
 
-    test.aggregator_contract
-    .initialize(&test.admin, &initialize_aggregator_addresses);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let mut path: Vec<Address> = Vec::new(&test.env);
     path.push_back(test.token_0.address.clone());
