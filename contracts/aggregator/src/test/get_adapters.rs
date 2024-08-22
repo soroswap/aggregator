@@ -8,8 +8,6 @@ fn test_get_adapters() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
-    // test.aggregator_contract_not_initialized
-    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let result = test.aggregator_contract.get_adapters();
 
