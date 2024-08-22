@@ -1,15 +1,14 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::Adapter;
 use crate::test::{
-    create_protocols_addresses, create_soroswap_router, new_update_adapters_addresses,
-    SoroswapAggregatorTest,
+    create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, new_update_adapters_addresses, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
 };
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
 use soroban_sdk::{vec, String, Vec};
+use super::soroswap_aggregator_contract::Adapter;
 
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(
@@ -32,25 +31,25 @@ fn test_update_adapters_add_new() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract_not_initialized
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let admin = test.aggregator_contract_not_initialized.get_admin();
+    let admin = test.aggregator_contract.get_admin();
     assert_eq!(admin, test.admin);
 
     //Update aggregator
-    let update_aggregator_addresses = new_update_adapters_addresses(&test);
-    test.aggregator_contract_not_initialized
+    let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
+    test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
 
     // test that now we have 2 protocols
-    let updated_protocols = test.aggregator_contract_not_initialized.get_adapters();
+    let updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(
         updated_protocols.get(0),
         initialize_aggregator_addresses.get(0)
     );
-    assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(2), update_aggregator_addresses.get(0));
     // test both are not paused
     for protocol_address in updated_protocols {
         let is_protocol_paused = test
@@ -66,17 +65,17 @@ fn test_update_adapters_overwrite() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract_not_initialized
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check initial protocol values
-    let protocols = test.aggregator_contract_not_initialized.get_adapters();
+    let protocols = test.aggregator_contract.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     // if we add a new protocol, it wont be overwitten
-    let new_aggregator_addresses = new_update_adapters_addresses(&test);
-    test.aggregator_contract_not_initialized
+    let new_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
+    test.aggregator_contract
         .update_adapters(&new_aggregator_addresses);
 
     // generate new router address and protocol addresses
@@ -87,14 +86,14 @@ fn test_update_adapters_overwrite() {
         initialize_aggregator_addresses.get(0)
     );
 
-    test.aggregator_contract_not_initialized
+    test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
 
     // check that protocol values are updated
     // but the other protocol is still the same
-    let updated_protocols = test.aggregator_contract_not_initialized.get_adapters();
+    let updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
-    assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(2), new_aggregator_addresses.get(0));
 
     // test both are not paused
     for protocol_address in updated_protocols {

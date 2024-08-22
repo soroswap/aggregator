@@ -122,6 +122,17 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
     ]
 }
 
+pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+    vec![
+        &test.env,
+        AdapterFromWasm {
+            protocol_id: String::from_str(&test.env, "some_protocol"),
+            address: test.soroswap_router_contract.address.clone(),
+            paused: false,
+        },
+    ]
+}
+
 // pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
 //     vec![&test.env,
 //         Adapter {
