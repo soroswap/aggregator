@@ -79,21 +79,21 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
     ]
 }
 
-pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
-    vec![
-        &test.env,
-        Adapter {
-            protocol_id: String::from_str(&test.env, "soroswap"),
-            address: test.soroswap_adapter_contract.address.clone(),
-            paused: false,
-        },
-        Adapter {
-            protocol_id: String::from_str(&test.env, "phoenix"),
-            address: test.phoenix_adapter_contract.address.clone(),
-            paused: false,
-        },
-    ]
-}
+// pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+//     vec![
+//         &test.env,
+//         Adapter {
+//             protocol_id: String::from_str(&test.env, "soroswap"),
+//             address: test.soroswap_adapter_contract.address.clone(),
+//             paused: false,
+//         },
+//         Adapter {
+//             protocol_id: String::from_str(&test.env, "phoenix"),
+//             address: test.phoenix_adapter_contract.address.clone(),
+//             paused: false,
+//         },
+//     ]
+// }
 
 pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address) -> Vec<AdapterFromWasm> {
     vec![
