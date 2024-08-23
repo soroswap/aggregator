@@ -51,8 +51,10 @@ fn check_parameters(
     Ok(())
 }
 
-fn calculate_distribution_amounts(
+fn calculate_distribution_amounts_and_check_paths( 
     env: &Env,
+    token_in: &Address,
+    token_out: &Address,
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
 ) -> Result<Vec<i128>, AggregatorError> {
@@ -65,6 +67,15 @@ fn calculate_distribution_amounts(
     let mut swap_amounts = soroban_sdk::Vec::new(env);
 
     for (index, dist) in distribution.iter().enumerate() {
+        // Check that all paths start with same token
+        if dist.path.get(0) != Some(token_in.clone()) {
+            return Err(AggregatorError::InvalidPath);
+        }
+        // check that all paths end with token_out
+        if dist.path.last() != Some(token_out.clone()) {
+            return Err(AggregatorError::InvalidPath);
+        }
+
         let swap_amount = if index == (distribution.len() - 1) as usize {
             total_amount
                 .checked_sub(total_swapped)
@@ -408,7 +419,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the adapters are successfully updated.
     fn update_adapters(e: Env, adapter_vec: Vec<Adapter>) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         for adapter in adapter_vec.iter() {
@@ -437,7 +447,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
     fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         remove_adapter(&e, protocol_id.clone());
@@ -457,7 +466,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
     fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         set_pause_protocol(&e, protocol_id.clone(), paused)?;
@@ -484,7 +492,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the operation is successful.
     fn set_admin(e: Env, new_admin: Address) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         let admin: Address = get_admin(&e)?;
@@ -511,7 +518,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// Returns `Ok(())` if the upgrade is successful.
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), AggregatorError> {
-        check_initialized(&e)?;
         check_admin(&e)?;
 
         e.deployer().update_current_contract_wasm(new_wasm_hash);
@@ -562,7 +568,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts(&e, amount_in, &distribution)?;
+        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_in, &distribution)?;
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial out balance
@@ -651,7 +657,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
             distribution.clone(),
         )?;
 
-        let swap_amounts = calculate_distribution_amounts(&e, amount_out, &distribution)?;
+        let swap_amounts = calculate_distribution_amounts_and_check_paths(&e, &token_in, &token_out, amount_out, &distribution)?;
         let mut swap_responses: Vec<Vec<i128>> = Vec::new(&e);
 
         // Check initial in balance

@@ -1,15 +1,14 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::models::Adapter;
 use crate::test::{
-    create_protocols_addresses, create_soroswap_router, new_update_adapters_addresses,
-    SoroswapAggregatorTest,
+    create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, new_update_adapters_addresses, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
 };
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
 use soroban_sdk::{vec, String, Vec};
+use super::soroswap_aggregator_contract::Adapter;
 
 // Create new soroswap router to overwrite the porevious
 pub fn update_overwrite_soroswap_protocols_addresses(
@@ -32,15 +31,15 @@ fn test_update_adapters_add_new() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let admin = test.aggregator_contract.get_admin();
     assert_eq!(admin, test.admin);
 
     //Update aggregator
-    let update_aggregator_addresses = new_update_adapters_addresses(&test);
+    let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
     test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
 
@@ -50,7 +49,7 @@ fn test_update_adapters_add_new() {
         updated_protocols.get(0),
         initialize_aggregator_addresses.get(0)
     );
-    assert_eq!(updated_protocols.get(1), update_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(2), update_aggregator_addresses.get(0));
     // test both are not paused
     for protocol_address in updated_protocols {
         let is_protocol_paused = test
@@ -66,16 +65,16 @@ fn test_update_adapters_overwrite() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check initial protocol values
     let protocols = test.aggregator_contract.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     // if we add a new protocol, it wont be overwitten
-    let new_aggregator_addresses = new_update_adapters_addresses(&test);
+    let new_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
     test.aggregator_contract
         .update_adapters(&new_aggregator_addresses);
 
@@ -94,7 +93,7 @@ fn test_update_adapters_overwrite() {
     // but the other protocol is still the same
     let updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
-    assert_eq!(updated_protocols.get(1), new_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(2), new_aggregator_addresses.get(0));
 
     // test both are not paused
     for protocol_address in updated_protocols {
@@ -112,7 +111,7 @@ fn test_update_adapters_not_yet_initialized() {
     //Update aggregator
     let update_aggregator_addresses = create_protocols_addresses(&test);
     let result = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .try_update_adapters(&update_aggregator_addresses);
 
     assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
@@ -126,23 +125,23 @@ fn test_update_adapters_with_mock_auth() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check initial protocol values
-    let protocols = test.aggregator_contract.get_adapters();
+    let protocols = test.aggregator_contract_not_initialized.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     // if we add a new protocol, it wont be overwitten
     let new_aggregator_addresses = new_update_adapters_addresses(&test);
-    // test.aggregator_contract.update_adapters(&new_aggregator_addresses);
+    // test.aggregator_contract_not_initialized.update_adapters(&new_aggregator_addresses);
 
     //  MOCK THE SPECIFIC AUTHORIZATION
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .mock_auths(&[MockAuth {
             address: &test.admin.clone(),
             invoke: &MockAuthInvoke {
-                contract: &test.aggregator_contract.address.clone(),
+                contract: &test.aggregator_contract_not_initialized.address.clone(),
                 fn_name: "update_adapters",
                 args: (new_aggregator_addresses.clone(),).into_val(&test.env),
                 sub_invokes: &[],
@@ -157,7 +156,7 @@ fn test_update_adapters_with_mock_auth() {
             test.admin.clone(),
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
-                    test.aggregator_contract.address.clone(),
+                    test.aggregator_contract_not_initialized.address.clone(),
                     Symbol::new(&test.env, "update_adapters"),
                     (new_aggregator_addresses.clone(),).into_val(&test.env)
                 )),

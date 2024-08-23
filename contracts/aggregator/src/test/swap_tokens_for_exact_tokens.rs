@@ -1,13 +1,14 @@
 extern crate std;
-use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest, create_soroswap_phoenix_addresses};
-use crate::DexDistribution;
+use crate::error::AggregatorError as AggregatorErrorFromCrate;
+use crate::test::{create_protocols_addresses, create_soroswap_phoenix_addresses, create_soroswap_phoenix_addresses_for_deployer, SoroswapAggregatorTest};
+// use crate::DexDistribution;
 use soroban_sdk::{Address, String, Vec};
+use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
 
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
     let test = SoroswapAggregatorTest::setup();
-    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+    let result = test.aggregator_contract_not_initialized.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &100,
@@ -16,7 +17,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
         &test.user.clone(),
         &100,
     );
-    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
 
 #[test]
@@ -24,9 +25,9 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
@@ -46,9 +47,9 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
@@ -68,9 +69,9 @@ fn swap_tokens_for_exact_tokens_deadline_expired() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
@@ -91,9 +92,9 @@ fn swap_tokens_for_exact_tokens_distribution_over_max() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     const MAX_DISTRIBUTION_LENGTH: u32 = 15;
@@ -125,9 +126,9 @@ fn swap_tokens_for_exact_tokens_zero_parts() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -162,15 +163,17 @@ fn swap_tokens_for_exact_tokens_protocol_not_found() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "protocol_id"),
-        path: Vec::new(&test.env),
+        protocol_id: String::from_str(&test.env, "protocol"),
+        path,
         parts: 1,
     };
     distribution_vec.push_back(distribution_0);
@@ -193,15 +196,17 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
     let distribution_0 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
-        path: Vec::new(&test.env),
+        path,
         parts: 1,
     };
     distribution_vec.push_back(distribution_0);
@@ -224,13 +229,87 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
 }
 
 #[test]
+fn swap_tokens_for_exact_tokens_malformed_path_wrong_start() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
+    
+    let mut distribution_vec = Vec::new(&test.env);
+
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_1.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let expected_amount_out = 5_000_000;
+
+    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &expected_amount_out,
+        &i128::MAX,
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline,
+    );
+    // compare the error
+    assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
+}
+
+
+#[test]
+fn swap_tokens_for_exact_tokens_malformed_path_wrong_end() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // Initialize aggregator
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
+    
+    let mut distribution_vec = Vec::new(&test.env);
+
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_0.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let expected_amount_out = 5_000_000;
+
+    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &expected_amount_out,
+        &i128::MAX,
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline,
+    );
+    // compare the error
+    assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
+}
+
+
+#[test]
 fn swap_tokens_for_exact_tokens_excessive_input_amount() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -269,9 +348,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     // add one with part 1 and other with part 0
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -339,9 +416,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
@@ -426,9 +501,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // s
     // call the function
     // add one with part 1 and other with part 0
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -548,10 +621,10 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
     let test = SoroswapAggregatorTest::setup();
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses(&test);
+    // let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
 
-    test.aggregator_contract
-    .initialize(&test.admin, &initialize_aggregator_addresses);
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let mut path: Vec<Address> = Vec::new(&test.env);
     path.push_back(test.token_0.address.clone());

@@ -1,0 +1,22 @@
+[package]
+name = "soroswap-aggregator-deployer"
+version = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+description = "Soroswap-Aggregator-Deployer is a smart contract designed to deploy the aggregator smart contracts"
+homepage = { workspace = true }
+repository = { workspace = true }
+authors = ["coderipper <joaquin@paltalabs.io>"]
+readme = "README.md"
+keywords = ["no_std", "wasm", "soroswap", "amm", "soroban"]
+publish = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+adapter-interface = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

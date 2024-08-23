@@ -1,7 +1,7 @@
-use soroban_sdk::{Address, vec, Vec, String};
-use crate::test::{SoroswapAggregatorAdapterTest};
-use adapter_interface::{AdapterError};
-
+use soroban_sdk::{Address, vec, Vec};
+use crate::test::SoroswapAggregatorAdapterTest;
+use adapter_interface::AdapterError;
+use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
@@ -9,7 +9,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
     test.env.budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    let result = test.adapter_contract_not_initialized.try_swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &0,            // amount_out_min
         &path,         // path
@@ -22,75 +22,52 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
-
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &-1,           // amount_in
         &0,            // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
     );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterError::NegativeNotAllowed))
-    );
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
-
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &-1,           // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
     );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterError::NegativeNotAllowed))
-    );
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #503)")]
 fn swap_exact_tokens_for_tokens_expired() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &0,            // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
-    );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterError::DeadlineExpired))
     );
 }
 
@@ -100,9 +77,6 @@ fn swap_exact_tokens_for_tokens_expired() {
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_invalid_path() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
@@ -113,7 +87,6 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
         &test.user, // to
         &deadline, // deadline
     );
- 
 }
 
 
@@ -121,10 +94,6 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
     let test = SoroswapAggregatorAdapterTest::setup();
-
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -149,9 +118,6 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
 #[should_panic] // TODO: Test the imported error
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -185,9 +151,6 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
 #[test]
 fn swap_exact_tokens_for_tokens_enough_output_amount_soroswap_protocol() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
@@ -219,9 +182,6 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_soroswap_protocol() {
 fn swap_exact_tokens_for_tokens_2_hops_soroswap_protocol() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
-    test.adapter_contract.initialize(
-        &String::from_str(&test.env, "soroswap"),
-        &test.router_contract.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
     let initial_user_balance = 20_000_000_000_000_000_000;

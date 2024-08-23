@@ -1,12 +1,13 @@
 extern crate std;
-use crate::error::AggregatorError;
-use crate::models::Adapter;
-use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
+use crate::error::AggregatorError as AggregatorErrorFromCrate;
+// use crate::models::Adapter;
+use crate::test::{create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
 use soroban_sdk::{vec, String, Vec};
+use super::soroswap_aggregator_contract::{AggregatorError, Adapter};
 
 pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
@@ -25,9 +26,9 @@ fn test_remove_adapter() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check that protocol is not paused
     let is_protocol_paused = test
@@ -37,6 +38,8 @@ fn test_remove_adapter() {
 
     test.aggregator_contract
         .remove_adapter(&String::from_str(&test.env, "soroswap"));
+    test.aggregator_contract
+        .remove_adapter(&String::from_str(&test.env, "phoenix"));
 
     let mut updated_protocols = test.aggregator_contract.get_adapters();
     let expected_empty_vec = vec![&test.env];
@@ -86,10 +89,10 @@ fn test_remove_adapter() {
 fn test_remove_adapter_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .try_remove_adapter(&String::from_str(&test.env, "soroswap"));
 
-    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
 
 // update protocols can only be called by admin
@@ -99,9 +102,9 @@ fn test_update_adapters_with_mock_auth() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check initial protocol values
     let protocols = test.aggregator_contract.get_adapters();

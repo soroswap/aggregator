@@ -1166,6 +1166,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "soroswap-aggregator-deployer"
+version = "1.0.0"
+dependencies = [
+ "adapter-interface",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

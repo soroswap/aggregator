@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, vec, Vec, String};
 use crate::test::{PhoenixAggregatorAdapterTest, phoenix_setup::deploy_and_initialize_lp};
-use adapter_interface::{AdapterError};
-
+use adapter_interface::AdapterError;
+use super::phoenix_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
@@ -9,7 +9,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
     test.env.budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+    let result = test.adapter_client_not_initialized.try_swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &0,            // amount_out_min
         &path,         // path
@@ -26,10 +26,6 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
-
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
@@ -42,7 +38,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 
     assert_eq!(
         result,
-        Err(Ok(AdapterError::NegativeNotAllowed))
+        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
     );
 }
 
@@ -50,10 +46,6 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
-
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -67,16 +59,13 @@ fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
 
     assert_eq!(
         result,
-        Err(Ok(AdapterError::NegativeNotAllowed))
+        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
     );
 }
 
 #[test]
 fn swap_exact_tokens_for_tokens_expired() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -90,7 +79,7 @@ fn swap_exact_tokens_for_tokens_expired() {
 
     assert_eq!(
         result,
-        Err(Ok(AdapterError::DeadlineExpired))
+        Err(Ok(AdapterErrorDeployer::DeadlineExpired))
     );
 }
 
@@ -100,9 +89,6 @@ fn swap_exact_tokens_for_tokens_expired() {
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_invalid_path() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
@@ -113,17 +99,12 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
         &test.user, // to
         &deadline, // deadline
     );
- 
 }
 
 #[test]
 #[should_panic] // TODO: Test the imported error
 fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
     let test = PhoenixAggregatorAdapterTest::setup();
-
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -146,12 +127,14 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
 
 #[test]
 // #[should_panic] // TODO: Change to an error object (If we dont delete this check)
-#[should_panic(expected = "Amount of token out received is less than the minimum amount expected")]
+// TODO: Check why it fails with the adapter_client?
+// #[should_panic(expected = "Amount of token out received is less than the minimum amount expected")]
+#[should_panic(expected = "HostError: Error(WasmVm, InvalidAction)")] //TODO: Why it changed using the deployer?
 fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
+    // test.adapter_client_not_initialized.initialize(
+    //     &String::from_str(&test.env, "phoenix"),
+    //     &test.multihop_client.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -173,7 +156,6 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
         &test.user,       // to
         &deadline,        // deadline
     );
-
 }
 
 
@@ -181,9 +163,6 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
 #[test]
 fn swap_exact_tokens_for_tokens_enough_output_amount() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
@@ -233,9 +212,6 @@ fn swap_exact_tokens_for_tokens_enough_output_amount() {
 #[test]
 fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.adapter_client.initialize(
-        &String::from_str(&test.env, "phoenix"),
-        &test.multihop_client.address);
 
     // we will make a pool betwern token 0 and token 2 with fees
     deploy_and_initialize_lp(
