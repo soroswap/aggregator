@@ -1,10 +1,7 @@
 extern crate std;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
-use crate::test::{
-    new_update_adapters_addresses, create_soroswap_phoenix_addresses
-};
-use soroban_sdk::{String, Vec, Address, testutils::{Address as _}};
-use crate::DexDistribution;
+use crate::test::{create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
+use soroban_sdk::{String, Vec, Address, testutils::Address as _};
+use super::soroswap_aggregator_contract::DexDistribution;
 
 
 #[test]
@@ -12,22 +9,22 @@ fn budget() {
     let test = SoroswapAggregatorTest::setup();
     
     //initialize ()
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
     test.env.budget().reset_unlimited();
     
-    test.aggregator_contract_not_initialized
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!("initialize()                                             | cpu: {},      mem: {}", cpu, mem);
 
     // update_adapters()
-    let update_aggregator_addresses = new_update_adapters_addresses(&test);
+    let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
 
     test.env.budget().reset_unlimited();
-    test.aggregator_contract_not_initialized
+    test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
@@ -36,13 +33,13 @@ fn budget() {
 
     //set_pause()
     test.env.budget().reset_unlimited();
-    test.aggregator_contract_not_initialized
+    test.aggregator_contract
     .set_pause(&String::from_str(&test.env, "soroswap"), &true);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!("set_pause()                                              | cpu: {},      mem: {}", cpu, mem);
     //unpause
-    test.aggregator_contract_not_initialized
+    test.aggregator_contract
     .set_pause(&String::from_str(&test.env, "soroswap"), &false);
 
    
@@ -50,7 +47,7 @@ fn budget() {
     // set_admin
     let new_admin = Address::generate(&test.env);
     test.env.budget().reset_unlimited();
-    test.aggregator_contract_not_initialized.set_admin(&new_admin);
+    test.aggregator_contract.set_admin(&new_admin);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!("set_admin()                                              | cpu: {},      mem: {}", cpu, mem);
@@ -64,8 +61,9 @@ fn budget() {
 
     
     //swap_exact_tokens_for_tokens TWO PROTOCOLS SOROSWAP AND PHOENIX- ONE HOP
-    let update_aggregator_addresses = create_soroswap_phoenix_addresses(&test);
-    test.aggregator_contract_not_initialized
+    let update_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+
+    test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
     // now we have soroswap and phoenix
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -88,7 +86,7 @@ fn budget() {
 
     let total_expected_amount_in = 123_456_789;
     test.env.budget().reset_unlimited();
-    test.aggregator_contract_not_initialized.swap_exact_tokens_for_tokens(
+    test.aggregator_contract.swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &total_expected_amount_in,
@@ -117,7 +115,7 @@ fn budget() {
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
         test.env.budget().reset_unlimited();
-        test.aggregator_contract_not_initialized.swap_exact_tokens_for_tokens(
+        test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
             &total_expected_amount_in,
@@ -153,7 +151,7 @@ fn budget() {
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
         test.env.budget().reset_unlimited();
-        test.aggregator_contract_not_initialized.swap_exact_tokens_for_tokens(
+        test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
             &amount_in,
@@ -185,7 +183,7 @@ fn budget() {
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
         test.env.budget().reset_unlimited();
-        test.aggregator_contract_not_initialized.swap_tokens_for_exact_tokens(
+        test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
             &expected_amount_out,
@@ -220,7 +218,7 @@ fn budget() {
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
         test.env.budget().reset_unlimited();
-        test.aggregator_contract_not_initialized.swap_tokens_for_exact_tokens(
+        test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
             &expected_amount_out,
@@ -246,8 +244,8 @@ fn budget() {
 
      //remove_adapter()
      test.env.budget().reset_unlimited();
-     test.aggregator_contract_not_initialized
-     .remove_adapter(&String::from_str(&test.env, "soroswap"));
+     test.aggregator_contract
+        .remove_adapter(&String::from_str(&test.env, "soroswap"));
      let mem = test.env.budget().memory_bytes_cost();
      let cpu = test.env.budget().cpu_instruction_cost();
      std::println!("remove_adapter()                                         | cpu: {},      mem: {}", cpu, mem);
