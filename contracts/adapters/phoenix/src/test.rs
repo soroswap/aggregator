@@ -10,7 +10,6 @@ use soroban_sdk::{
     String,
     Vec,
     Val,
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
     IntoVal
 };
 use crate::{SoroswapAggregatorPhoenixAdapter, SoroswapAggregatorPhoenixAdapterClient};

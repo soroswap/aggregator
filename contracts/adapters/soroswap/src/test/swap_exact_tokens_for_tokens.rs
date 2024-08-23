@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, vec, Vec, String};
+use soroban_sdk::{Address, vec, Vec};
 use crate::test::{SoroswapAggregatorAdapterTest};
 use soroswap_aggregator_adapter_interface::{AdapterError};
 use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
