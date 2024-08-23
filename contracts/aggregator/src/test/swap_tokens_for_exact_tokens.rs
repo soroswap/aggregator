@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
-use crate::test::{SoroswapAggregatorTest};
+use crate::test::SoroswapAggregatorTest;
 // use crate::DexDistribution;
 use soroban_sdk::{Address, String, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
@@ -21,6 +21,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
 fn swap_tokens_for_exact_tokens_negative_amount_out() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
@@ -29,19 +30,38 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
     // test.aggregator_contract
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
-    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    test.aggregator_contract.swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &-1,
         &100,
-        &Vec::new(&test.env),
+        &distribution_vec,
         &test.user.clone(),
-        &100,
+        &deadline,
     );
-    // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::NegativeNotAllowed)));
 }
 
+/*
+Negatives in amount_in_max will be allowed, but will fail with ExcessiveInputAmount
+Because the Aggregator checks for 
+if final_amount_in > amount_in_max {
+        return Err(AggregatorError::ExcessiveInputAmount);
+}
+*/
 #[test]
 fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     // creat the test
@@ -51,20 +71,35 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     // test.aggregator_contract
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
     let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &100,
         &-1,
-        &Vec::new(&test.env),
+        &distribution_vec,
         &test.user.clone(),
-        &100,
+        &deadline,
     );
-    // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::NegativeNotAllowed)));
+
+    assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #503)")] //Deadline Expired
 fn swap_tokens_for_exact_tokens_deadline_expired() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
@@ -73,17 +108,28 @@ fn swap_tokens_for_exact_tokens_deadline_expired() {
     // test.aggregator_contract
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
     // call the function
-    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    test.aggregator_contract.swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &100,
         &100,
-        &Vec::new(&test.env),
+        &distribution_vec,
         &test.user.clone(),
         &0,
     );
-    // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::DeadlineExpired)));
 }
 
 #[test]

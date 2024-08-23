@@ -8,9 +8,9 @@ mod error;
 pub use error::AdapterError;
 
 #[contractspecfn(name = "Spec", export = false)]
-#[contractclient(name = "SoroswapAggregatorAdapterClient")]
+#[contractclient(name = "AdapterClient")]
 
-pub trait SoroswapAggregatorAdapterTrait {
+pub trait AdapterTrait {
     fn initialize(
         e: Env,
         protocol_id: String,

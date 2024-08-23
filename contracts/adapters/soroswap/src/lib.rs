@@ -15,26 +15,9 @@ use storage::{
     set_protocol_address, 
     get_protocol_address, 
 };
-use soroswap_aggregator_adapter_interface::{SoroswapAggregatorAdapterTrait, AdapterError};
+use adapter_interface::{AdapterTrait, AdapterError};
 use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
     protocol_swap_tokens_for_exact_tokens};
-
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
-    if amount < 0 {
-        Err(AdapterError::NegativeNotAllowed)
-    } else {
-        Ok(())
-    }
-}
-
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AdapterError> {
-    let ledger_timestamp = e.ledger().timestamp();
-    if ledger_timestamp >= timestamp {
-        Err(AdapterError::DeadlineExpired)
-    } else {
-        Ok(())
-    }
-}
 
 fn check_initialized(e: &Env) -> Result<(), AdapterError> {
     if is_initialized(e) {
@@ -48,13 +31,13 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 struct SoroswapAggregatorAdapter;
 
 #[contractimpl]
-impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
+impl AdapterTrait for SoroswapAggregatorAdapter {
     fn initialize(
         e: Env,
         protocol_id: String,
         protocol_address: Address,
     ) -> Result<(), AdapterError> {
-        if is_initialized(&e) {
+        if check_initialized(&e).is_ok() {
             return Err(AdapterError::AlreadyInitialized);
         }
     
@@ -78,10 +61,6 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         to.require_auth();
-
-        check_nonnegative_amount(amount_in)?;
-        check_nonnegative_amount(amount_out_min)?;
-        ensure_deadline(&e, deadline)?;
 
         let swap_result = protocol_swap_exact_tokens_for_tokens(
             &e, 
@@ -107,10 +86,6 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorAdapter {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         to.require_auth();
-
-        check_nonnegative_amount(amount_out)?;
-        check_nonnegative_amount(amount_in_max)?;
-        ensure_deadline(&e, deadline)?;
 
         let swap_result = protocol_swap_tokens_for_exact_tokens(
             &e, 

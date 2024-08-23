@@ -16,7 +16,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
-soroswap-aggregator-adapter-interface = { workspace = true }
+adapter-interface = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

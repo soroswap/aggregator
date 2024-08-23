@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, vec, Vec};
 use crate::test::{PhoenixAggregatorAdapterTest, phoenix_setup::deploy_and_initialize_lp};
-use soroswap_aggregator_adapter_interface::{AdapterError};
+use adapter_interface::AdapterError;
 use super::phoenix_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]

@@ -65,7 +65,7 @@ pub fn remove_adapter(e: &Env, protocol_id: String) {
         e.storage()
             .instance()
             .remove(&DataKey::Adapter(protocol_id.clone()));
-        remove_adapter_id(e, protocol_id);
+        remove_protocol_id(e, protocol_id);
     }
 }
 
@@ -86,7 +86,7 @@ pub fn get_protocol_ids(e: &Env) -> Vec<String> {
     }
 }
 
-pub fn remove_adapter_id(e: &Env, protocol_id: String) {
+pub fn remove_protocol_id(e: &Env, protocol_id: String) {
     let protocols = get_protocol_ids(e);
     let mut new_protocols = Vec::new(e);
 

@@ -1,7 +1,6 @@
 use soroban_sdk::{Address, vec, Vec};
-use crate::test::{SoroswapAggregatorAdapterTest};
-use soroswap_aggregator_adapter_interface::{AdapterError};
-use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
+use crate::test::SoroswapAggregatorAdapterTest;
+use adapter_interface::AdapterError;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
@@ -22,64 +21,52 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &-1,           // amount_in
         &0,            // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
     );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
-    );
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
     test.env.budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &-1,           // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
     );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
-    );
 }
 
 #[test]
+#[should_panic(expected = "HostError: Error(Contract, #503)")]
 fn swap_exact_tokens_for_tokens_expired() {
     let test = SoroswapAggregatorAdapterTest::setup();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
-    let result = test.adapter_contract.try_swap_exact_tokens_for_tokens(
+    test.adapter_contract.swap_exact_tokens_for_tokens(
         &0,            // amount_in
         &0,            // amount_out_min
         &path,         // path
         &test.user,    // to
         &0,            // deadline
-    );
-
-    assert_eq!(
-        result,
-        Err(Ok(AdapterErrorDeployer::DeadlineExpired))
     );
 }
 

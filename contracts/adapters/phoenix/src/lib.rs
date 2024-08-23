@@ -14,15 +14,15 @@ use storage::{
     set_protocol_address,
     get_protocol_address,
 };
-use soroswap_aggregator_adapter_interface::{
-    SoroswapAggregatorAdapterTrait, AdapterError
+use adapter_interface::{
+    AdapterTrait, AdapterError
 };
 use protocol_interface::{
     protocol_swap_exact_tokens_for_tokens,
     protocol_swap_tokens_for_exact_tokens
 };
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
+fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
         Err(AdapterError::NegativeNotAllowed)
     } else {
@@ -51,7 +51,7 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 struct SoroswapAggregatorPhoenixAdapter;
 
 #[contractimpl]
-impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorPhoenixAdapter {
+impl AdapterTrait for SoroswapAggregatorPhoenixAdapter {
     
     /// Initializes the contract and sets the Phoenix multihop address.
     ///
@@ -69,7 +69,7 @@ impl SoroswapAggregatorAdapterTrait for SoroswapAggregatorPhoenixAdapter {
         protocol_id: String,
         protocol_address: Address,
     ) -> Result<(), AdapterError> {
-        if is_initialized(&e) {
+        if check_initialized(&e).is_ok() {
             return Err(AdapterError::AlreadyInitialized);
         }
     

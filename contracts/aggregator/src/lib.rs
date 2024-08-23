@@ -11,28 +11,11 @@ mod test;
 
 use error::AggregatorError;
 use models::{Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
-use soroswap_aggregator_adapter_interface::SoroswapAggregatorAdapterClient;
+use adapter_interface::AdapterClient;
 use storage::{
     extend_instance_ttl, get_adapter, get_admin, get_protocol_ids, has_adapter, is_initialized,
     put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
 };
-
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AggregatorError> {
-    if amount < 0 {
-        Err(AggregatorError::NegativeNotAllowed)
-    } else {
-        Ok(())
-    }
-}
-
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AggregatorError> {
-    let ledger_timestamp = e.ledger().timestamp();
-    if ledger_timestamp >= timestamp {
-        Err(AggregatorError::DeadlineExpired)
-    } else {
-        Ok(())
-    }
-}
 
 fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     if is_initialized(e) {
@@ -50,17 +33,11 @@ fn check_admin(e: &Env) -> Result<(), AggregatorError> {
 
 fn check_parameters(
     e: &Env,
-    amount_0: i128,
-    amount_1: i128,
     to: Address,
-    deadline: u64,
     distribution: Vec<DexDistribution>,
 ) -> Result<(), AggregatorError> {
     check_initialized(e)?;
-    check_nonnegative_amount(amount_0)?;
-    check_nonnegative_amount(amount_1)?;
     to.require_auth();
-    ensure_deadline(e, deadline)?;
 
     if distribution.len() > MAX_DISTRIBUTION_LENGTH {
         return Err(AggregatorError::DistributionLengthExceeded);
@@ -81,7 +58,10 @@ fn calculate_distribution_amounts_and_check_paths(
     total_amount: i128,
     distribution: &Vec<DexDistribution>,
 ) -> Result<Vec<i128>, AggregatorError> {
-    let total_parts: u32 = distribution.iter().map(|dist| dist.parts).sum();
+    let total_parts: u32 = distribution.iter().try_fold(0u32, |acc, dist| {
+        acc.checked_add(dist.parts).ok_or(AggregatorError::ArithmeticError)
+    })?;
+
     let total_parts: i128 = total_parts.into();
     let mut total_swapped = 0;
     let mut swap_amounts = soroban_sdk::Vec::new(env);
@@ -105,7 +85,9 @@ fn calculate_distribution_amounts_and_check_paths(
                 .checked_mul(dist.parts.into())
                 .and_then(|prod| prod.checked_div(total_parts))
                 .ok_or(AggregatorError::ArithmeticError)?;
-            total_swapped += amount;
+            total_swapped = total_swapped
+                .checked_add(amount)
+                .ok_or(AggregatorError::ArithmeticError)?;
             amount
         };
 
@@ -118,12 +100,12 @@ fn calculate_distribution_amounts_and_check_paths(
 pub fn get_adapter_client(
     e: &Env,
     protocol_id: String,
-) -> Result<SoroswapAggregatorAdapterClient, AggregatorError> {
+) -> Result<AdapterClient, AggregatorError> {
     let adapter = get_adapter(&e, protocol_id.clone())?;
     if adapter.paused {
         return Err(AggregatorError::ProtocolPaused);
     }
-    Ok(SoroswapAggregatorAdapterClient::new(&e, &adapter.address))
+    Ok(AdapterClient::new(&e, &adapter.address))
 }
 
 /*
@@ -400,9 +382,10 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         admin: Address,
         adapter_vec: Vec<Adapter>,
     ) -> Result<(), AggregatorError> {
-        if is_initialized(&e) {
+        if check_initialized(&e).is_ok() {
             return Err(AggregatorError::AlreadyInitialized);
         }
+        
         admin.require_auth();
 
         for adapter in adapter_vec.iter() {
@@ -581,10 +564,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
-            amount_in,
-            amount_out_min,
             to.clone(),
-            deadline,
             distribution.clone(),
         )?;
 
@@ -673,10 +653,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         extend_instance_ttl(&e);
         check_parameters(
             &e,
-            amount_out,
-            amount_in_max,
             to.clone(),
-            deadline,
             distribution.clone(),
         )?;
 
