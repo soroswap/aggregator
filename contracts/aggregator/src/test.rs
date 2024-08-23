@@ -367,5 +367,8 @@ pub mod set_pause_get_paused;
 pub mod swap_exact_tokens_for_tokens;
 pub mod swap_tokens_for_exact_tokens;
 pub mod update_adapters;
+pub mod budget_cpu_mem;
 // pub mod swap;
-// pub mod admin;
+pub mod admin;
+// test upgrade wasm
+

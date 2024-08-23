@@ -1,5 +1,5 @@
 // use crate::DexDistribution;
-use soroban_sdk::{symbol_short, testutils::Events, vec, Address, IntoVal, String, Vec};
+use soroban_sdk::{symbol_short, testutils::{Events, Address as _}, vec, Address, IntoVal, String, Vec};
 
 use crate::test::{
     create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
@@ -7,7 +7,7 @@ use crate::test::{
 
 use crate::event::InitializedEvent;
 
-use super::soroswap_aggregator_contract::{UpdateProtocolsEvent, RemovedProtocolEvent, PausedProtocolEvent, DexDistribution, SwapEvent};
+use super::soroswap_aggregator_contract::{UpdateProtocolsEvent, RemovedProtocolEvent, PausedProtocolEvent, DexDistribution, SwapEvent, NewAdminEvent};
 
 #[test]
 fn initialized_event() {
@@ -287,6 +287,73 @@ fn set_pause_event() {
             ]
         );
     }
+}
+
+
+#[test]
+fn set_admin_event() {
+    let test = SoroswapAggregatorTest::setup();
+    
+    let new_admin = Address::generate(&test.env);
+
+    test.aggregator_contract.set_admin(&new_admin);
+
+    let set_admin = test.env.events().all().last().unwrap();
+    let expected_set_admin: NewAdminEvent = NewAdminEvent {
+        old: test.admin.clone(),
+        new: new_admin,
+    };
+    assert_eq!(
+        vec![&test.env, set_admin.clone()],
+        vec![
+            &test.env,
+            (
+                test.aggregator_contract.address.clone(),
+                ("SoroswapAggregator", symbol_short!("new_admin")).into_val(&test.env),
+                (expected_set_admin).into_val(&test.env)
+            ),
+        ]
+    );
+    let false_set_admin: NewAdminEvent = NewAdminEvent {
+        old: test.admin.clone(),
+        new: test.admin.clone(),
+    };
+    assert_ne!(
+        vec![&test.env, set_admin.clone()],
+        vec![
+            &test.env,
+            (
+                test.aggregator_contract.address.clone(),
+                ("SoroswapAggregator", symbol_short!("new_admin")).into_val(&test.env),
+                (false_set_admin).into_val(&test.env)
+            ),
+        ]
+    );
+    // Wrong symbol_short
+    assert_ne!(
+        vec![&test.env, set_admin.clone()],
+        vec![
+            &test.env,
+            (
+                test.aggregator_contract.address.clone(),
+                ("SoroswapAggregator", symbol_short!("new")).into_val(&test.env),
+                (expected_set_admin).into_val(&test.env)
+            ),
+        ]
+    );
+    // Wrong string
+    assert_ne!(
+        vec![&test.env, set_admin.clone()],
+        vec![
+            &test.env,
+            (
+                test.aggregator_contract.address.clone(),
+                ("SoroswapAggregatorr", symbol_short!("new_admin")).into_val(&test.env),
+                (expected_set_admin).into_val(&test.env)
+            ),
+        ]
+    );
+
 }
 
 #[test]
