@@ -55,8 +55,14 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
     );
 }
 
+/*
+Negatives in amount_in_max will be allowed, but will fail with ExcessiveInputAmount
+Because the Aggregator checks for 
+if final_amount_in > amount_in_max {
+        return Err(AggregatorError::ExcessiveInputAmount);
+}
+*/
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
 fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
@@ -79,7 +85,7 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     distribution_vec.push_back(distribution_0);
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
-    test.aggregator_contract.swap_tokens_for_exact_tokens(
+    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
         &100,
@@ -88,6 +94,8 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
         &test.user.clone(),
         &deadline,
     );
+
+    assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
 }
 
 #[test]

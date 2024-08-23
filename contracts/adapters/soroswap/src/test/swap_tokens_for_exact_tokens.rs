@@ -2,7 +2,6 @@ use soroban_sdk::{Address, vec, Vec};
 use soroban_sdk::testutils::Ledger;
 use crate::test::SoroswapAggregatorAdapterTest;
 use adapter_interface::AdapterError;
-use super::soroswap_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
