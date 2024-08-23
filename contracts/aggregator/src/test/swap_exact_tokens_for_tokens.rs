@@ -66,40 +66,44 @@ fn swap_exact_tokens_for_tokens_negative_amount_in() {
     );
 }
 
-#[test]
-#[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
-fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
-    // creat the test
-    let test = SoroswapAggregatorTest::setup();
-    // Initialize aggregator
-    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    // test.aggregator_contract_not_initialized
-    //     .initialize(&test.admin, &initialize_aggregator_addresses);
-    // call the function
-    let mut distribution_vec = Vec::new(&test.env);
-    // add one with part 1 and other with part 0
-    let mut path: Vec<Address> = Vec::new(&test.env);
-    path.push_back(test.token_0.address.clone());
-    path.push_back(test.token_1.address.clone());
+// We will allow `amount_out_min` to be negative in `swap_exact_tokens_for_tokens_negative_amount_out_min`.
+// Calling `swap_exact_tokens_for_tokens_negative_amount_out_min` with `amount_out_min` negative
+// is is similar of calling it with `amount_out_min=0`.
+// This is because then, the Aggregator checks
 
-    let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
-        path,
-        parts: 1,
-    };
-    distribution_vec.push_back(distribution_0);
-    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+// if final_amount_out < amount_out_min {
+//     return Err(AggregatorError::InsufficientOutputAmount);
+// }
 
-    test.aggregator_contract.swap_exact_tokens_for_tokens(
-        &test.token_0.address.clone(),
-        &test.token_1.address.clone(),
-        &100,
-        &-1,
-        &distribution_vec,
-        &test.user.clone(),
-        &deadline,
-    );
-}
+// #[test]
+// #[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
+// fn swap_exact_tokens_for_tokens_negative_amount_out_min() {
+//     // creat the test
+//     let test = SoroswapAggregatorTest::setup();
+//     let mut distribution_vec = Vec::new(&test.env);
+    
+//     let mut path: Vec<Address> = Vec::new(&test.env);
+//     path.push_back(test.token_0.address.clone());
+//     path.push_back(test.token_1.address.clone());
+
+//     let distribution_0 = DexDistribution {
+//         protocol_id: String::from_str(&test.env, "soroswap"),
+//         path,
+//         parts: 1,
+//     };
+//     distribution_vec.push_back(distribution_0);
+//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+//     test.aggregator_contract.swap_exact_tokens_for_tokens(
+//         &test.token_0.address.clone(), // token_in
+//         &test.token_1.address.clone(), // token_out
+//         &100, // amount_in
+//         &-1, // amount_out_min
+//         &distribution_vec,
+//         &test.user.clone(),
+//         &deadline,
+//     );
+// }
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #503)")]
