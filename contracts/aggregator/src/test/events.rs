@@ -1,19 +1,19 @@
-use crate::DexDistribution;
-use soroban_sdk::{symbol_short, testutils::Events, vec, Address, IntoVal, String, Vec, testutils::{Address as _}};
+// use crate::DexDistribution;
+use soroban_sdk::{symbol_short, testutils::{Events, Address as _}, vec, Address, IntoVal, String, Vec};
 
 use crate::test::{
-    create_protocols_addresses, new_update_adapters_addresses, SoroswapAggregatorTest,
+    create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
 };
 
-use crate::event::{
-    InitializedEvent, PausedProtocolEvent, RemovedProtocolEvent, SwapEvent, UpdateProtocolsEvent, NewAdminEvent
-};
+use crate::event::InitializedEvent;
+
+use super::soroswap_aggregator_contract::{UpdateProtocolsEvent, RemovedProtocolEvent, PausedProtocolEvent, DexDistribution, SwapEvent, NewAdminEvent};
 
 #[test]
 fn initialized_event() {
     let test = SoroswapAggregatorTest::setup();
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let initialized_event = test.env.events().all().last().unwrap();
@@ -28,7 +28,7 @@ fn initialized_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address.clone(),
+                test.aggregator_contract_not_initialized.address.clone(),
                 ("SoroswapAggregator", symbol_short!("init")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
@@ -45,7 +45,7 @@ fn initialized_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address.clone(),
+                test.aggregator_contract_not_initialized.address.clone(),
                 ("SoroswapAggregator", symbol_short!("init")).into_val(&test.env),
                 (false_initialized_event).into_val(&test.env)
             ),
@@ -58,7 +58,7 @@ fn initialized_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address.clone(),
+                test.aggregator_contract_not_initialized.address.clone(),
                 ("SoroswapAggregator", symbol_short!("iniit")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
@@ -71,7 +71,7 @@ fn initialized_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address,
+                test.aggregator_contract_not_initialized.address,
                 ("SoroswapAggregatorr", symbol_short!("init")).into_val(&test.env),
                 (expected_initialized_event).into_val(&test.env)
             ),
@@ -84,15 +84,15 @@ fn update_adapters_event() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let admin = test.aggregator_contract.get_admin();
     assert_eq!(admin, test.admin);
 
     //Update aggregator
-    let update_aggregator_addresses = new_update_adapters_addresses(&test);
+    let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
     test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
 
@@ -136,7 +136,7 @@ fn update_adapters_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address.clone(),
+                test.aggregator_contract_not_initialized.address.clone(),
                 ("SoroswapAggregator", symbol_short!("updat")).into_val(&test.env),
                 (expected_updated_event).into_val(&test.env)
             ),
@@ -149,7 +149,7 @@ fn update_adapters_event() {
         vec![
             &test.env,
             (
-                test.aggregator_contract.address,
+                test.aggregator_contract_not_initialized.address,
                 ("SoroswapAggregatorr", symbol_short!("update")).into_val(&test.env),
                 (expected_updated_event).into_val(&test.env)
             ),
@@ -160,10 +160,6 @@ fn update_adapters_event() {
 #[test]
 fn remove_adapter_event() {
     let test = SoroswapAggregatorTest::setup();
-    // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // Remove protocol
     let protocol_id = String::from_str(&test.env, "soroswap");
@@ -227,10 +223,6 @@ fn remove_adapter_event() {
 #[test]
 fn set_pause_event() {
     let test = SoroswapAggregatorTest::setup();
-    // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // Remove protocol
     let protocol_id = String::from_str(&test.env, "soroswap");
@@ -301,14 +293,8 @@ fn set_pause_event() {
 #[test]
 fn set_admin_event() {
     let test = SoroswapAggregatorTest::setup();
-    // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
-
-
+    
     let new_admin = Address::generate(&test.env);
-
 
     test.aggregator_contract.set_admin(&new_admin);
 
@@ -377,9 +363,9 @@ fn swap_exact_tokens_for_tokens_event() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let mut distribution_vec = Vec::new(&test.env);
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -436,9 +422,9 @@ fn swap_tokens_for_exact_tokens_event() {
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
     // Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let mut distribution_vec = Vec::new(&test.env);
     let mut path: Vec<Address> = Vec::new(&test.env);
@@ -481,7 +467,7 @@ fn swap_tokens_for_exact_tokens_event() {
     // test one by one swap_event.clone().0
     // assert_eq!(
     //     swap_event.clone().0,
-    //     test.aggregator_contract.address.clone()
+    //     test.aggregator_contract_not_initialized.address.clone()
     // );
     // assert_eq!(
     //     swap_event.clone().1,

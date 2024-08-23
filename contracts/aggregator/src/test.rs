@@ -4,7 +4,7 @@ use crate::models::Adapter;
 use crate::{SoroswapAggregator, SoroswapAggregatorClient};
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
-    vec, Address, BytesN, Env, String, Vec,
+    vec, Address, BytesN, Env, String, Vec, Symbol, Val, IntoVal
 };
 
 mod soroswap_setup;
@@ -25,10 +25,28 @@ use phoenix_setup::{
     SoroswapAggregatorAdapterForPhoenixClient
 };
 
+mod deployer_contract {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    pub type DeployerClient<'a> = Client<'a>;
+}
+pub use deployer_contract::DeployerClient;
+
+fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
+    let deployer_address = &e.register_contract_wasm(None, deployer_contract::WASM);
+    let deployer = DeployerClient::new(e, deployer_address);
+    deployer
+}
+
 // SoroswapAggregator Contract [THE MAIN CONTRACT]
 fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
     SoroswapAggregatorClient::new(e, &e.register_contract(None, SoroswapAggregator {}))
 }
+
+pub mod soroswap_aggregator_contract {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm");
+    pub type SoroswapAggregatorClientFromWasm<'a> = Client<'a>;
+}
+use soroswap_aggregator_contract::{SoroswapAggregatorClientFromWasm, Adapter as AdapterFromWasm};
 
 
 // Token Contract
@@ -60,17 +78,34 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
         }
     ]
 }
-pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+
+// pub fn create_soroswap_phoenix_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+//     vec![
+//         &test.env,
+//         Adapter {
+//             protocol_id: String::from_str(&test.env, "soroswap"),
+//             address: test.soroswap_adapter_contract.address.clone(),
+//             paused: false,
+//         },
+//         Adapter {
+//             protocol_id: String::from_str(&test.env, "phoenix"),
+//             address: test.phoenix_adapter_contract.address.clone(),
+//             paused: false,
+//         },
+//     ]
+// }
+
+pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address) -> Vec<AdapterFromWasm> {
     vec![
-        &test.env,
-        Adapter {
-            protocol_id: String::from_str(&test.env, "soroswap"),
-            address: test.soroswap_adapter_contract.address.clone(),
+        env,
+        AdapterFromWasm {
+            protocol_id: String::from_str(env, "soroswap"),
+            address: soroswap_adapter.clone(),
             paused: false,
         },
-        Adapter {
-            protocol_id: String::from_str(&test.env, "phoenix"),
-            address: test.phoenix_adapter_contract.address.clone(),
+        AdapterFromWasm {
+            protocol_id: String::from_str(env, "phoenix"),
+            address: phoenix_adapter.clone(),
             paused: false,
         },
     ]
@@ -80,6 +115,17 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
     vec![
         &test.env,
         Adapter {
+            protocol_id: String::from_str(&test.env, "some_protocol"),
+            address: test.soroswap_router_contract.address.clone(),
+            paused: false,
+        },
+    ]
+}
+
+pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+    vec![
+        &test.env,
+        AdapterFromWasm {
             protocol_id: String::from_str(&test.env, "some_protocol"),
             address: test.soroswap_router_contract.address.clone(),
             paused: false,
@@ -105,9 +151,16 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
 //     ]
 // }
 
+pub fn generate_salt(initial: u8) -> [u8; 32] {
+    let mut salt = [0u8; 32];
+    salt[0] = initial;
+    salt
+}
+
 pub struct SoroswapAggregatorTest<'a> {
     env: Env,
-    aggregator_contract: SoroswapAggregatorClient<'a>,
+    aggregator_contract: SoroswapAggregatorClientFromWasm<'a>,
+    aggregator_contract_not_initialized: SoroswapAggregatorClient<'a>,
     soroswap_router_contract: SoroswapRouterClient<'a>,
     // soroswap_factory_contract: SoroswapFactoryClient<'a>,
     soroswap_adapter_contract: SoroswapAggregatorAdapterForSoroswapClient<'a>,
@@ -123,7 +176,8 @@ impl<'a> SoroswapAggregatorTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
-        let aggregator_contract = create_soroswap_aggregator(&env);
+
+        let aggregator_contract_not_initialized = create_soroswap_aggregator(&env);
 
         let admin = Address::generate(&env);
         let user = Address::generate(&env);
@@ -144,8 +198,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         token_1.mint(&admin, &initial_user_balance);
         token_2.mint(&admin, &initial_user_balance);
         token_3.mint(&admin, &initial_user_balance);
-        
-        
+    
         
         /*  INITIALIZE SOROSWAP FACTORY, ROUTER AND LPS */
         /************************************************/
@@ -261,24 +314,38 @@ impl<'a> SoroswapAggregatorTest<'a> {
             &phoenix_factory_client.address);
 
 
+        // SETTING UP DEPLOYER
+        let deployer_client = create_deployer(&env);
+        let salt = BytesN::from_array(&env, &generate_salt(2));
+        let init_fn = Symbol::new(&env, &("initialize"));
+
         /* CREATE ADAPTERS */
-        // Create and Initializing Soroswap Adapter Contract
-        let soroswap_adapter_contract = create_soroswap_adapter(&env);
-        soroswap_adapter_contract.initialize(
-            &String::from_str(&env, "soroswap"),
-            &soroswap_router_contract.address,
+        let soroswap_adapter_contract = create_soroswap_adapter(&env, &deployer_client, soroswap_router_contract.address.clone(), admin.clone());
+
+        let phoenix_adapter_contract = create_phoenix_adapter(&env, &deployer_client, phoenix_multihop_client.address.clone(), admin.clone());
+
+        let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
+        
+        // Deploy aggregator using deployer, and include an init function to call.
+        let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&env, soroswap_adapter_contract.address.clone(), phoenix_adapter_contract.address.clone());
+
+        // Convert the arguments into a Vec<Val>
+        let init_fn_args: Vec<Val> = (admin.clone(), initialize_aggregator_addresses).into_val(&env);
+
+        let (contract_id, _init_result) = deployer_client.deploy(
+            &admin.clone(),
+            &wasm_hash,
+            &salt,
+            &init_fn,
+            &init_fn_args,
         );
 
-        let phoenix_adapter_contract = create_phoenix_adapter(&env);
-        phoenix_adapter_contract.initialize(
-            &String::from_str(&env, "phoenix"),
-            &phoenix_multihop_client.address
-        );
-
+        let aggregator_contract = SoroswapAggregatorClientFromWasm::new(&env, &contract_id);
 
         SoroswapAggregatorTest {
             env,
             aggregator_contract,
+            aggregator_contract_not_initialized,
             soroswap_router_contract,
             // soroswap_factory_contract,
             soroswap_adapter_contract,

@@ -19,18 +19,17 @@ fn set_admin() {
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
     test.env.budget().reset_default();
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
     
-
     // get admin
-    let admin = test.aggregator_contract.get_admin();
+    let admin = test.aggregator_contract_not_initialized.get_admin();
     assert_eq!(admin, test.admin);
 
     // set admin
     let new_admin = Address::generate(&test.env);
-    test.aggregator_contract.set_admin(&new_admin);
-    let admin = test.aggregator_contract.get_admin();
+    test.aggregator_contract_not_initialized.set_admin(&new_admin);
+    let admin = test.aggregator_contract_not_initialized.get_admin();
     assert_eq!(admin, new_admin);
 }   
 
@@ -42,7 +41,7 @@ fn test_set_admin_initialized() {
     let new_admin = Address::generate(&test.env);
 
     let result = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .try_set_admin(&new_admin);
 
     assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
@@ -58,20 +57,20 @@ fn test_set_admin_with_mock_auth() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
 
-    let admin = test.aggregator_contract.get_admin();
+    let admin = test.aggregator_contract_not_initialized.get_admin();
     assert_eq!(admin, test.admin);
 
     let new_admin = Address::generate(&test.env);
 
     //  MOCK THE SPECIFIC AUTHORIZATION
-    test.aggregator_contract
+    test.aggregator_contract_not_initialized
         .mock_auths(&[MockAuth {
             address: &test.admin.clone(),
             invoke: &MockAuthInvoke {
-                contract: &test.aggregator_contract.address.clone(),
+                contract: &test.aggregator_contract_not_initialized.address.clone(),
                 fn_name: "set_admin",
                 args: (new_admin.clone(),).into_val(&test.env),
                 sub_invokes: &[],
@@ -86,7 +85,7 @@ fn test_set_admin_with_mock_auth() {
             test.admin.clone(),
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
-                    test.aggregator_contract.address.clone(),
+                    test.aggregator_contract_not_initialized.address.clone(),
                     Symbol::new(&test.env, "set_admin"),
                     (new_admin.clone(),).into_val(&test.env)
                 )),

@@ -1,9 +1,11 @@
 
 extern crate std;
-use crate::error::AggregatorError;
-use crate::models::Adapter;
-use crate::test::{create_protocols_addresses, create_soroswap_router, SoroswapAggregatorTest};
+use crate::error::AggregatorError as AggregatorErrorFromCrate;
+// use crate::models::Adapter;
+use crate::test::{create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{vec, String, Vec};
+
+use super::soroswap_aggregator_contract::{Adapter, AggregatorError};
 
 pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
@@ -22,9 +24,10 @@ fn test_set_pause_true_false() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     // check that protocol is not paused
     let mut is_protocol_paused = test
@@ -45,6 +48,11 @@ fn test_set_pause_true_false() {
             protocol_id: String::from_str(&test.env, "soroswap"),
             address: test.soroswap_adapter_contract.address.clone(),
             paused: true,
+        },
+        Adapter {
+            protocol_id: String::from_str(&test.env, "phoenix"),
+            address: test.phoenix_adapter_contract.address.clone(),
+            paused: false,
         },
     ];
     assert_eq!(updated_protocols, expected_protocols_vec);
@@ -67,6 +75,11 @@ fn test_set_pause_true_false() {
             address: initialize_aggregator_addresses.get(0).unwrap().address,
             paused: true,
         },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
         new_protocol_0.get(0).unwrap(),
     ];
 
@@ -83,6 +96,11 @@ fn test_set_pause_true_false() {
             protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
             address: initialize_aggregator_addresses.get(0).unwrap().address,
             paused: true,
+        },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
         },
         new_protocol_0.get(0).unwrap(),
         new_protocol_1.get(0).unwrap(),
@@ -101,6 +119,11 @@ fn test_set_pause_true_false() {
             protocol_id: initialize_aggregator_addresses.get(0).unwrap().protocol_id,
             address: initialize_aggregator_addresses.get(0).unwrap().address,
             paused: true,
+        },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
         },
         new_protocol_0.get(0).unwrap(),
         Adapter {
@@ -140,6 +163,11 @@ fn test_set_pause_true_false() {
             address: initialize_aggregator_addresses.get(0).unwrap().address,
             paused: true,
         },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
         new_protocol_0.get(0).unwrap(),
         Adapter {
             protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
@@ -178,6 +206,11 @@ fn test_set_pause_true_false() {
             address: initialize_aggregator_addresses.get(0).unwrap().address,
             paused: false,
         },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
         new_protocol_0.get(0).unwrap(),
         Adapter {
             protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
@@ -210,10 +243,10 @@ fn test_set_pause_true_false() {
 fn test_set_pause_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test
-        .aggregator_contract
+        .aggregator_contract_not_initialized
         .try_set_pause(&String::from_str(&test.env, "soroswap"), &true);
 
-    assert_eq!(result, Err(Ok(AggregatorError::NotInitialized)));
+    assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
 
 // test non initialized
@@ -221,9 +254,10 @@ fn test_set_pause_not_yet_initialized() {
 fn test_set_pause_non_existent() {
     let test = SoroswapAggregatorTest::setup();
 
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    
+    // test.aggregator_contract
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
     let result = test
         .aggregator_contract

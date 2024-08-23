@@ -1,7 +1,7 @@
 use soroban_sdk::{
-   Env, BytesN, Address,
+   Env, BytesN, Address, Symbol, String, Vec, Val, IntoVal
 };
-
+use super::{generate_salt, DeployerClient};
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
@@ -48,9 +48,34 @@ mod soroswap_adapter {
 }
 pub use soroswap_adapter::SoroswapAggregatorAdapterForSoroswapClient;
 
+
 // Adapter for Soroswap
-pub fn create_soroswap_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForSoroswapClient<'a> {
-    let adapter_address = &e.register_contract_wasm(None, soroswap_adapter::WASM);
-    let adapter = SoroswapAggregatorAdapterForSoroswapClient::new(e, adapter_address);
-    adapter
+// pub fn create_soroswap_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForSoroswapClient<'a> {
+//     let adapter_address = &e.register_contract_wasm(None, soroswap_adapter::WASM);
+//     let adapter = SoroswapAggregatorAdapterForSoroswapClient::new(e, adapter_address);
+//     adapter
+// }
+pub fn create_soroswap_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, router_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForSoroswapClient<'a> {
+    let wasm_hash = e.deployer().upload_contract_wasm(soroswap_adapter::WASM);
+
+    // Deploy contract using deployer, and include an init function to call
+    let salt = BytesN::from_array(&e, &generate_salt(0));
+    let init_fn = Symbol::new(&e, &("initialize"));
+
+    let protocol_id = String::from_str(&e, "soroswap");
+    let protocol_address = router_contract.clone();
+
+    // Convert the arguments into a Vec<Val>
+    let init_fn_args: Vec<Val> = (protocol_id.clone(), protocol_address.clone()).into_val(e);
+
+    let (contract_id, _init_result) = deployer_client.deploy(
+        &admin,
+        &wasm_hash,
+        &salt,
+        &init_fn,
+        &init_fn_args,
+    );
+
+    let adapter_contract = SoroswapAggregatorAdapterForSoroswapClient::new(e, &contract_id);
+    adapter_contract
 }

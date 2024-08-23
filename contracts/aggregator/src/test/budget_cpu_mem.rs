@@ -1,10 +1,7 @@
 extern crate std;
-use crate::test::{create_protocols_addresses, SoroswapAggregatorTest};
-use crate::test::{
-    new_update_adapters_addresses, create_soroswap_phoenix_addresses
-};
-use soroban_sdk::{String, Vec, Address, testutils::{Address as _}};
-use crate::DexDistribution;
+use crate::test::{create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
+use soroban_sdk::{String, Vec, Address, testutils::Address as _};
+use super::soroswap_aggregator_contract::DexDistribution;
 
 
 #[test]
@@ -12,19 +9,19 @@ fn budget() {
     let test = SoroswapAggregatorTest::setup();
     
     //initialize ()
-    let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
     test.env.budget().reset_unlimited();
     
-    test.aggregator_contract
-        .initialize(&test.admin, &initialize_aggregator_addresses);
+    // test.aggregator_contract_not_initialized
+    //     .initialize(&test.admin, &initialize_aggregator_addresses);
     
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!("initialize()                                             | cpu: {},      mem: {}", cpu, mem);
 
     // update_adapters()
-    let update_aggregator_addresses = new_update_adapters_addresses(&test);
+    let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
 
     test.env.budget().reset_unlimited();
     test.aggregator_contract
@@ -64,7 +61,8 @@ fn budget() {
 
     
     //swap_exact_tokens_for_tokens TWO PROTOCOLS SOROSWAP AND PHOENIX- ONE HOP
-    let update_aggregator_addresses = create_soroswap_phoenix_addresses(&test);
+    let update_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+
     test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
     // now we have soroswap and phoenix
@@ -247,7 +245,7 @@ fn budget() {
      //remove_adapter()
      test.env.budget().reset_unlimited();
      test.aggregator_contract
-     .remove_adapter(&String::from_str(&test.env, "soroswap"));
+        .remove_adapter(&String::from_str(&test.env, "soroswap"));
      let mem = test.env.budget().memory_bytes_cost();
      let cpu = test.env.budget().cpu_instruction_cost();
      std::println!("remove_adapter()                                         | cpu: {},      mem: {}", cpu, mem);

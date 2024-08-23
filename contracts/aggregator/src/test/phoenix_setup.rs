@@ -1,3 +1,4 @@
+use super::{generate_salt, DeployerClient};
 
 // For Phoenix
 mod phoenix_adapter {
@@ -10,27 +11,46 @@ mod phoenix_adapter {
 pub use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
 use crate::test::install_token_wasm;
 // Adapter for phoenix
-pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
-    let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
-    let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
-    adapter
+// pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+//     let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
+//     let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
+//     adapter
+// }
+
+pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, multihop_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+    let wasm_hash = e.deployer().upload_contract_wasm(phoenix_adapter::WASM);
+
+    // Deploy contract using deployer, and include an init function to call.
+    let salt = BytesN::from_array(&e, &generate_salt(1));
+    let init_fn = Symbol::new(&e, &("initialize"));
+
+    let protocol_id = String::from_str(&e, "phoenix");
+    let protocol_address = multihop_contract.clone();
+
+    // Convert the arguments into a Vec<Val>
+    let init_fn_args: Vec<Val> = (protocol_id.clone(), protocol_address.clone()).into_val(e);
+
+    let (contract_id, _init_result) = deployer_client.deploy(
+        &admin,
+        &wasm_hash,
+        &salt,
+        &init_fn,
+        &init_fn_args,
+    );
+
+    let adapter_contract = SoroswapAggregatorAdapterForPhoenixClient::new(e, &contract_id);
+    adapter_contract
 }
+
 
 
 // #![cfg(test)]
 // extern crate std;
 use soroban_sdk::{
-    vec,
-    // IntoVal,
-    String,
-    Env, 
-    Bytes,
-    BytesN, 
-    Address, 
     testutils::{
         arbitrary::std,
         Address as _,
-    },
+    }, vec, Address, Bytes, BytesN, Env, String, Symbol, Vec, Val, IntoVal
 };
 
 /* *************  PHOENIX FACTORY  *************  */
