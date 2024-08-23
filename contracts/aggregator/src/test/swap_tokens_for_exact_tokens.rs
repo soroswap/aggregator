@@ -21,7 +21,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #502)")] //Negative not allowed
+#[should_panic(expected = "HostError: Error(Contract, #616)")] //Negible Amount
 fn swap_tokens_for_exact_tokens_negative_amount_out() {
     // creat the test
     let test = SoroswapAggregatorTest::setup();
@@ -54,6 +54,51 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
         &deadline,
     );
 }
+
+#[test]
+fn swap_tokens_for_exact_tokens_negible_amount() {
+    // creat the test
+    let test = SoroswapAggregatorTest::setup();
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_1.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path.clone(),
+        parts: 1,
+    };
+    let distribution_1 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path,
+        parts: 1000,
+    };
+    distribution_vec.push_back(distribution_0);
+    distribution_vec.push_back(distribution_1);
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    /*
+        Because amount_out =0,
+        amount_0 will be 1000*part/ total parts
+        1000 * 1 / 1001 =0
+        Hence will fail with Negible Amount Error
+    */
+
+    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+        &test.token_0.address.clone(),
+        &test.token_1.address.clone(),
+        &1000,//amount_out
+        &i128::MAX,//amount_in_max
+        &distribution_vec,
+        &test.user.clone(),
+        &deadline,
+    );
+
+    assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
+}
+
 
 /*
 Negatives in amount_in_max will be allowed, but will fail with ExcessiveInputAmount
