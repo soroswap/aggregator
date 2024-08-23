@@ -17,6 +17,9 @@ use storage::{
     put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
 };
 
+// Minimum amount to be traded
+const MIN_AMOUNT: i128 = 1;
+
 fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     if is_initialized(e) {
         Ok(())
@@ -90,6 +93,10 @@ fn calculate_distribution_amounts_and_check_paths(
                 .ok_or(AggregatorError::ArithmeticError)?;
             amount
         };
+
+        if swap_amount < MIN_AMOUNT {
+            return Err(AggregatorError::NegibleAmount);
+        }
 
         swap_amounts.push_back(swap_amount);
     }
