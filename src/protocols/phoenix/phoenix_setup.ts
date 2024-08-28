@@ -8,23 +8,12 @@ import { deployAndInitPhoenix } from './phoenix_deploy.js';
 
 export async function phoenixSetup(loadedConfig: any, addressBook: any) {
 
-// // const network = process.argv[2];
-// const addressBook = AddressBook.loadFromFile(network);
+  const network = process.argv[2];
+  const soroswapDir = network === 'standalone' ? '.soroban' : 'public';
+  const soroswapTokensBook = TokensBook.loadFromFile(
+   `../../protocols/soroswap/${soroswapDir}`
+  );
 
-// const soroswapDir = network === 'standalone' ? '.soroban' : 'public';
-// const soroswapAddressBook = AddressBook.loadFromFile(
-//   network,
-//   `../../protocols/soroswap/${soroswapDir}`
-// );
-// const soroswapTokensBook = TokensBook.loadFromFile(
-//   `../../protocols/soroswap/${soroswapDir}`
-// );
-
-// const loadedConfig = config(network);
-  // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
-  // if (network != 'mainnet') {
-    // mocks
-    // console.log('Installing and deploying: Phoenix Mocked Contracts');
     console.log('Loading Config for Phoenix');
     const phoenixAdmin = loadedConfig.getUser('PHOENIX_DEPLOYER_SECRET_KEY')
 
@@ -58,10 +47,8 @@ export async function phoenixSetup(loadedConfig: any, addressBook: any) {
       loadedConfig.admin
     );
 
-    // await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+    await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
   }
-// }
-
 
 // await phoenixSetup();
 // addressBook.writeToFile();

@@ -4,6 +4,8 @@ The Soroswap Aggregator Contract currently aggregates the pools from the Soroswa
 
 **For standalone development read #Development section**
 
+> [!IMPORTANT] Be sure to clone the repository with its submodules to ensure proper execution of development, testing, and deploying scripts.
+
 ## 1. Setup
 
 1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
@@ -11,6 +13,7 @@ The Soroswap Aggregator Contract currently aggregates the pools from the Soroswa
 ```bash
 git clone --recurse-submodules http://github.com/soroswap/aggregator.git
 ```
+> [!TIP] If you forgot to clone with the `--recurse-submodules` flag, you can run `git submodule update --init --recursive` to get the submodules.
 
 1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
 ```bash
@@ -18,7 +21,6 @@ cp .env.example .env
 ```
 For the **secret keys**, you can create an account and private keys in https://laboratory.stellar.org/#account-creator?network=test.
 For `MAINNET_RPC_URL`, you will need to subscribe to one of the Stellar Mainnet RPC providers: https://app.validationcloud.io/, https://nownodes.io/ or others (ask in the Stellar Discord)
-
 
 1.2 In one terminal: (choose standalone, futurenet or testnet)
 
@@ -88,6 +90,8 @@ cd /workspace
 yarn deploy <network>
 ```
 You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
+
+> [!NOTE] The `TEST_TOKENS_ADMIN_SECRET_KEY` in your `.env` file must be identical to the one used for Soroswap deployment to successfully add liquidity to the pools in Phoenix.
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
