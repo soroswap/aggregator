@@ -18,7 +18,7 @@ use storage::{
 };
 
 // Minimum amount to be traded
-const MIN_AMOUNT: i128 = 1;
+const MIN_AMOUNT: i128 = 10;
 
 fn check_initialized(e: &Env) -> Result<(), AggregatorError> {
     if is_initialized(e) {
