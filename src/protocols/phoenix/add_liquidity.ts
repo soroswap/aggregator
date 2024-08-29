@@ -15,7 +15,9 @@ const addPhoneixLiquidity = async () => {
     
   );
   const numberOfTokens = process.argv[3] ? parseInt(process.argv[3]) : soroswapTokensBook.getTokensByNetwork(network)?.length!;
+  if(!numberOfTokens || numberOfTokens == 0) throw new Error('Number of tokens is required, please run the script as "yarn add-liquidity:<protocol> <network> <numberOfTokens>"');
   console.log('Number of tokens', numberOfTokens);
+
   const phoenixAdmin = loadedConfig.getUser('PHOENIX_DEPLOYER_SECRET_KEY')
   const addressBook = AddressBook.loadFromFile(network);
 
@@ -25,7 +27,11 @@ const addPhoneixLiquidity = async () => {
   
   const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
   await airdropAccount(tokensAdminAccount);
-  await phoenixMultiAddLiquidity(numberOfTokens, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+  try {
+    await phoenixMultiAddLiquidity(numberOfTokens, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
+  } catch (error) {
+    console.error('🔴Error adding liquidity', error);
+  }
 }
 
 await addPhoneixLiquidity()
