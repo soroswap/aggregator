@@ -127,7 +127,7 @@ bash scripts/deploySoroswap.sh <network>
 ### Add liquidity to the phoenix pools:
 If you want to create and add liquidity to the Phoenix pools, you can do so by running the following command:
 ```bash
-yarn add_liquidity <network> <number of tokens>*
+yarn add-liquidity:phoenix <network> <number of tokens>*
 ```
 This will create pairs with all tokens listed in the [Soroswap tokens list](https://github.com/soroswap/core/blob/main/public/tokens.json).
 
