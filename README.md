@@ -93,9 +93,6 @@ yarn deploy <network>
 ```
 You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
 
-> [!NOTE] 
-> The `TEST_TOKENS_ADMIN_SECRET_KEY` in your `.env` file must be identical to the one used for Soroswap deployment to successfully add liquidity to the pools in Phoenix.
-
 when deployment is completed you can find the addresses in ./.soroban directory
 
 ## 5.- Publish deployed address.
@@ -126,6 +123,10 @@ bash scripts/deploySoroswap.sh <network>
 
 ### Add liquidity to the phoenix pools:
 If you want to create and add liquidity to the Phoenix pools, you can do so by running the following command:
+
+> [!IMPORTANT] 
+> The `TEST_TOKENS_ADMIN_SECRET_KEY` in your `.env` file must be identical to the one used for Soroswap deployment to successfully add liquidity to the pools in Phoenix.
+
 ```bash
 yarn add-liquidity:phoenix <network> <number of tokens>*
 ```
