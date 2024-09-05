@@ -1,6 +1,10 @@
 # Soroswap Aggregator 
 
-The Soroswap Aggregator Contract currently aggregates the pools from the Soroswap.Finance protocol and Phoenix protocol.
+The Soroswap Aggregator Contract currently aggregates different Soroban based AMMs
+
+Check the documentation in https://docs.soroswap.finance/ and find the Audit Report by [Runtime Verification]() in [./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and a Summary in [./audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf)
+
+# Setup and Deployment
 
 **For standalone development read #Development section**
 
