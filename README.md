@@ -2,7 +2,7 @@
 
 The Soroswap Aggregator Contract currently aggregates different Soroban based AMMs
 
-Check the documentation in https://docs.soroswap.finance/ and the [Security Audit Report](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and the [Security Audit Findings Summary](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf) written by [Runtime Verification](https://runtimeverification.com).
+Check the documentation in https://docs.soroswap.finance/ and find the Audit Report by [Runtime Verification]() in [./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and a Summary in [./audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf)
 
 # Setup and Deployment
 
@@ -138,3 +138,8 @@ This will create pairs with all tokens listed in the [Soroswap tokens list](http
 
 > [!NOTE] 
 > *The number of tokens is optional, if not provided, the script will add liquidity to all the pools.
+
+### Add new protocol as submodule
+```bash
+git submodule add <remote_url> <destination_folder>
+```
