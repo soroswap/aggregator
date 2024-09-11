@@ -19,10 +19,10 @@ use soroban_sdk::{
 #[allow(clippy::too_many_arguments)]
 pub mod factory {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_factory.wasm"
+        file = "./aqua_contracts/aqua_factory.wasm"
     );
 }
-use crate::test::phoenix_setup::factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
+use crate::test::aqua_setup::factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
 
 pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     let factory_wasm = e.deployer().upload_contract_wasm(factory::WASM);
@@ -32,19 +32,19 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
 }
 
-pub use factory::Client as PhoenixFactory;
+pub use factory::Client as AquaFactory;
 
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
 pub mod multihop {
-    soroban_sdk::contractimport!(file = "./phoenix_contracts/phoenix_multihop.wasm");
+    soroban_sdk::contractimport!(file = "./aqua_contracts/aqua_multihop.wasm");
     pub type MultihopClient<'a> = Client<'a>;
 }
 pub use multihop::MultihopClient; 
 
 pub fn install_multihop_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_multihop.wasm"
+        file = "./aqua_contracts/aqua_multihop.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -66,7 +66,7 @@ pub fn deploy_multihop_contract<'a>(
 
 pub mod token_contract {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/soroban_token_contract.wasm"
+        file = "./aqua_contracts/soroban_token_contract.wasm"
     );
 }
 
@@ -89,7 +89,7 @@ pub use token_contract::Client as TokenClient;
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/soroban_token_contract.wasm"
+        file = "./aqua_contracts/soroban_token_contract.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -104,7 +104,7 @@ pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract
 #[allow(clippy::too_many_arguments)]
 pub mod lp_contract {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_pool.wasm"
+        file = "./aqua_contracts/aqua_pool.wasm"
     );
 }
 
@@ -118,7 +118,7 @@ pub fn install_lp_contract(env: &Env) -> BytesN<32> {
 #[allow(clippy::too_many_arguments)]
 pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_stake.wasm"
+        file = "./aqua_contracts/aqua_stake.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -135,9 +135,9 @@ pub fn deploy_and_mint_tokens<'a>(
 }
 
 
-pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFactory<'a> {
+pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> AquaFactory<'a> {
     let factory_addr = deploy_factory_contract(&env, &admin.clone());
-    let factory_client = PhoenixFactory::new(env, &factory_addr);
+    let factory_client = AquaFactory::new(env, &factory_addr);
     let multihop_wasm_hash = install_multihop_wasm(env);
     let whitelisted_accounts = vec![env, admin.clone()];
 
@@ -160,7 +160,7 @@ pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFa
 #[allow(clippy::too_many_arguments)]
 pub fn deploy_and_initialize_lp(
     env: &Env,
-    factory: &PhoenixFactory,
+    factory: &AquaFactory,
     admin: Address,
     mut token_a: Address,
     mut token_a_amount: i128,
@@ -216,10 +216,10 @@ pub fn deploy_and_initialize_lp(
 }
 
 
-pub struct PhoenixTest<'a> {
+pub struct AquaTest<'a> {
     pub env: Env,
     pub multihop_client: MultihopClient<'a>,
-    pub factory_client: PhoenixFactory<'a>,
+    pub factory_client: AquaFactory<'a>,
     pub token_0: TokenClient<'a>,
     pub token_1: TokenClient<'a>,
     pub token_2: TokenClient<'a>,
@@ -228,8 +228,8 @@ pub struct PhoenixTest<'a> {
     pub admin: Address
 }
 
-impl<'a> PhoenixTest<'a> {
-    pub fn phoenix_setup() -> Self {
+impl<'a> AquaTest<'a> {
+    pub fn aqua_setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
         env.budget().reset_unlimited();
@@ -289,7 +289,7 @@ impl<'a> PhoenixTest<'a> {
         assert_eq!(token_2.balance(&user), 0i128);
         assert_eq!(token_3.balance(&user), 0i128);
 
-    PhoenixTest {
+    AquaTest {
             env: env.clone(),
             multihop_client,
             factory_client,
