@@ -21,6 +21,13 @@ git clone --recurse-submodules http://github.com/soroswap/aggregator.git
 > [!TIP]
 > If you forgot to clone with the `--recurse-submodules` flag, you can run `git submodule update --init --recursive` to get the submodules.
 
+> [!NOTE]
+If there was a Testnet reset, and the soroswap/core repo has new Tesnet deployments for test tokens, you want to bring those changes
+```
+cd protocols/soroswap/
+git pull origin main
+```
+
 1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
 ```bash
 cp .env.example .env
