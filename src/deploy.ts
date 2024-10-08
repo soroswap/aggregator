@@ -8,7 +8,7 @@ import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
 
 export async function deployAndInitAggregator(addressBook: AddressBook) {
-  if(network == 'mainnet') throw new Error('Mainnet not yet supported')
+  // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   await airdropAccount(loadedConfig.admin);
 
   console.log('-------------------------------------------------------');

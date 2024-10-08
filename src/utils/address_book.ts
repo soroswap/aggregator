@@ -24,15 +24,21 @@ export class AddressBook {
    */
   static loadFromFile(network: string, addressBookPath: string = '../../.soroban') {
     const fileName = `${addressBookPath}/${network}.contracts.json`;
+    
+    
     try {
       const contractFile = readFileSync(path.join(__dirname, fileName));
+      
       const contractObj = JSON.parse(contractFile.toString());
+      
       return new AddressBook(
         new Map(Object.entries(contractObj.ids)),
         new Map(Object.entries(contractObj.hashes)),
         fileName
       );
+      
     } catch {
+      
       // unable to load file, it likely doesn't exist
       return new AddressBook(new Map(), new Map(), fileName);
     }
