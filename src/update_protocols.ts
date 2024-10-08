@@ -4,7 +4,7 @@ import { invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 
 export async function updateAdapters(addressBook: AddressBook) {
-  if(network == 'mainnet') throw new Error('Mainnet not yet supported')
+  // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   
   //   pub struct Adapter {
   //     pub protocol_id: String,

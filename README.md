@@ -124,6 +124,11 @@ bash scripts/run.sh
 yarn test:manual <network>
 ```
 
+## Publish Phoenix Aggregator in Mainnet
+```
+yarn build && yarn deploy-phoenix-adapter mainnet
+
+```
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
 
