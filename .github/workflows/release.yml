@@ -19,13 +19,13 @@ jobs:
   release-soroswap-aggregator:
     uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
     with:
-      release_name: ${{ github.ref_name }}                        # use git tag as unique release name
-      release_description: 'Soroswap Aggregator contract release' # some boring placeholder text to attach
-      relative_path: './contracts/aggregator'                   # relative path to your really awesome contract
+      release_name: ${{ github.ref_name }}
+      release_description: 'Soroswap Aggregator contract release'
+      relative_path: './contracts/aggregator'
       package: "soroswap-aggregator"
-      make_target: './Makefile'                # make target to invoke
-    secrets:  # the authentication token will be automatically created by GitHub
-      release_token: ${{ secrets.GITHUB_TOKEN }}                # don't modify this line
+      make_target: './Makefile'
+    secrets:
+      release_token: ${{ secrets.GITHUB_TOKEN }}
   release-soroswap-aggregator-deployer:
     uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
     with:
@@ -53,16 +53,6 @@ jobs:
       release_description: 'Soroswap Aggregator contract release'
       relative_path: './contracts/adapters/phoenix'
       package: "phoenix-adapter"
-      make_target: './Makefile'
-    secrets:
-      release_token: ${{ secrets.GITHUB_TOKEN }}
-  release-adapter-interface:
-    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
-    with:
-      release_name: ${{ github.ref_name }}
-      release_description: 'Soroswap Aggregator contract release'
-      relative_path: './contracts/adapters/interface'
-      package: "adapter-interface"
       make_target: './Makefile'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
