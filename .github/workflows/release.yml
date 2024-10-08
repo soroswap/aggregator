@@ -21,9 +21,9 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}                        # use git tag as unique release name
       release_description: 'Soroswap Aggregator contract release' # some boring placeholder text to attach
-      relative_path: '["contracts/aggregator"]'                   # relative path to your really awesome contract
+      relative_path: './contracts/aggregator'                   # relative path to your really awesome contract
       package: "soroswap-aggregator"
-      make_target: 'contracts/aggregator/Makefile'                # make target to invoke
+      make_target: './Makefile'                # make target to invoke
     secrets:  # the authentication token will be automatically created by GitHub
       release_token: ${{ secrets.GITHUB_TOKEN }}                # don't modify this line
   release-soroswap-aggregator-deployer:
@@ -31,9 +31,9 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'Soroswap Aggregator contract release'
-      relative_path: '["contracts/deployer"]'
+      relative_path: './contracts/deployer'
       package: "soroswap-aggregator-deployer"
-      make_target: 'contracts/deployer/Makefile'
+      make_target: './Makefile'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
   release-soroswap-adapter:
@@ -41,9 +41,9 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'Soroswap Aggregator contract release'
-      relative_path: '["contracts/adapters/soroswap"]'
+      relative_path: './contracts/adapters/soroswap'
       package: "soroswap-adapter"
-      make_target: 'contracts/adapters/soroswapMakefile'
+      make_target: './Makefile'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
   release-phoenix-adapter:
@@ -51,9 +51,9 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'Soroswap Aggregator contract release'
-      relative_path: '["contracts/adapters/phoenix"]'
+      relative_path: './contracts/adapters/phoenix'
       package: "phoenix-adapter"
-      make_target: 'contracts/adapters/phoenix/Makefile'
+      make_target: './Makefile'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
   release-adapter-interface:
@@ -61,8 +61,8 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'Soroswap Aggregator contract release'
-      relative_path: '["contracts/adapters/interface"]'
+      relative_path: './contracts/adapters/interface'
       package: "adapter-interface"
-      make_target: 'contracts/adapters/interface/Makefile'
+      make_target: './Makefile'
     secrets:
       release_token: ${{ secrets.GITHUB_TOKEN }}
