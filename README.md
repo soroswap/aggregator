@@ -60,6 +60,16 @@ cd /workspace/contracts
 make build
 ```
 
+### Compile other protocols
+If you are considering other protocol that have changed their wasm versions, upgrade them:
+For example, for phoenix:
+```
+cd protocols/phoenix-contracts/
+make build
+cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+```
+
+
 ## 2. Run Tests and Scout Audit
 ```
 cd /workspace/contracts/
