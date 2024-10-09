@@ -116,6 +116,19 @@ You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Ima
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
+If you deployed in Testnet. A new version of Phoenix will be deployed, so you will need to add liquidity to these pairs
+```
+yarn 
+```
+
+
+Run javascript tests
+```
+cd /workspace
+yarn test
+```
+
+
 ## 5.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
 

@@ -9,8 +9,11 @@ import {
   Operation, 
   scValToNative, 
   TransactionBuilder,
-  xdr, 
+  xdr 
 } from "@stellar/stellar-sdk";
+import type {
+  Option,
+} from "@stellar/stellar-sdk/contract";
 import { deployStellarAsset } from "../utils/contract.js";
 import { getCurrentTimePlusOneHour, signWithKeypair } from "../utils/tx.js";
 import * as PhoenixFactoryContract from '../protocols/phoenix/bindgins/factory_bindings.js';
@@ -278,11 +281,12 @@ const create_phoenix_pool_transaction = async (
     sender: phoenixAdmin.publicKey(),
     lp_init_info: {
       admin: phoenixAdmin.publicKey(),
+      swap_fee_bps: 0n,
       fee_recipient: loadedConfig.testUser.publicKey(),
       max_allowed_slippage_bps: 4000n,
+      default_slippage_bps: 2500n,
       max_allowed_spread_bps: 4000n,
       max_referral_bps: 5000n,
-      swap_fee_bps: 0n,
       stake_init_info: {
         manager: aggregatorAdmin.publicKey(),
         max_complexity: 10,
@@ -296,6 +300,11 @@ const create_phoenix_pool_transaction = async (
     },
     share_token_name: `TOKEN-LP-${firstAsset.code}/${secondAsset.code}`,
     share_token_symbol: `PLP-${firstAsset.code}/${secondAsset.code}`,
+    pool_type: PhoenixFactoryContract.PoolType.Xyk,
+    amp: 0n,
+    default_slippage_bps: 100n,
+    max_allowed_fee_bps: 2000n,
+
   });
   return await tx.signAndSend().catch((error:any)=>{
     throw new Error(error)
