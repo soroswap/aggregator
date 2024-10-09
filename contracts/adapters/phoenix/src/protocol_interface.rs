@@ -3,6 +3,7 @@
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
 use crate::storage::{get_protocol_address};
 use adapter_interface::{AdapterError};
+// use phoenix_contracts::PoolType;
 
 soroban_sdk::contractimport!(
     file = "./phoenix_contracts/phoenix_multihop.wasm"
@@ -37,7 +38,7 @@ fn convert_to_swaps(e: &Env, path: &Vec<Address>) -> Vec<Swap> {
         swaps.push_back(Swap {
           offer_asset: offer_asset.clone(), // asset being sold (token_in)
           ask_asset: ask_asset.clone(), // asset buying (token_out)
-          ask_asset_min_amount: None,
+          ask_asset_min_amount: None, 
         });
     }
 
@@ -50,7 +51,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     amount_out_min: &i128,
     path: &Vec<Address>, 
     to: &Address,
-    _deadline: &u64,
+    deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
     let phoenix_multihop_address = get_protocol_address(&e)?;
@@ -62,13 +63,32 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
     let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
+    let pool_type = PoolType::Xyk; // currently we only support XYK pools
+    
     // By using max_spread_bps = None, the Phoenix LP will use the maximum allowed slippage
     // amount_in is the amount being sold of the first token in the operations.
+
+    // fn swap(
+    //     env: Env,
+    //     recipient: Address,
+    //     // FIXM: Disable Referral struct
+    //     // referral: Option<Referral>,
+    //     operations: Vec<Swap>,
+    //     max_spread_bps: Option<i64>,
+    //     amount: i128,
+    //     pool_type: PoolType,
+    //     deadline: Option<u64>,
+    //     max_allowed_fee_bps: Option<i64>,
+    // );
     phoenix_multihop_client.swap(
         &to, // recipient: Address, 
         &operations, // operations: Vec<Swap>,
         &None, // max_spread_bps: Option<i64>.
-        &amount_in); //amout: i128. Amount being sold. Input from the user,
+        &amount_in, //amout: i128. Amount being sold. Input from the user,
+        &pool_type, // pool_type: PoolType,
+        &None, // deadline: Option<u64>,
+        &None, // max_allowed_fee_bps: Option<i64>,
+    ); 
         
     let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
@@ -101,6 +121,9 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
 
+    // let pool_type = PoolType::Xyk; // currently we only support XYK pools
+
+
     // We first need to get the "reverse_amount from phoenix.simulate_reverse_swap"
     // however here, if the path is [t0, t1, t2, t3, t4], the  operations should be
     // swap_0 = Swap{
@@ -128,9 +151,19 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     for op in operations.iter().rev() {
         operations_reversed.push_back(op.clone());
     }
+
+    // fn simulate_reverse_swap(
+    //     env: Env,
+    //     operations: Vec<Swap>,
+    //     amount: i128,
+    //     pool_type: PoolType,
+    // ) -> SimulateReverseSwapResponse;
+
     let reverse_simulated_swap = phoenix_multihop_client.simulate_reverse_swap(
         &operations_reversed, //operations: Vec<Swap>,
-        amount_out); //amount: i128,
+        amount_out, //amount: i128,
+        &PoolType::Xyk //PoolType,
+    ); 
     
     // TODO: Eliminate this check. The overall in max is checked by the Aggregator
     // Removing this check will reduce the amount of instructions/
@@ -139,11 +172,27 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         panic!("Amount of token in required is greater than the maximum amount expected");
     }
 
+    // fn swap(
+    //     env: Env,
+    //     recipient: Address,
+    //     // FIXM: Disable Referral struct
+    //     // referral: Option<Referral>,
+    //     operations: Vec<Swap>,
+    //     max_spread_bps: Option<i64>,
+    //     amount: i128,
+    //     pool_type: PoolType,
+    //     deadline: Option<u64>,
+    //     max_allowed_fee_bps: Option<i64>,
+    // );
     phoenix_multihop_client.swap(
         &to, // recipient: Address, 
         &operations, // operations: Vec<Swap>,
         &None, // max_spread_bps: Option<i64>.
-        &reverse_simulated_swap.offer_amount); //amout: i128. Amount being sold. Input from the user,
+        &reverse_simulated_swap.offer_amount, //amout: i128. Amount being sold. Input from the user,
+        &PoolType::Xyk, // pool_type: PoolType,
+        &None, // deadline: Option<u64>,
+        &None, // max_allowed_fee_bps: Option<i64>,
+    );
 
     // Here we trust in the amounts returned by Phoenix contracts
     let mut swap_amounts: Vec<i128> = Vec::new(e);
