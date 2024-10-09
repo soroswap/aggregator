@@ -259,7 +259,7 @@ pub fn deploy_and_initialize_lp(
         &PoolType::Xyk, //     pool_type: PoolType,
         &None::<u64>,//     amp: Option<u64>,
         &100i64, //     default_slippage_bps: i64,
-        &1_000,//     max_allowed_fee_bps: i64,
+        &2_000,//     max_allowed_fee_bps: i64,
     );
 
     let lp_client = lp_contract::Client::new(env, &lp);
