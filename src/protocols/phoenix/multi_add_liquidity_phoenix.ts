@@ -55,12 +55,34 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
           signTransaction: (tx: string) => signWithKeypair(tx, 'Test SDF Network ; September 2015', phoenixAdmin),
         });
 
-        const tx = await factory_contract.create_liquidity_pool({
+      //   factory.create_liquidity_pool(
+      //     &admin,
+      //     &lp_init_info,
+      //     &String::from_str(&env, "Pool"),
+      //     &String::from_str(&env, "PHO/BTC"),
+      //     &PoolType::Xyk,
+      //     &None::<u64>,
+      //     &100i64,
+      //     &1_000,
+      // );
+    //   fn create_liquidity_pool(
+    //     env: Env,
+    //     sender: Address,
+    //     lp_init_info: LiquidityPoolInitInfo,
+    //     share_token_name: String,
+    //     share_token_symbol: String,
+    //     pool_type: PoolType,
+    //     amp: Option<u64>,
+    //     default_slippage_bps: i64,
+    //     max_allowed_fee_bps: i64,
+    // ) 
+        const tx = await factory_contract.create_liquidity_pool({ 
           sender: phoenixAdmin.publicKey(),
           lp_init_info: {
             admin: phoenixAdmin.publicKey(),
             fee_recipient: phoenixAdmin.publicKey(),
             max_allowed_slippage_bps: 4000n,
+            default_slippage_bps: 2500n,
             max_allowed_spread_bps: 400n,
             max_referral_bps: 5000n,
             swap_fee_bps: 0n,
@@ -77,6 +99,10 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
           },
           share_token_name: `TOKEN${i}`,
           share_token_symbol: `TKN${i}`,
+          pool_type: PhoenixFactoryContract.PoolType.Xyk,
+          amp: 0n,
+    default_slippage_bps: 100n,
+    max_allowed_fee_bps: 2000n,
         });
         
         try {
@@ -94,12 +120,23 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
         const pairAddress = await invokeContract('phoenix_factory', addressBook, 'query_for_pool_by_token_pair', getPairParams, phoenixAdmin, true)
         console.log('🚀 « pairAddress:', scValToNative(pairAddress.result.retval));
 
-        console.log('Adding liquidity')
+        console.log('Adding liquidity') 
+        // fn provide_liquidity(
+    //     env: Env,
+    //     depositor: Address,
+    //     desired_a: Option<i128>,
+    //     min_a: Option<i128>,
+    //     desired_b: Option<i128>,
+    //     min_b: Option<i128>,
+    //     custom_slippage_bps: Option<i64>,
+    //     deadline: Option<u64>,
+    // );
         const addLiquidityParams: xdr.ScVal[] = [
           new Address(phoenixAdmin.publicKey()).toScVal(),
           nativeToScVal(2000000000000, { type: "i128" }),
           nativeToScVal(null),
           nativeToScVal(2000000000000, { type: "i128" }),
+          nativeToScVal(null),
           nativeToScVal(null),
           nativeToScVal(null)
         ]
