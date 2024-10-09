@@ -34,6 +34,8 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
 
 pub use factory::Client as PhoenixFactory;
 
+pub use factory::PoolType;
+
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
 pub mod multihop {
@@ -99,6 +101,19 @@ pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract
 }
 
 
+/* *************  STABLE CONTRACT  *************  */
+
+#[allow(clippy::too_many_arguments)]
+pub mod stable_contract {
+    soroban_sdk::contractimport!(
+        file = "./phoenix_contracts/phoenix_pool_stable.wasm"
+    );
+}
+
+pub fn install_stable_contract(env: &Env) -> BytesN<32> {
+    env.deployer().upload_contract_wasm(stable_contract::WASM)
+}
+
 /* *************  LP CONTRACT  *************  */
 
 #[allow(clippy::too_many_arguments)]
@@ -142,13 +157,27 @@ pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFa
     let whitelisted_accounts = vec![env, admin.clone()];
 
     let lp_wasm_hash = install_lp_contract(env);
+    let stable_wasm_hash = install_stable_contract(env);
     let stake_wasm_hash = install_stake_wasm(env);
     let token_wasm_hash = install_token_wasm(env);
 
-    factory_client.initialize(
+    // fn initialize(
+    //     env: Env,
+    //     admin: Address,
+    //     multihop_wasm_hash: BytesN<32>,
+    //     lp_wasm_hash: BytesN<32>,
+    //     stable_wasm_hash: BytesN<32>,
+    //     stake_wasm_hash: BytesN<32>,
+    //     token_wasm_hash: BytesN<32>,
+    //     whitelisted_accounts: Vec<Address>,
+    //     lp_token_decimals: u32,
+    // );
+
+    factory_client.initialize( 
         &admin.clone(),
         &multihop_wasm_hash,
         &lp_wasm_hash,
+        &stable_wasm_hash,
         &stake_wasm_hash,
         &token_wasm_hash,
         &whitelisted_accounts,
@@ -186,32 +215,74 @@ pub fn deploy_and_initialize_lp(
         max_complexity: 10u32,
     };
 
+    // pub struct LiquidityPoolInitInfo {
+    //     pub admin: Address,
+    //     pub swap_fee_bps: i64,
+    //     pub fee_recipient: Address,
+    //     pub max_allowed_slippage_bps: i64,
+    //     pub default_slippage_bps: i64,
+    //     pub max_allowed_spread_bps: i64,
+    //     pub max_referral_bps: i64,
+    //     pub token_init_info: TokenInitInfo,
+    //     pub stake_init_info: StakeInitInfo,
+    // }
+    
     let lp_init_info = LiquidityPoolInitInfo {
         admin: admin.clone(),
+        swap_fee_bps: fees.unwrap_or(0i64),
         fee_recipient: admin.clone(),
         max_allowed_slippage_bps: 5000,
+        default_slippage_bps: 2_500,
         max_allowed_spread_bps: 500,
-        swap_fee_bps: fees.unwrap_or(0i64),
         max_referral_bps: 5_000,
-        token_init_info,
         stake_init_info,
+        token_init_info,
     };
 
+    // fn create_liquidity_pool(
+    //     env: Env,
+    //     sender: Address,
+    //     lp_init_info: LiquidityPoolInitInfo,
+    //     share_token_name: String,
+    //     share_token_symbol: String,
+    //     pool_type: PoolType,
+    //     amp: Option<u64>,
+    //     default_slippage_bps: i64,
+    //     max_allowed_fee_bps: i64,
+    // ) -> Address;
+
     let lp = factory.create_liquidity_pool(
-        &admin.clone(),
-        &lp_init_info,
-        &String::from_str(env, "Pool"),
-        &String::from_str(env, "PHO/XLM"),
+        &admin.clone(), //     sender: Address,
+        &lp_init_info, //     lp_init_info: LiquidityPoolInitInfo,
+        &String::from_str(env, "Pool"),  //     share_token_name: String,
+        &String::from_str(env, "PHO/XLM"),//     share_token_symbol: String,
+        &PoolType::Xyk, //     pool_type: PoolType,
+        &None::<u64>,//     amp: Option<u64>,
+        &100i64, //     default_slippage_bps: i64,
+        &1_000,//     max_allowed_fee_bps: i64,
     );
 
     let lp_client = lp_contract::Client::new(env, &lp);
+
+    // fn provide_liquidity(
+    //     env: Env,
+    //     depositor: Address,
+    //     desired_a: Option<i128>,
+    //     min_a: Option<i128>,
+    //     desired_b: Option<i128>,
+    //     min_b: Option<i128>,
+    //     custom_slippage_bps: Option<i64>,
+    //     deadline: Option<u64>,
+    // );
+
     lp_client.provide_liquidity(
-        &admin.clone(),
-        &Some(token_a_amount),
-        &None,
-        &Some(token_b_amount),
-        &None,
-        &None::<i64>,
+        &admin.clone(), //     depositor: Address,
+        &Some(token_a_amount), //  desired_a: Option<i128>,
+        &None, //     min_a: Option<i128>,
+        &Some(token_b_amount), //     desired_b: Option<i128>,
+        &None, //     min_b: Option<i128>,
+        &None::<i64>, //     custom_slippage_bps: Option<i64>,
+        &None::<u64>, //     deadline: Option<u64>,
     );
 }
 
