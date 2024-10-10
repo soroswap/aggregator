@@ -369,6 +369,7 @@ const provide_phoenix_liquidity = async (phoenixAdmin: Keypair, pairAddress:stri
     nativeToScVal(null),
     nativeToScVal(formatAmmount(amount_B), { type: "i128" }),
     nativeToScVal(null),
+    nativeToScVal(null),
     nativeToScVal(null)
   ]
 
