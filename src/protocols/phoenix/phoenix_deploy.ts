@@ -12,6 +12,12 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
   // Phoenix Multihop
   await installContract('phoenix_multihop', addressBook, phoenixAdmin);
   await bumpContractCode('phoenix_multihop', addressBook, phoenixAdmin);
+
+    
+  // Phoenix Stable
+  await installContract('phoenix_stable', addressBook, phoenixAdmin);
+  await bumpContractCode('phoenix_stable', addressBook, phoenixAdmin);
+  
   // Phoenix Token
   await installContract('phoenix_token', addressBook, phoenixAdmin);
   await bumpContractCode('phoenix_token', addressBook, phoenixAdmin);
@@ -52,7 +58,7 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
     new Address(phoenixAdmin.publicKey()).toScVal(), //admin
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_multihop'), 'hex')),
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_pool'), 'hex')),
-    // stable_wasm
+    nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stable'), 'hex')), // stable_wasm
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_stake'), 'hex')),
     nativeToScVal(Buffer.from(addressBook.getWasmHash('phoenix_token'), 'hex')),
     nativeToScVal([new Address(phoenixAdmin.publicKey())]),

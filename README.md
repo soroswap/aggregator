@@ -60,6 +60,16 @@ cd /workspace/contracts
 make build
 ```
 
+### Compile other protocols
+If you are considering other protocol that have changed their wasm versions, upgrade them:
+For example, for phoenix:
+```
+cd protocols/phoenix-contracts/
+make build
+cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+```
+
+
 ## 2. Run Tests and Scout Audit
 ```
 cd /workspace/contracts/
@@ -105,6 +115,19 @@ yarn deploy <network>
 You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
 
 when deployment is completed you can find the addresses in ./.soroban directory
+
+If you deployed in Testnet. A new version of Phoenix will be deployed, so you will need to add liquidity to these pairs
+```
+yarn 
+```
+
+
+Run javascript tests
+```
+cd /workspace
+yarn test
+```
+
 
 ## 5.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
