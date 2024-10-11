@@ -129,14 +129,20 @@ yarn test
 ```
 
 
-## 5.- Publish deployed address.
+## 5.- Publish Phoenix Aggregator in Mainnet
+```
+yarn build && yarn deploy-phoenix-adapter mainnet
+
+```
+
+## 6.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
 
 ```bash
 yarn publish_addresses <network>
 ```
 
-## 6.- Integration Test in Public Testnet. 
+## 7.- Integration Test in Public Testnet. 
 Its important to allways test contracts in a live testnet Blockchain.
 We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
 
@@ -145,12 +151,6 @@ You can test the Aggregator methods by running the following command:
 bash scripts/quickstart.sh standalone
 bash scripts/run.sh
 yarn test:manual <network>
-```
-
-## Publish Phoenix Aggregator in Mainnet
-```
-yarn build && yarn deploy-phoenix-adapter mainnet
-
 ```
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
