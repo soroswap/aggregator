@@ -13,13 +13,11 @@ export async function deployPhoenixAdapter(addressBook: AddressBook) {
   if(network != 'mainnet') throw new Error('Only Mainnet is Supported')
   // await airdropAccount(loadedConfig.admin);
 
-  // deployer has already been deployed.
-
-  // console.log('-------------------------------------------------------');
-  // console.log('Deploying Adapter using the deployer');
-  // console.log('-------------------------------------------------------');
-  // console.log("** Phoenix Adapter");
-  // await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
+  console.log('-------------------------------------------------------');
+  console.log('Deploying Adapter using the deployer');
+  console.log('-------------------------------------------------------');
+  console.log("** Phoenix Adapter");
+  await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
 
   
   
