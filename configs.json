@@ -1,6 +1,6 @@
 {
     "protocolVersion": "21",
-    "previewHash": "21.0.1-scout-audit@sha256:b2345967694194c07bc35e03f584788eff95e973659daa3f8ce324fdc621ca13",
+    "previewHash": "21.0.0@sha256:22c9f7fcca767937622a9070b8f28e3800c763ad3d4c3d6be7078dce21252ce4",
     "quickstartHash": "v426-latest-amd64@sha256:274395daab6fa8033b9213f152d56699358917fb01d7c7e95392a37fc00c9d01",
     "networkConfig": [
         {
