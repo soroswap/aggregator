@@ -31,7 +31,7 @@ const CONTRACT_REL_PATH: object = {
   phoenix_token: '../../contracts/adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm',
   phoenix_pool: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool.wasm',
   phoenix_stake: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
-  phoenix_stable: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
+  phoenix_stable: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool_stable.wasm',
 };
 
 const network = process.argv[2];
@@ -123,7 +123,7 @@ export async function invokeCustomContract(
   source: Keypair,
   simulation?: boolean,
 ) {
-  //console.log('Invoking contract: ', contractId, ' with method: ', method);
+  console.log('Invoking contract: ', contractId, ' with method: ', method);
   const contractInstance = new Contract(contractId);
 
   const contractOperation = contractInstance.call(method, ...params);

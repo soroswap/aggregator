@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "deploy": "tsc && node dist/deploy.js",
+    "deploy-phoenix-adapter": "tsc && node dist/deploy_phoenix_adapter.js",
     "add-liquidity:phoenix": "tsc && node dist/protocols/phoenix/add_liquidity.js",
     "test": "tsc && node dist/test.js",
     "test:manual": "tsc && node dist/manual_testing/manual_tests.js",

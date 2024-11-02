@@ -4,6 +4,10 @@ The Soroswap Aggregator Contract currently aggregates different Soroban based AM
 
 Check the documentation in https://docs.soroswap.finance/ and find the Audit Report by [Runtime Verification]() in [./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and a Summary in [./audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf)
 
+
+For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
+
+
 # Setup and Deployment
 
 **For standalone development read #Development section**
@@ -20,6 +24,13 @@ git clone --recurse-submodules http://github.com/soroswap/aggregator.git
 ```
 > [!TIP]
 > If you forgot to clone with the `--recurse-submodules` flag, you can run `git submodule update --init --recursive` to get the submodules.
+
+> [!NOTE]
+If there was a Testnet reset, and the soroswap/core repo has new Tesnet deployments for test tokens, you want to bring those changes
+```
+cd protocols/soroswap/
+git pull origin main
+```
 
 1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
 ```bash
@@ -52,6 +63,16 @@ yarn
 cd /workspace/contracts
 make build
 ```
+
+### Compile other protocols
+If you are considering other protocol that have changed their wasm versions, upgrade them:
+For example, for phoenix:
+```
+cd protocols/phoenix-contracts/
+make build
+cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+```
+
 
 ## 2. Run Tests and Scout Audit
 ```
@@ -99,14 +120,33 @@ You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Ima
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
-## 5.- Publish deployed address.
+If you deployed in Testnet. A new version of Phoenix will be deployed, so you will need to add liquidity to these pairs
+```
+yarn 
+```
+
+
+Run javascript tests
+```
+cd /workspace
+yarn test
+```
+
+
+## 5.- Publish Phoenix Aggregator in Mainnet
+```
+yarn build && yarn deploy-phoenix-adapter mainnet
+
+```
+
+## 6.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
 
 ```bash
 yarn publish_addresses <network>
 ```
 
-## 6.- Integration Test in Public Testnet. 
+## 7.- Integration Test in Public Testnet. 
 Its important to allways test contracts in a live testnet Blockchain.
 We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
 
@@ -116,7 +156,6 @@ bash scripts/quickstart.sh standalone
 bash scripts/run.sh
 yarn test:manual <network>
 ```
-
 ## Development
 When deploying to any network other than mainnet the script will also deploy Phoenix Protocol for testing purposes
 
