@@ -5,7 +5,7 @@ The Soroswap Aggregator Contract currently aggregates different Soroban based AM
 Check the documentation in https://docs.soroswap.finance/ and the [Security Audit Report](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and the [Security Audit Findings Summary](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf) written by [Runtime Verification](https://runtimeverification.com).
 
 
-For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
+For Deployed address check the [`./public/mainnet.contracts.json`](./public/mainnet.contracts.json)
 
 
 # Setup and Deployment
@@ -17,7 +17,7 @@ For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
 
 ## 1. Setup
 
-1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
+1.1 Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
 
 ```bash
 git clone --recurse-submodules http://github.com/soroswap/aggregator.git
@@ -45,7 +45,7 @@ For `MAINNET_RPC_URL`, you will need to subscribe to one of the Stellar Mainnet 
 bash scripts/quickstart.sh standalone # or futurenet or testnet
 ```
 
-1.3. In another terminal, to enter the docker container
+1.3 In another terminal, to enter the docker container
 
 ```bash
 bash scripts/run.sh
