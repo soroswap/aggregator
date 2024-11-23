@@ -1,11 +1,14 @@
 # Soroswap Aggregator 
 
-The Soroswap Aggregator Contract currently aggregates different Soroban based AMMs
+The Soroswap Aggregator aggregates liquidity from different Soroban based AMMs
 
-Check the documentation in https://docs.soroswap.finance/ and the [Security Audit Report](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and the [Security Audit Findings Summary](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf) written by [Runtime Verification](https://runtimeverification.com).
+📚 Documentation: [Soroswap Documentation](https://docs.soroswap.finance/)
 
+🔒 Audit Report: [Runtime Verification](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf)
 
-For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
+📑 Audit Summary: [Runtime Verification](./audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf)
+
+🌐 Deployed Address: [`./public/mainnet.json`](./public/mainnet.json)
 
 
 # Setup and Deployment
@@ -66,13 +69,21 @@ make build
 
 ### Compile other protocols
 If you are considering other protocol that have changed their wasm versions, upgrade them:
-For example, for phoenix:
+
+For Phoenix:
 ```
 cd protocols/phoenix-contracts/
 make build
 cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
 ```
 
+For Aqua:
+```
+cd protocols/aqua
+npm install -g @go-task/cli
+task build
+cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/aqua/aqua_contracts/
+```
 
 ## 2. Run Tests and Scout Audit
 ```
@@ -177,3 +188,8 @@ This will create pairs with all tokens listed in the [Soroswap tokens list](http
 
 > [!NOTE] 
 > *The number of tokens is optional, if not provided, the script will add liquidity to all the pools.
+
+### Add new protocol as submodule
+```bash
+git submodule add <remote_url> <destination_folder>
+```

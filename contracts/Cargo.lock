@@ -40,6 +40,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aqua-adapter"
+version = "0.1.0"
+dependencies = [
+ "adapter-interface",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "arbitrary"
 version = "1.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
