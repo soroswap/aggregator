@@ -4,3 +4,6 @@
 [submodule "protocols/phoenix-contracts"]
 	path = protocols/phoenix-contracts
 	url = https://github.com/Phoenix-Protocol-Group/phoenix-contracts/
+[submodule "protocols/CometDEX"]
+	path = protocols/CometDEX
+	url = https://github.com/mootz12/comet-contracts-v1/
