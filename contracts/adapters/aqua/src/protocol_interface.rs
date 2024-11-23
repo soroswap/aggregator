@@ -5,7 +5,7 @@ use crate::storage::{get_protocol_address};
 use adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
-    file = "./aqua_contracts/aqua_multihop.wasm"
+    file = "./aqua_contracts/soroban_liquidity_pool_swap_router_contract.wasm"
 );
 pub type AquaMultihopClient<'a> = Client<'a>;
 
