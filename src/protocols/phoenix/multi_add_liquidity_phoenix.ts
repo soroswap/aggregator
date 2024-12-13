@@ -1,4 +1,11 @@
-import { Address, Keypair, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
+import {
+  Address,
+  Keypair,
+  nativeToScVal,
+  Networks,
+  scValToNative,
+  xdr,
+} from '@stellar/stellar-sdk';
 import { mintToken } from '../../mint_token.js';
 import { AddressBook } from '../../utils/address_book.js';
 import { getTokenBalance, invokeContract, invokeCustomContract } from '../../utils/contract.js';
@@ -8,9 +15,15 @@ import * as PhoenixFactoryContract from './bindgins/factory_bindings.js';
 
 const network = process.argv[2];
 
-export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook: TokensBook, addressBook: AddressBook, phoenixAdmin: Keypair, tokensAdminAccount: Keypair) {
+export async function phoenixMultiAddLiquidity(
+  numberOfPaths: number,
+  tokensBook: TokensBook,
+  addressBook: AddressBook,
+  phoenixAdmin: Keypair,
+  tokensAdminAccount: Keypair
+) {
   const tokens = tokensBook.getTokensByNetwork(network);
-  if(!tokens || tokens.length <= 0) throw new Error('No tokens found in the tokens book');
+  if (!tokens || tokens.length <= 0) throw new Error('No tokens found in the tokens book');
   console.log('🚀 « tokens:', tokens[0]);
 
   try {
@@ -29,54 +42,62 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
       for (let i = 0; i < path.length - 1; i++) {
         let tokenA = path[i];
         let tokenB = path[i + 1];
-        
+
         if (tokenA > tokenB) {
           [tokenA, tokenB] = [tokenB, tokenA];
         }
-        
+
         // Mint tokens
         // export async function mintToken(contractId: string, amount: number, to: string, admin: Keypair) {
 
         await mintToken(tokenA, 25000000000000, phoenixAdmin.publicKey(), tokensAdminAccount);
         await mintToken(tokenB, 25000000000000, phoenixAdmin.publicKey(), tokensAdminAccount);
-        
-        console.log('-------------------------------------------------------');
-        console.log("Adding liquidity for pair: ", tokenA, "|", tokenB);
-        
-        console.log("TOKEN A Balance:", await getTokenBalance(tokenA, phoenixAdmin.publicKey(), phoenixAdmin));
-        console.log("TOKEN B Balance:", await getTokenBalance(tokenB, phoenixAdmin.publicKey(), phoenixAdmin));
 
+        console.log('-------------------------------------------------------');
+        console.log('Adding liquidity for pair: ', tokenA, '|', tokenB);
+
+        console.log(
+          'TOKEN A Balance:',
+          await getTokenBalance(tokenA, phoenixAdmin.publicKey(), phoenixAdmin)
+        );
+        console.log(
+          'TOKEN B Balance:',
+          await getTokenBalance(tokenB, phoenixAdmin.publicKey(), phoenixAdmin)
+        );
 
         const factory_contract = new PhoenixFactoryContract.Client({
           publicKey: phoenixAdmin.publicKey()!,
-          contractId: addressBook.getContractId("phoenix_factory"),
+          contractId: addressBook.getContractId('phoenix_factory'),
           networkPassphrase: 'Test SDF Network ; September 2015',
-          rpcUrl: "https://soroban-testnet.stellar.org/",
-          signTransaction: (tx: string) => signWithKeypair(tx, 'Test SDF Network ; September 2015', phoenixAdmin),
+          rpcUrl: 'https://soroban-testnet.stellar.org/',
+          signTransaction: async (tx: string) => {
+            const signedTxXdr = await signWithKeypair(tx, Networks.TESTNET, phoenixAdmin);
+            return { signedTxXdr };
+          },
         });
 
-      //   factory.create_liquidity_pool(
-      //     &admin,
-      //     &lp_init_info,
-      //     &String::from_str(&env, "Pool"),
-      //     &String::from_str(&env, "PHO/BTC"),
-      //     &PoolType::Xyk,
-      //     &None::<u64>,
-      //     &100i64,
-      //     &1_000,
-      // );
-    //   fn create_liquidity_pool(
-    //     env: Env,
-    //     sender: Address,
-    //     lp_init_info: LiquidityPoolInitInfo,
-    //     share_token_name: String,
-    //     share_token_symbol: String,
-    //     pool_type: PoolType,
-    //     amp: Option<u64>,
-    //     default_slippage_bps: i64,
-    //     max_allowed_fee_bps: i64,
-    // ) 
-        const tx = await factory_contract.create_liquidity_pool({ 
+        //   factory.create_liquidity_pool(
+        //     &admin,
+        //     &lp_init_info,
+        //     &String::from_str(&env, "Pool"),
+        //     &String::from_str(&env, "PHO/BTC"),
+        //     &PoolType::Xyk,
+        //     &None::<u64>,
+        //     &100i64,
+        //     &1_000,
+        // );
+        //   fn create_liquidity_pool(
+        //     env: Env,
+        //     sender: Address,
+        //     lp_init_info: LiquidityPoolInitInfo,
+        //     share_token_name: String,
+        //     share_token_symbol: String,
+        //     pool_type: PoolType,
+        //     amp: Option<u64>,
+        //     default_slippage_bps: i64,
+        //     max_allowed_fee_bps: i64,
+        // )
+        const tx = await factory_contract.create_liquidity_pool({
           sender: phoenixAdmin.publicKey(),
           lp_init_info: {
             admin: phoenixAdmin.publicKey(),
@@ -90,21 +111,21 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
               manager: phoenixAdmin.publicKey(),
               max_complexity: 10,
               min_bond: 6n,
-              min_reward: 3n
+              min_reward: 3n,
             },
             token_init_info: {
               token_a: tokenA,
               token_b: tokenB,
-            }
+            },
           },
           share_token_name: `TOKEN${i}`,
           share_token_symbol: `TKN${i}`,
           pool_type: PhoenixFactoryContract.PoolType.Xyk,
           amp: 0n,
-    default_slippage_bps: 100n,
-    max_allowed_fee_bps: 2000n,
+          default_slippage_bps: 100n,
+          max_allowed_fee_bps: 2000n,
         });
-        
+
         try {
           const result = await tx.signAndSend();
           console.log('🚀 « result:', result);
@@ -112,55 +133,79 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
           console.log('🚀 « error:', error);
         }
 
-        console.log("Getting pair address")
+        console.log('Getting pair address');
         const getPairParams: xdr.ScVal[] = [
           new Address(tokenA).toScVal(),
-          new Address(tokenB).toScVal()
-        ]
-        const pairAddress = await invokeContract('phoenix_factory', addressBook, 'query_for_pool_by_token_pair', getPairParams, phoenixAdmin, true)
+          new Address(tokenB).toScVal(),
+        ];
+        const pairAddress = await invokeContract(
+          'phoenix_factory',
+          addressBook,
+          'query_for_pool_by_token_pair',
+          getPairParams,
+          phoenixAdmin,
+          true
+        );
         console.log('🚀 « pairAddress:', scValToNative(pairAddress.result.retval));
 
-        console.log('Adding liquidity') 
+        console.log('Adding liquidity');
         // fn provide_liquidity(
-    //     env: Env,
-    //     depositor: Address,
-    //     desired_a: Option<i128>,
-    //     min_a: Option<i128>,
-    //     desired_b: Option<i128>,
-    //     min_b: Option<i128>,
-    //     custom_slippage_bps: Option<i64>,
-    //     deadline: Option<u64>,
-    // );
+        //     env: Env,
+        //     depositor: Address,
+        //     desired_a: Option<i128>,
+        //     min_a: Option<i128>,
+        //     desired_b: Option<i128>,
+        //     min_b: Option<i128>,
+        //     custom_slippage_bps: Option<i64>,
+        //     deadline: Option<u64>,
+        // );
         const addLiquidityParams: xdr.ScVal[] = [
           new Address(phoenixAdmin.publicKey()).toScVal(),
-          nativeToScVal(2000000000000, { type: "i128" }),
+          nativeToScVal(2000000000000, { type: 'i128' }),
           nativeToScVal(null),
-          nativeToScVal(2000000000000, { type: "i128" }),
+          nativeToScVal(2000000000000, { type: 'i128' }),
           nativeToScVal(null),
           nativeToScVal(null),
-          nativeToScVal(null)
-        ]
-        
-        await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addLiquidityParams, phoenixAdmin)
+          nativeToScVal(null),
+        ];
 
-        console.log("TOKEN A Balance AFTER:", await getTokenBalance(tokenA, phoenixAdmin.publicKey(), phoenixAdmin));
-        console.log("TOKEN B Balance AFTER:", await getTokenBalance(tokenB, phoenixAdmin.publicKey(), phoenixAdmin));
-      }      
+        await invokeCustomContract(
+          scValToNative(pairAddress.result.retval),
+          'provide_liquidity',
+          addLiquidityParams,
+          phoenixAdmin
+        );
+
+        console.log(
+          'TOKEN A Balance AFTER:',
+          await getTokenBalance(tokenA, phoenixAdmin.publicKey(), phoenixAdmin)
+        );
+        console.log(
+          'TOKEN B Balance AFTER:',
+          await getTokenBalance(tokenB, phoenixAdmin.publicKey(), phoenixAdmin)
+        );
+      }
     }
   } catch (error) {
     console.log('🚀 « error:', error);
-    
   }
 }
 
-function generatePaths(tokens: Asset[], startAddress: string, endAddress: string, numberOfPaths: number): string[][] {
+function generatePaths(
+  tokens: Asset[],
+  startAddress: string,
+  endAddress: string,
+  numberOfPaths: number
+): string[][] {
   // Filter out the start and end tokens from the list to avoid including them as intermediates
-  const intermediateTokens = tokens.filter(token => token.contract !== startAddress && token.contract !== endAddress);
+  const intermediateTokens = tokens.filter(
+    (token) => token.contract !== startAddress && token.contract !== endAddress
+  );
   console.log('🚀 « intermediateTokens:', intermediateTokens);
 
   // Function to generate a path
   const createPath = (intermediates: Asset[]): string[] => {
-    return [startAddress, ...intermediates.map(token => token.contract), endAddress];
+    return [startAddress, ...intermediates.map((token) => token.contract), endAddress];
   };
 
   // Store generated paths
