@@ -6,10 +6,12 @@ import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
+import { cometSetup } from './setup_comet.js';
 
 export async function deployAndInitAggregator(addressBook: AddressBook) {
   // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   await airdropAccount(loadedConfig.admin);
+
 
   console.log('-------------------------------------------------------');
   console.log('Deploying Deployer');
@@ -51,6 +53,11 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   // SAVE ADDRES IN ADDRESS BOOK
   addressBook.setContractId("soroswap_adapter", soroswapAdapterAddress)
 
+  console.log("** Comet Adapter");
+
+  await cometSetup(loadedConfig, addressBook)
+
+
   console.log('-------------------------------------------------------');
   console.log('Deploying Aggregator');
   console.log('-------------------------------------------------------');
@@ -63,6 +70,11 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
       address: new Address(addressBook.getContractId('soroswap_adapter')),
       paused: false
     },
+    {
+      protocol_id: "comet_blend",
+      address: new Address(addressBook.getContractId('comet_adapter')),
+      paused: false
+    }
   ];
 
   const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
@@ -130,7 +142,7 @@ const soroswapAddressBook = AddressBook.loadFromFile(
   `../../protocols/soroswap/${soroswapDir}`
 );
 const soroswapTokensBook = TokensBook.loadFromFile(
-  `./protocols/soroswap/${soroswapDir}`
+  `../../protocols/soroswap/${soroswapDir}`
 );
 
 const loadedConfig = config(network);

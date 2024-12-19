@@ -1,8 +1,8 @@
-import { Account, Keypair, SorobanRpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
+import { Account, Keypair, rpc, Transaction, TransactionBuilder, xdr } from '@stellar/stellar-sdk';
 import { config } from './env_config.js';
 
-type txResponse = SorobanRpc.Api.SendTransactionResponse | SorobanRpc.Api.GetTransactionResponse;
-type txStatus = SorobanRpc.Api.SendTransactionStatus | SorobanRpc.Api.GetTransactionStatus;
+type txResponse = rpc.Api.SendTransactionResponse | rpc.Api.GetTransactionResponse;
+type txStatus = rpc.Api.SendTransactionStatus | rpc.Api.GetTransactionStatus;
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -11,10 +11,10 @@ export async function signWithKeypair(
   txXdr: string,
   passphrase: string,
   source: Keypair
-): Promise<string> {
+): Promise<{signedTxXdr: string}> {
   const tx = new Transaction(txXdr, passphrase);
   tx.sign(source);
-  return tx.toXDR();
+  return {signedTxXdr: tx.toXDR()};
 }
 
 export async function invoke(
@@ -36,7 +36,7 @@ export async function invoke(
 export async function invokeTransaction(tx: Transaction, source: Keypair, sim: boolean) {
   // simulate the TX
   const simulation_resp = await loadedConfig.rpc.simulateTransaction(tx);
-  if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
+  if (rpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
     if(simulation_resp.error.includes("ExistingValue")) {throw new Error("ExistingValue")}
@@ -58,7 +58,7 @@ export async function invokeTransaction(tx: Transaction, source: Keypair, sim: b
       txResources.writeBytes()
     )
     .build();
-  const assemble_tx = SorobanRpc.assembleTransaction(tx, simulation_resp);
+  const assemble_tx = rpc.assembleTransaction(tx, simulation_resp);
   sim_tx_data.resourceFee(
     xdr.Int64.fromString((Number(sim_tx_data.resourceFee().toString()) + 100000).toString())
   );
