@@ -1,7 +1,7 @@
 extern crate std;
 use crate::error::AggregatorError;
 use crate::test::{
-    create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, new_update_adapters_addresses, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
+    create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, new_update_adapters_addresses, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
 };
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
@@ -31,7 +31,7 @@ fn test_update_adapters_add_new() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
@@ -49,7 +49,7 @@ fn test_update_adapters_add_new() {
         updated_protocols.get(0),
         initialize_aggregator_addresses.get(0)
     );
-    assert_eq!(updated_protocols.get(2), update_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(3), update_aggregator_addresses.get(0));
     // test both are not paused
     for protocol_address in updated_protocols {
         let is_protocol_paused = test
@@ -65,7 +65,7 @@ fn test_update_adapters_overwrite() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
@@ -93,7 +93,7 @@ fn test_update_adapters_overwrite() {
     // but the other protocol is still the same
     let updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols.get(0), update_aggregator_addresses.get(0));
-    assert_eq!(updated_protocols.get(2), new_aggregator_addresses.get(0));
+    assert_eq!(updated_protocols.get(3), new_aggregator_addresses.get(0));
 
     // test both are not paused
     for protocol_address in updated_protocols {

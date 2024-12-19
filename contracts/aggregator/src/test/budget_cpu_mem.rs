@@ -1,5 +1,5 @@
 extern crate std;
-use crate::test::{create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
+use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
 use soroban_sdk::{String, Vec, Address, testutils::Address as _};
 use super::soroswap_aggregator_contract::DexDistribution;
 
@@ -61,7 +61,7 @@ fn budget() {
 
     
     //swap_exact_tokens_for_tokens TWO PROTOCOLS SOROSWAP AND PHOENIX- ONE HOP
-    let update_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let update_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
 
     test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
