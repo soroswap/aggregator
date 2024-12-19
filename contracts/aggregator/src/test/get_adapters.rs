@@ -1,13 +1,13 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::test::{SoroswapAggregatorTest, create_soroswap_phoenix_addresses_for_deployer};
+use crate::test::{SoroswapAggregatorTest, create_soroswap_phoenix_comet_addresses_for_deployer};
 
 #[test]
 fn test_get_adapters() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
 
     let result = test.aggregator_contract.get_adapters();
 
