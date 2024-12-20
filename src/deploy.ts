@@ -6,7 +6,7 @@ import { AddressBook } from './utils/address_book.js';
 import { airdropAccount, deployContract, installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
-import { cometSetup } from './setup_comet.js';
+import { cometSetup } from './protocols/comet/comet_setup.js';
 
 export async function deployAndInitAggregator(addressBook: AddressBook) {
   // if(network == 'mainnet') throw new Error('Mainnet not yet supported')

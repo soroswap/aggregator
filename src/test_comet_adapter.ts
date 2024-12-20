@@ -4,7 +4,6 @@ import { invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 import { getCurrentTimePlusOneHour } from './utils/tx.js';
 import { TokensBook } from './utils/tokens_book.js';
-import { cometSetup } from './setup_comet.js';
 
 export async function testCometAdapter(addressBook: AddressBook) {
   console.log('-------------------------------------------------------');
