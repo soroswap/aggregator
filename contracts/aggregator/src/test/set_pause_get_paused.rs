@@ -2,7 +2,7 @@
 extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 // use crate::models::Adapter;
-use crate::test::{create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
+use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{vec, String, Vec};
 
 use super::soroswap_aggregator_contract::{Adapter, AggregatorError};
@@ -25,7 +25,7 @@ fn test_set_pause_true_false() {
 
     //Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
@@ -54,6 +54,11 @@ fn test_set_pause_true_false() {
             address: test.phoenix_adapter_contract.address.clone(),
             paused: false,
         },
+        Adapter {
+            protocol_id: String::from_str(&test.env, "comet"),
+            address: test.comet_adapter_contract.address.clone(),
+            paused: false,
+        },
     ];
     assert_eq!(updated_protocols, expected_protocols_vec);
 
@@ -80,6 +85,11 @@ fn test_set_pause_true_false() {
             address: initialize_aggregator_addresses.get(1).unwrap().address,
             paused: false,
         },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(2).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(2).unwrap().address,
+            paused: false,
+        },
         new_protocol_0.get(0).unwrap(),
     ];
 
@@ -100,6 +110,11 @@ fn test_set_pause_true_false() {
         Adapter {
             protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
             address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(2).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(2).unwrap().address,
             paused: false,
         },
         new_protocol_0.get(0).unwrap(),
@@ -123,6 +138,11 @@ fn test_set_pause_true_false() {
         Adapter {
             protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
             address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(2).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(2).unwrap().address,
             paused: false,
         },
         new_protocol_0.get(0).unwrap(),
@@ -168,6 +188,11 @@ fn test_set_pause_true_false() {
             address: initialize_aggregator_addresses.get(1).unwrap().address,
             paused: false,
         },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(2).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(2).unwrap().address,
+            paused: false,
+        },
         new_protocol_0.get(0).unwrap(),
         Adapter {
             protocol_id: new_protocol_1.get(0).unwrap().protocol_id,
@@ -209,6 +234,11 @@ fn test_set_pause_true_false() {
         Adapter {
             protocol_id: initialize_aggregator_addresses.get(1).unwrap().protocol_id,
             address: initialize_aggregator_addresses.get(1).unwrap().address,
+            paused: false,
+        },
+        Adapter {
+            protocol_id: initialize_aggregator_addresses.get(2).unwrap().protocol_id,
+            address: initialize_aggregator_addresses.get(2).unwrap().address,
             paused: false,
         },
         new_protocol_0.get(0).unwrap(),

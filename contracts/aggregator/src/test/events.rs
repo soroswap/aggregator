@@ -2,7 +2,7 @@
 use soroban_sdk::{symbol_short, testutils::{Events, Address as _}, vec, Address, IntoVal, String, Vec};
 
 use crate::test::{
-    create_protocols_addresses, create_soroswap_phoenix_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
+    create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
 };
 
 use crate::event::InitializedEvent;
@@ -84,7 +84,7 @@ fn update_adapters_event() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
     // test.aggregator_contract
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 

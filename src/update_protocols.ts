@@ -3,7 +3,13 @@ import { AddressBook } from './utils/address_book.js';
 import { invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 
-export async function updateAdapters(addressBook: AddressBook) {
+interface UpdateAdapterProps {
+  protocol_id: string, 
+  address: Address, 
+  paused: boolean
+}
+
+export async function updateAdapters(addressBook: AddressBook, adapters: UpdateAdapterProps[]) {
   // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
   
   //   pub struct Adapter {
@@ -11,13 +17,15 @@ export async function updateAdapters(addressBook: AddressBook) {
   //     pub address: Address,
   //     pub paused: bool,
   // }
-  const adaptersVec = [
-    {
-      protocol_id: "phoenix",
-      address: new Address(addressBook.getContractId('phoenix_adapter')),
-      paused: false
-    },
-  ];
+  
+  const adaptersVec: UpdateAdapterProps[] = [];
+  for (const adapter of adapters) {
+    adaptersVec.push({
+      protocol_id: adapter.protocol_id,
+      address: adapter.address,
+      paused: adapter.paused,
+    });
+  }
 
   const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
     return xdr.ScVal.scvMap([

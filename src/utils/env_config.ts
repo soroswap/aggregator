@@ -1,4 +1,4 @@
-import { Horizon, Keypair, SorobanRpc } from '@stellar/stellar-sdk';
+import { Horizon, Keypair, rpc } from '@stellar/stellar-sdk';
 import dotenv from "dotenv";
 import * as fs from "fs";
 import path from "path";
@@ -22,8 +22,8 @@ interface Config {
   networkConfig: NetworkConfig[];
 }
 
-class EnvConfig {
-  rpc: SorobanRpc.Server;
+export class EnvConfig {
+  rpc: rpc.Server;
   horizonRpc: Horizon.Server;
   passphrase: string;
   friendbot: string | undefined;
@@ -33,7 +33,7 @@ class EnvConfig {
   testUser: Keypair;
 
   constructor(
-    rpc: SorobanRpc.Server,
+    rpc: rpc.Server,
     horizonRpc: Horizon.Server,
     passphrase: string,
     friendbot: string | undefined,
@@ -106,8 +106,10 @@ class EnvConfig {
 
     const allowHttp = network === "standalone";
 
+    console.log(admin)
+
     return new EnvConfig(
-      new SorobanRpc.Server(rpc_url, { allowHttp }),
+      new rpc.Server(rpc_url, { allowHttp }),
       new Horizon.Server(horizon_rpc_url, {allowHttp}),
       passphrase,
       friendbot_url,

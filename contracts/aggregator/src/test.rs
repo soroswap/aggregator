@@ -2,6 +2,8 @@
 extern crate std;
 use crate::models::Adapter;
 use crate::{SoroswapAggregator, SoroswapAggregatorClient};
+use comet_setup::comet_adapter::CometAdapterClient;
+use comet_setup::{create_comet_adapter, create_comet_factory, deploy_and_init_comet_pool};
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
     vec, Address, BytesN, Env, String, Vec, Symbol, Val, IntoVal
@@ -24,6 +26,8 @@ use phoenix_setup::{
     deploy_multihop_contract as phoenix_deploy_multihop_contract,
     SoroswapAggregatorAdapterForPhoenixClient
 };
+
+mod comet_setup;
 
 mod deployer_contract {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
@@ -95,7 +99,7 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
 //     ]
 // }
 
-pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address) -> Vec<AdapterFromWasm> {
+pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address, comet_adapter: Address) -> Vec<AdapterFromWasm> {
     vec![
         env,
         AdapterFromWasm {
@@ -106,6 +110,11 @@ pub fn create_soroswap_phoenix_addresses_for_deployer(env: &Env, soroswap_adapte
         AdapterFromWasm {
             protocol_id: String::from_str(env, "phoenix"),
             address: phoenix_adapter.clone(),
+            paused: false,
+        },
+        AdapterFromWasm {
+            protocol_id: String::from_str(env, "comet"),
+            address: comet_adapter.clone(),
             paused: false,
         },
     ]
@@ -165,6 +174,7 @@ pub struct SoroswapAggregatorTest<'a> {
     // soroswap_factory_contract: SoroswapFactoryClient<'a>,
     soroswap_adapter_contract: SoroswapAggregatorAdapterForSoroswapClient<'a>,
     phoenix_adapter_contract: SoroswapAggregatorAdapterForPhoenixClient<'a>,
+    comet_adapter_contract: CometAdapterClient<'a>,
     token_0: TokenClient<'a>,
     token_1: TokenClient<'a>,
     token_2: TokenClient<'a>,
@@ -313,6 +323,10 @@ impl<'a> SoroswapAggregatorTest<'a> {
             admin.clone(),
             &phoenix_factory_client.address);
 
+        /* INITIALIZE COMET FACTORY AND LP */
+        /************************************************/
+        let comet_factory: comet_setup::factory::Client<'_> = create_comet_factory(&env);
+        let comet_pair = deploy_and_init_comet_pool(&env, &admin, &vec![&env, token_0.address.clone(), token_2.address.clone()], comet_factory);
 
         // SETTING UP DEPLOYER
         let deployer_client = create_deployer(&env);
@@ -324,10 +338,12 @@ impl<'a> SoroswapAggregatorTest<'a> {
 
         let phoenix_adapter_contract = create_phoenix_adapter(&env, &deployer_client, phoenix_multihop_client.address.clone(), admin.clone());
 
+        let comet_adapter_contract = create_comet_adapter(&env, &deployer_client, comet_pair.address.clone(), admin.clone());
+
         let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
         
         // Deploy aggregator using deployer, and include an init function to call.
-        let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&env, soroswap_adapter_contract.address.clone(), phoenix_adapter_contract.address.clone());
+        let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&env, soroswap_adapter_contract.address.clone(), phoenix_adapter_contract.address.clone(), comet_adapter_contract.address.clone());
 
         // Convert the arguments into a Vec<Val>
         let init_fn_args: Vec<Val> = (admin.clone(), initialize_aggregator_addresses).into_val(&env);
@@ -350,6 +366,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
             // soroswap_factory_contract,
             soroswap_adapter_contract,
             phoenix_adapter_contract,
+            comet_adapter_contract,
             token_0,
             token_1,
             token_2,

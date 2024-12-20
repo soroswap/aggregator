@@ -51,7 +51,7 @@ export async function deployPhoenixAdapter(addressBook: AddressBook) {
   addressBook.setContractId("phoenix_adapter", phoenixAdapterAddress)
 
   console.log("Updating adapters on aggregator.. adding Phoenix")
-  await updateAdapters(addressBook);
+  await updateAdapters(addressBook, [{protocol_id: 'phoenix', address: new Address(phoenixAdapterAddress), paused: false}]);
 
 }
 
