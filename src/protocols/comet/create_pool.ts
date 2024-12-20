@@ -9,12 +9,17 @@ import { mintToken } from '../../mint_token.js';
 export async function createCometPool(addressBook: AddressBook, tokensBook:TokensBook, network: string, loadedConfig: EnvConfig,) {
   const tokens = tokensBook.getTokensByNetwork(network);
   if(!tokens || tokens.length <= 0) throw new Error('No tokens found in the tokens book');
-  console.log('🚀 « tokens:', tokens[0]);
+  console.log('🚀 « tokens:', tokens[3]);
   console.log('🚀 « tokens:', tokens[2]);
   console.log('creating comet pair...');
 
-  await mintToken(tokens[0].contract, 800_0000000, loadedConfig.admin.publicKey(), loadedConfig.tokenAdmin);
-  await mintToken(tokens[2].contract, 200_0000000, loadedConfig.admin.publicKey(), loadedConfig.tokenAdmin);
+  const tokenPair = [tokens[3].contract, tokens[2].contract];
+  if(tokens[2].contract > tokens[3].contract) {
+    tokenPair[0] = tokens[2].contract;
+    tokenPair[1] = tokens[3].contract;
+  }
+  await mintToken(tokenPair[0], 800_0000000, loadedConfig.admin.publicKey(), loadedConfig.tokenAdmin);
+  await mintToken(tokenPair[1], 200_0000000, loadedConfig.admin.publicKey(), loadedConfig.tokenAdmin);
   const createCometPairResponse = await invokeContract(
     'comet_factory',
     addressBook,
@@ -22,7 +27,7 @@ export async function createCometPool(addressBook: AddressBook, tokensBook:Token
     [
       nativeToScVal(randomBytes(32)), //bytes32 salt
       new Address(loadedConfig.admin.publicKey()).toScVal(), //controller
-      nativeToScVal([new Address(tokens[0].contract).toScVal(), new Address(tokens[2].contract).toScVal()]), //tokens
+      nativeToScVal([new Address(tokenPair[0]).toScVal(), new Address(tokenPair[1]).toScVal()]), //tokens
       nativeToScVal([  //weights
         nativeToScVal(8000000, { type: 'i128' }),
         nativeToScVal(2000000, { type: 'i128' }),

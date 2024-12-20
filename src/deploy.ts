@@ -74,6 +74,11 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
       protocol_id: "comet_blend",
       address: new Address(addressBook.getContractId('comet_adapter')),
       paused: false
+    },
+    {
+      protocol_id: "phoenix",
+      address: new Address(addressBook.getContractId('phoenix_adapter')),
+      paused: false
     }
   ];
 
@@ -121,12 +126,17 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   console.log("Aggregator initialized")
 
+  const adaptersNames =  adaptersVec.map((adapter) => {
+    const protocol_id = adapter.protocol_id.toString()
+    return protocol_id + ', '
+  }
+  )
   if (network != 'mainnet') {
     console.log("Setting up Phoenix protocol")
-    // mocks
+
     await phoenixSetup(loadedConfig, addressBook);
-    console.log("Updating adapters on aggregator.. adding Phoenix")
-    await updateAdapters(addressBook);
+    console.log("Updating adapters on aggregator.. adding: ", ...adaptersNames)
+    await updateAdapters(addressBook, adaptersVec);
   }
 
   // TODO: IF MAINNET, UPDATE PHOENIX ADAPTERS WITH MAINNET DEPLOYMENT ADDRESS

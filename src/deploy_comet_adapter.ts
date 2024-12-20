@@ -1,9 +1,8 @@
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
-import { phoenixSetup } from './protocols/phoenix/phoenix_setup.js';
 import { updateAdapters } from './update_protocols.js';
 import { AddressBook } from './utils/address_book.js';
-import { airdropAccount, deployContract, installContract, invokeContract } from './utils/contract.js';
+import { installContract, invokeContract } from './utils/contract.js';
 import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
 import { createCometPool } from './protocols/comet/create_pool.js';
@@ -48,8 +47,8 @@ export async function deployCometAdapter(addressBook: AddressBook) {
     console.log('🚀 « cometAdapterAddress:', cometAdapterAddress);
     addressBook.setContractId('comet_adapter', cometAdapterAddress);
 
-  console.log("Updating adapters on aggregator.. adding Phoenix")
-  await updateAdapters(addressBook);
+  console.log("Updating adapters on aggregator.. adding Comet")
+  await updateAdapters(addressBook, [{protocol_id: 'comet_blend', address: new Address(cometAdapterAddress), paused: false}]);
 
 }
 
@@ -57,12 +56,6 @@ const network = process.argv[2];
 if(network != 'mainnet') throw new Error('Only Mainnet is Supported')
 
 const addressBook = AddressBook.loadFromFile(network);
-
-const phoenixAddressBook = AddressBook.loadFromFile(
-  network,
-  `../../protocols/comet-addresses`
-);
-
 const loadedConfig = config(network);
 
 await deployCometAdapter(addressBook);
