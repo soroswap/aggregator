@@ -19,6 +19,7 @@ import { getCurrentTimePlusOneHour, signWithKeypair } from "../utils/tx.js";
 import * as PhoenixFactoryContract from '../protocols/phoenix/bindgins/factory_bindings.js';
 import { AddressBook } from '../utils/address_book.js';
 import { config } from "../utils/env_config.js";
+import { randomBytes } from "crypto";
 
 
 const network = process.argv[2];
@@ -401,6 +402,134 @@ interface PhoenixPool {
   asset_lp_address: string,
   asset_lp_amount: string,
   stake_address: string,
+}
+
+export interface CometPoolParams{
+  asset_a: string,
+  asset_b: string,
+  weight_a: number,
+  weight_b: number,
+  amount_a: number,
+  amount_b: number,
+  user: Keypair
+}
+
+export interface CometPool {
+  address: string,
+  asset_0: string,
+  asset_0_balance: number,
+  asset_1: string,
+  asset_1_balance: number,
+  adapter_name: string,
+}
+
+function generateAdapterIdForComet() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < 10; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+
+export async function createCometPool(params: CometPoolParams): Promise<CometPool> {
+    console.log('creating comet pair...');
+    const createCometPairResponse = await invokeContract(
+      'comet_factory',
+      addressBook,
+      'new_c_pool',
+      [
+        nativeToScVal(randomBytes(32)),
+        new Address(params.user.publicKey()).toScVal(),
+        nativeToScVal([new Address(params.asset_a).toScVal(), new Address(params.asset_b).toScVal()]),
+        nativeToScVal([
+          nativeToScVal(params.weight_a, { type: 'i128' }),
+          nativeToScVal(params.weight_b, { type: 'i128' }),
+        ]),
+        nativeToScVal([
+          nativeToScVal(params.amount_a, { type: 'i128' }),
+          nativeToScVal(params.amount_b, { type: 'i128' }),
+        ]),
+        nativeToScVal(30000, { type: 'i128' }),
+      ],
+      params.user
+    );
+    const cometPairAddress = scValToNative(createCometPairResponse.returnValue)
+
+    const initArgs = xdr.ScVal.scvVec([
+      xdr.ScVal.scvString("comet"),
+      new Address(cometPairAddress).toScVal(),
+    ]);
+  
+    const cometAdapterDeployParams: xdr.ScVal[] = [
+      new Address(loadedConfig.admin.publicKey()).toScVal(),
+      nativeToScVal(Buffer.from(addressBook.getWasmHash('comet_adapter'), 'hex')),
+      nativeToScVal(randomBytes(32)),
+      xdr.ScVal.scvSymbol('initialize'),
+      initArgs,
+    ];
+  
+    const response = await invokeContract(
+      'deployer',
+      addressBook,
+      'deploy',
+      cometAdapterDeployParams,
+      loadedConfig.admin
+    );
+  
+    const cometAdapterAddress = scValToNative(response.returnValue)[0];
+    console.log('🚀 « comet adapter address:', cometAdapterAddress);
+    // SAVE ADDRES IN ADDRESS BOOK
+    addressBook.setContractId('comet_adapter', cometAdapterAddress);
+
+    const adapter_name = generateAdapterIdForComet()
+
+    const adaptersVec = [
+      {
+        protocol_id: adapter_name,
+        address: new Address(cometAdapterAddress),
+        paused: false
+      }
+    ];
+
+    const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('address'),
+          val: adapter.address.toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('paused'),
+          val: nativeToScVal(adapter.paused),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('protocol_id'),
+          val: xdr.ScVal.scvString(adapter.protocol_id),
+        }),
+      ]);
+    }));
+
+      const aggregatorUpdateAdaptersParams: xdr.ScVal[] = [
+        adaptersVecScVal,
+      ];
+    
+      await invokeContract(
+        'aggregator',
+        addressBook,
+        'update_adapters',
+        aggregatorUpdateAdaptersParams,
+        loadedConfig.admin
+      );
+
+    return{
+      address: cometPairAddress,
+      asset_0: params.asset_a,
+      asset_0_balance: params.amount_a,
+      asset_1: params.asset_b,
+      asset_1_balance: params.amount_b,
+      adapter_name
+    }
 }
 
 interface DexDistributionRaw {

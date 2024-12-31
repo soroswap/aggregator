@@ -902,3 +902,196 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
 
     assert_eq!(success_result, expected_result);
 }
+
+
+#[test]
+fn swap_exact_tokens_for_tokens_succeed_comet() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    // call the function
+    let mut distribution_vec = Vec::new(&test.env);
+    // add one with part 1 and other with part 0
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_2.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "comet"),
+        path,
+        parts: 1,
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let amount_in = 1_000_000;
+    // bone = 10**18
+    // fee_ratio = (10**7 - 30000) * 10**11 => 997000000000000000
+    // scaled_reserve_(out|in) = token_(out|in)_reserve * 10**7
+    // adjusted_in = amount_in * fee_ratio / BONE
+    // base = (scaled_reserve_in * BONE) / (scaled_reserve_in) + adjusted_in) 
+    // weight_ratio = in_token_weight * 10**18 / out_token_weight
+    // power = ((base / BONE) ** (weight_ratio / BONE)) * BONE // The code treats the numbers as 18 digit fixed point values. So code does it differently, but this is equivelant
+    // balance_ratio = BONE - power
+    // <= scaled_reserve_out * balance_ratio / BONE / 10**7
+
+    // scaled_reserve_in = 800000000000 * 10**7 => 8000000000000000000
+    // scaled_reserve_out = 200000000000 * 10**7 => 2000000000000000000
+    // adjusted_in = 1_000_000 * 997000000000000000 / BONE => 99700000000000000
+    // base = (8000000000000000000 * BONE) / (8000000000000000000 + 99700000000000000) => 999998753751553137
+    // weight_ratio = 8000000 * bone / 2000000 => 4000000000000000000
+    // power = ((999998753751553137 / BONE) ** (4000000000000000000 / BONE)) * 10**18 => 999995015015531351
+    // balance_ratio = BONE - 999995015015531351 => 4984984468649
+    // 2000000000000000000 * 4984984468649 / BONE / 10**7 => 996996
+    let expected_amount_out = 996996;
+
+    // check initial user balance of both tokens
+    let user_balance_before_0 = test.token_0.balance(&test.user);
+    let user_balance_before_2 = test.token_2.balance(&test.user);
+
+    let result = test
+        .aggregator_contract
+        .swap_exact_tokens_for_tokens(
+            &test.token_0.address.clone(),
+            &test.token_2.address.clone(),
+            &amount_in,
+            &(expected_amount_out),
+            &distribution_vec.clone(),
+            &test.user.clone(),
+            &deadline,
+        );
+
+    // check new user balances
+    let user_balance_after_0 = test.token_0.balance(&test.user);
+    let user_balance_after_2 = test.token_2.balance(&test.user);
+    // compare
+    assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in);
+    assert_eq!(
+        user_balance_after_2,
+        user_balance_before_2 + expected_amount_out
+    );
+
+    // check the result vec
+    // the result vec in this case is a vec of 1 vec with two elements, the amount 0 and amount 1
+    let mut expected_comet_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_comet_result_vec.push_back(amount_in);
+    expected_comet_result_vec.push_back(expected_amount_out);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_comet_result_vec);
+
+    assert_eq!(result, expected_result);
+}
+
+#[test]
+fn swap_exact_tokens_for_tokens_succeed_comet_soroswap_two_hops() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    // call the function
+    let mut distribution_vec = Vec::new(&test.env);
+    
+    let mut path_soroswap: Vec<Address> = Vec::new(&test.env);
+    path_soroswap.push_back(test.token_0.address.clone());
+    path_soroswap.push_back(test.token_1.address.clone());
+    path_soroswap.push_back(test.token_2.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "soroswap"),
+        path: path_soroswap,
+        parts: 1,
+    };
+
+    let mut path_comet: Vec<Address> = Vec::new(&test.env);
+    path_comet.push_back(test.token_0.address.clone());
+    path_comet.push_back(test.token_2.address.clone());
+
+    let distribution_1 = DexDistribution {
+        protocol_id: String::from_str(&test.env, "comet"),
+        path: path_comet,
+        parts: 1,
+    };
+
+    distribution_vec.push_back(distribution_0);
+    distribution_vec.push_back(distribution_1);
+
+    // let initial_user_balance: i128 = 20_000_000_000_000_000_000;
+    // let amount_0: i128 = 1_000_000_000_000_000_000;
+    // let amount_1: i128 = 4_000_000_000_000_000_000;
+    // let amount_2: i128 = 8_000_000_000_000_000_000;
+
+    let amount_in = 2_000_000;
+
+
+    let amount_in_soroswap = 1_000_000;
+    // fee = 1_000_000 * 3 /1000 =  3000 // USE CEILING
+    // amount_in less fee = 1_000_000 - 3000 = 997000
+    // First out = (997000*4000000000000000000)/(1000000000000000000 + 997000) = 3987999.999996024 = 3987999
+    let first_out = 3987999;
+    // fee = 3987999 * 3 /1000 =  11963.997 = 11964 // USE CEILING
+    // in less fee = 3987999 - 11964 = 3976035
+    // Second out = (3976035*8000000000000000000)/(4000000000000000000 + 3976035) = 7952069.999992096 = 7952069
+    let expected_amount_out_soroswap = 7952069;
+
+    let amount_in_comet = 1_000_000;
+    // bone = 10**18
+    // fee_ratio = (10**7 - 30000) * 10**11 => 997000000000000000
+    // scaled_reserve_(out|in) = token_(out|in)_reserve * 10**7
+    // adjusted_in = amount_in * fee_ratio / BONE
+    // base = (scaled_reserve_in * BONE) / (scaled_reserve_in) + adjusted_in) 
+    // weight_ratio = in_token_weight * 10**18 / out_token_weight
+    // power = ((base / BONE) ** (weight_ratio / BONE)) * BONE // The code treats the numbers as 18 digit fixed point values. So code does it differently, but this is equivelant
+    // balance_ratio = BONE - power
+    // <= scaled_reserve_out * balance_ratio / BONE / 10**7
+
+    // scaled_reserve_in = 800000000000 * 10**7 => 8000000000000000000
+    // scaled_reserve_out = 200000000000 * 10**7 => 2000000000000000000
+    // adjusted_in = 1_000_000 * 997000000000000000 / BONE => 99700000000000000
+    // base = (8000000000000000000 * BONE) / (8000000000000000000 + 99700000000000000) => 999998753751553137
+    // weight_ratio = 8000000 * bone / 2000000 => 4000000000000000000
+    // power = ((999998753751553137 / BONE) ** (4000000000000000000 / BONE)) * 10**18 => 999995015015531351
+    // balance_ratio = BONE - 999995015015531351 => 4984984468649
+    // 2000000000000000000 * 4984984468649 / BONE / 10**7 => 996996
+    let expected_amount_out_comet = 996996;
+
+    let expected_out = expected_amount_out_comet + expected_amount_out_soroswap;
+
+    let user_balance_before_0 = test.token_0.balance(&test.user);
+    let user_balance_before_1 = test.token_1.balance(&test.user);
+    let user_balance_before_2 = test.token_2.balance(&test.user);
+
+    let result = test.aggregator_contract.swap_exact_tokens_for_tokens(
+        &test.token_0.address.clone(),
+        &test.token_2.address.clone(),
+        &amount_in,
+        &(0),
+        &distribution_vec.clone(),
+        &test.user.clone(),
+        &deadline,
+    );
+
+    let user_balance_after_0 = test.token_0.balance(&test.user);
+    let user_balance_after_1 = test.token_1.balance(&test.user);
+    let user_balance_after_2 = test.token_2.balance(&test.user);
+
+    // compare
+    assert_eq!(user_balance_after_0, user_balance_before_0 - amount_in);
+    assert_eq!(user_balance_after_1, user_balance_before_1);
+    assert_eq!(
+        user_balance_after_2,
+        user_balance_before_2 + expected_out
+    );
+
+    let mut expected_soroswap_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_soroswap_result_vec.push_back(amount_in_soroswap);
+    expected_soroswap_result_vec.push_back(first_out);
+    expected_soroswap_result_vec.push_back(expected_amount_out_soroswap);
+
+    let mut expected_comet_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_comet_result_vec.push_back(amount_in_comet);
+    expected_comet_result_vec.push_back(expected_amount_out_comet);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_soroswap_result_vec);
+    expected_result.push_back(expected_comet_result_vec);
+
+    assert_eq!(result, expected_result);
+}

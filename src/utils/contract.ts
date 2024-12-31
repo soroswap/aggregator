@@ -32,6 +32,9 @@ const CONTRACT_REL_PATH: object = {
   phoenix_pool: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool.wasm',
   phoenix_stake: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
   phoenix_stable: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool_stable.wasm',
+  comet_adapter: '../../contracts/target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm',
+  comet_factory: '../../contracts/adapters/comet/comet_contracts/comet_factory.wasm',
+  comet_pool: '../../contracts/adapters/comet/comet_contracts/comet_pool.wasm',
 };
 
 const network = process.argv[2];
