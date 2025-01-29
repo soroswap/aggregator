@@ -2,7 +2,6 @@
 
 The Soroswap Aggregator Contract currently aggregates different Soroban based AMMs
 
-
 Check the documentation in https://docs.soroswap.finance/ and the [Security Audit Report](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and the [Security Audit Findings Summary](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf) written by [Runtime Verification](https://runtimeverification.com).
 
 
