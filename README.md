@@ -20,7 +20,7 @@ The Soroswap Aggregator aggregates liquidity from different Soroban based AMMs
 
 ## 1. Setup
 
-1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
+1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, Phoenix, Aqua, etc... or to deploy on Standalone and Testnet those protocols.
 
 ```bash
 git clone --recurse-submodules http://github.com/soroswap/aggregator.git
@@ -33,6 +33,11 @@ If there was a Testnet reset, and the soroswap/core repo has new Tesnet deployme
 ```
 cd protocols/soroswap/
 git pull origin main
+```
+> [!NOTE]
+If you want to update the submodules, do
+```
+git pull --recurse-submodules
 ```
 
 1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
