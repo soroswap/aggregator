@@ -11,11 +11,12 @@ import {
   SwapMethod,
   getPhoenixBalanceForContract,
   SoroswapPool,
-  create_soroswap_liquidity_pool
+  create_soroswap_liquidity_pool,
+  createCometPool
 } from "./utils.js";
 import { AddressBook } from '../utils/address_book.js';
 import { config } from '../utils/env_config.js';
-import { Address, Asset, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AxiosClient } from "@stellar/stellar-sdk/rpc";
 const args = process.argv;
 
@@ -37,7 +38,7 @@ switch(args.length){
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
 
-const prepareTestEnvironment = async ()=>{
+const  prepareTestEnvironment = async ()=>{
   const networkPassphrase = loadedConfig.passphrase;
   const soroswapRouterAddress = await (await AxiosClient.get('https://api.soroswap.finance/api/testnet/router')).data.address;
   console.log("-------------------------------------------------------");
@@ -137,6 +138,31 @@ const prepareTestEnvironment = async ()=>{
   await provide_phoenix_liquidity(phoenixAdmin, pairAddress, 100000000000000000, 100000000000000000);
   const phoenixPoolBalance = await invokeCustomContract(pairAddress, 'query_pool_info', [], phoenixAdmin, true);
   console.log('🔎 New Phoenix liquidity pool balances:',scValToNative(phoenixPoolBalance.result.retval));
+
+  console.log("-------------------------------------------------------");
+  console.log("Creating Comet liquidity pool");
+  console.log("-------------------------------------------------------");
+
+  let cometPool = await createCometPool(
+    {
+      asset_a: cID_A,
+      asset_b: cID_B,
+      user: testUser,
+      amount_a: 80000_0000000,
+      amount_b: 20000_0000000,
+      weight_a: 8000000,
+      weight_b: 2000000,
+    }
+  )
+
+  console.log('🟢 Comet pair address:', cometPool.address);
+
+  const cometBalances = [
+    await invokeCustomContract(cometPool.address, 'get_balance', [new Address(cID_A).toScVal()], testUser, true),
+    await invokeCustomContract(cometPool.address, 'get_balance', [new Address(cID_B).toScVal()], testUser, true),
+  ].map((value) => scValToNative(value.result.retval));
+  console.log('🔎 comet pool balances:', cometBalances);
+
   const result = {
     assetA: assetA,
     assetB: assetB,
@@ -146,8 +172,11 @@ const prepareTestEnvironment = async ()=>{
     phoenixAdmin: phoenixAdmin,
     soroswapPoolCID: soroswapPoolCID,
     pairAddress: pairAddress,
+    cometAddress: cometPool.address,
+    cometAdapterName: cometPool.adapter_name,
     soroswapPoolBalance: soroswapPoolBalance,
     phoenixPoolBalance: phoenixPoolBalance,
+    cometPoolBalance: cometBalances,
   }
   return result;
 }
@@ -637,6 +666,294 @@ const swap_exact_tokens_for_tokens_one_protocol_two_hops = async ()=>{
   }
 
 } 
+
+const swapExactInputAggregatorCometTest = async ()=>{
+  console.log("-------------------------------------------------------");
+  console.log("Testing exact input swap for comet");
+  console.log("-------------------------------------------------------");
+  const { 
+    assetA,
+    assetB, 
+    cID_A, 
+    cID_B, 
+    testUser, 
+    soroswapPoolCID, 
+    soroswapPoolBalance, 
+    cometPoolBalance,
+    cometAddress,
+    cometAdapterName,
+  } = await prepareTestEnvironment();
+
+  console.log('-------------------------------------------------------');
+  console.log('Aggregator exact input swap comet test');
+  console.log('-------------------------------------------------------');
+
+  const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
+  console.log('soroswapAdapter:', soroswapAdapter);
+  const comet_adapter =  addressBook.getContractId('comet_adapter');
+  console.log('cometAdapter:', comet_adapter);
+
+  const dexDistributionRaw = [
+    {
+      protocol_id: "soroswap",
+      path: [cID_A, cID_B],
+      parts: 1,
+    },
+    {
+      protocol_id: cometAdapterName,
+      path: [cID_A, cID_B],
+      parts: 1,
+    },
+  ];
+
+  const dexDistributionVec = await createDexDistribution(dexDistributionRaw);
+
+  const asset_A_first_balance = await fetchAssetBalance(assetA, testUser);
+  const asset_B_first_balance = await fetchAssetBalance(assetB, testUser);
+
+  console.log(' ------------ Test user balances --------------');
+  console.log('🔎 Asset A:', asset_A_first_balance);
+  console.log('🔎 Asset B:', asset_B_first_balance);
+
+  console.log(' ------------ Soroswap pool balances --------------');
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalance.result.retval));
+
+  console.log(' ------------ comet pool balances --------------')
+  console.log('🔎 Comet pool balance [A,B]:', cometPoolBalance);
+  
+  const swapExactIn = await callAggregatorSwap(cID_A, cID_B, 2_000_000, dexDistributionVec, testUser, SwapMethod.EXACT_INPUT);
+  console.log('🟡 Swap exact in:', swapExactIn);
+
+  const asset_A_second_balance = await fetchAssetBalance(assetA, testUser);
+  const asset_B_second_balance = await fetchAssetBalance(assetB, testUser);
+
+  console.log(' -------------- Test user balances after exact input swap -------------');
+  console.log('🔎 Asset A:', asset_A_second_balance);
+  console.log('🔎 Asset B:', asset_B_second_balance);
+
+  console.log(' -------------- Soroswap pool balances after exact input swap -------------');
+  const soroswapPoolBalanceAfterExactIn = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactIn.result.retval))
+  
+  console.log(' -------------- Comet pool balances after exact input swap -------------');
+  const cometPoolBalanceAfterExactIn = [
+    await invokeCustomContract(cometAddress, 'get_balance', [new Address(cID_A).toScVal()], testUser, true),
+    await invokeCustomContract(cometAddress, 'get_balance', [new Address(cID_B).toScVal()], testUser, true),
+  ].map((value) => scValToNative(value.result.retval));
+  console.log('🔎 Comet pool balance [A,B]:', cometPoolBalanceAfterExactIn);
+
+  const comet_before_assets = cometPoolBalance;
+  const comet_after_assets = cometPoolBalanceAfterExactIn;
+
+  console.log("-------------- Contract ID's -----------------")
+  console.table({
+    'Contract Asset A': cID_A,
+    'Contract Asset B': cID_B,
+    'Contract Soroswap': soroswapPoolCID,
+    'Contract Comet': cometAddress,
+  })
+
+  // The comet amounts are the same as in the rust test
+  // see contracts\adapters\comet\src\test\swap_exact_tokens_for_tokens.rs for an explanation
+  const expectedAmountIn0 = 1000000n;
+  const expectedAmountIn1 = 1000000n;
+  const expectedAmountOut0 = 3987999n;
+  const expectedAmountOut1 =  996996n;
+
+  console.log(' -------------- Asset balances table -------------')
+  console.table({
+    'Initial balance': {
+      'User Asset A': asset_A_first_balance,
+      'User Asset B': asset_B_first_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalance.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalance.result.retval)[1],
+      'Comet Asset A': comet_before_assets[0],
+      'Comet Asset B': comet_before_assets[1],
+    },
+    'Balance after exact input swap': {
+      'User Asset A': asset_A_second_balance,
+      'User Asset B': asset_B_second_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[1],
+      'Comet Asset A': comet_after_assets[0],
+      'Comet Asset B': comet_after_assets[1],
+    }
+  })
+  console.log(' -------------- result table -------------')
+  console.table({
+
+    'Expected amounts': {
+      'Amount in asset A': expectedAmountIn0,
+      'Amount out asset A': expectedAmountOut0,
+      'Amount in asset B': expectedAmountIn1,
+      'Amount out asset B': expectedAmountOut1,
+    },
+    'Swap result': {
+      'Amount in asset A': swapExactIn[0][0],
+      'Amount out asset A': swapExactIn[0][1],
+      'Amount in asset B': swapExactIn[1][0],
+      'Amount out asset B': swapExactIn[1][1],
+    }
+  })
+
+  if(
+    swapExactIn[0][0] === expectedAmountIn0 && 
+    swapExactIn[0][1] === expectedAmountOut0 &&
+    swapExactIn[1][0] === expectedAmountIn1 &&
+    swapExactIn[1][1] === expectedAmountOut1
+  ){
+    console.log('🟢 Aggregator test swap exact input comet passed')
+    return true;
+  } else {
+    console.error('🔴 Aggregator test swap exact input comet failed')
+    return false;
+  }
+}
+
+const swapExactOutputAggregatorCometTest = async ()=>{
+  console.log("-------------------------------------------------------");
+  console.log("Testing exact output comet swap");
+  console.log("-------------------------------------------------------");
+  const { 
+    assetA,
+    assetB, 
+    cID_A, 
+    cID_B, 
+    testUser, 
+    soroswapPoolCID, 
+    soroswapPoolBalance, 
+    cometPoolBalance,
+    cometAddress,
+    cometAdapterName,
+  } = await prepareTestEnvironment();
+
+  console.log('-------------------------------------------------------');
+  console.log('Aggregator exact output swap comet test');
+  console.log('-------------------------------------------------------');
+
+  const soroswapAdapter =  addressBook.getContractId('soroswap_adapter');
+  console.log('soroswapAdapter:', soroswapAdapter);
+  const comet_adapter =  addressBook.getContractId('comet_adapter');
+  console.log('cometAdapter:', comet_adapter);
+
+  const dexDistributionRaw = [
+    {
+      protocol_id: "soroswap",
+      path: [cID_A, cID_B],
+      parts: 1,
+    },
+    {
+      protocol_id: cometAdapterName,
+      path: [cID_A, cID_B],
+      parts: 1,
+    },
+  ];
+
+  const dexDistributionVec = await createDexDistribution(dexDistributionRaw);
+
+  const asset_A_first_balance = await fetchAssetBalance(assetA, testUser);
+  const asset_B_first_balance = await fetchAssetBalance(assetB, testUser);
+
+  console.log(' ------------ Test user balances --------------');
+  console.log('🔎 Asset A:', asset_A_first_balance);
+  console.log('🔎 Asset B:', asset_B_first_balance);
+
+  console.log(' ------------ Soroswap pool balances --------------');
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalance.result.retval));
+
+  console.log(' ------------ comet pool balances --------------')
+  console.log('🔎 Comet pool balance [A,B]:', cometPoolBalance);
+  
+  const swapExactOut = await callAggregatorSwap(cID_A, cID_B, 2_000_000, dexDistributionVec, testUser, SwapMethod.EXACT_OUTPUT);
+  console.log('🟡 Swap exact out:', swapExactOut);
+
+  const asset_A_second_balance = await fetchAssetBalance(assetA, testUser);
+  const asset_B_second_balance = await fetchAssetBalance(assetB, testUser);
+
+  console.log(' -------------- Test user balances after exact output swap -------------');
+  console.log('🔎 Asset A:', asset_A_second_balance);
+  console.log('🔎 Asset B:', asset_B_second_balance);
+
+  console.log(' -------------- Soroswap pool balances after exact output swap -------------');
+  const soroswapPoolBalanceAfterExactIn = await invokeCustomContract(soroswapPoolCID, 'get_reserves', [], testUser, true);
+  console.log('🔎 Soroswap pool balance [A,B]:', scValToNative(soroswapPoolBalanceAfterExactIn.result.retval))
+  
+  console.log(' -------------- Comet pool balances after exact output swap -------------');
+  const cometPoolBalanceAfterExactIn = [
+    await invokeCustomContract(cometAddress, 'get_balance', [new Address(cID_A).toScVal()], testUser, true),
+    await invokeCustomContract(cometAddress, 'get_balance', [new Address(cID_B).toScVal()], testUser, true),
+  ].map((value) => scValToNative(value.result.retval));
+  console.log('🔎 Comet pool balance [A,B]:', cometPoolBalanceAfterExactIn);
+
+  const comet_before_assets = cometPoolBalance;
+  const comet_after_assets = cometPoolBalanceAfterExactIn;
+
+  console.log("-------------- Contract ID's -----------------")
+  console.table({
+    'Contract Asset A': cID_A,
+    'Contract Asset B': cID_B,
+    'Contract Soroswap': soroswapPoolCID,
+    'Contract Comet': cometAddress,
+  })
+
+  // The comet amounts are the same as in the rust test
+  // see contracts\adapters\comet\src\test\swap_tokens_for_exact_tokens.rs for an explanation
+  const expectedAmountIn0 = 250754n;
+  const expectedAmountIn1 = 1003015n;
+  const expectedAmountOut0 = 1000000n;
+  const expectedAmountOut1 =  1000000n;
+
+  console.log(' -------------- Asset balances table -------------')
+  console.table({
+    'Initial balance': {
+      'User Asset A': asset_A_first_balance,
+      'User Asset B': asset_B_first_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalance.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalance.result.retval)[1],
+      'Comet Asset A': comet_before_assets[0],
+      'Comet Asset B': comet_before_assets[1],
+    },
+    'Balance after exact input swap': {
+      'User Asset A': asset_A_second_balance,
+      'User Asset B': asset_B_second_balance,
+      'Soroswap Asset A': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[0],
+      'Soroswap Asset B': scValToNative(soroswapPoolBalanceAfterExactIn.result.retval)[1],
+      'Comet Asset A': comet_after_assets[0],
+      'Comet Asset B': comet_after_assets[1],
+    }
+  })
+  console.log(' -------------- result table -------------')
+  console.table({
+
+    'Expected amounts': {
+      'Amount in asset A': expectedAmountIn0,
+      'Amount out asset A': expectedAmountOut0,
+      'Amount in asset B': expectedAmountIn1,
+      'Amount out asset B': expectedAmountOut1,
+    },
+    'Swap result': {
+      'Amount in asset A': swapExactOut[0][0],
+      'Amount out asset A': swapExactOut[0][1],
+      'Amount in asset B': swapExactOut[1][0],
+      'Amount out asset B': swapExactOut[1][1],
+    }
+  })
+
+  if(
+    swapExactOut[0][0] === expectedAmountIn0 && 
+    swapExactOut[0][1] === expectedAmountOut0 &&
+    swapExactOut[1][0] === expectedAmountIn1 &&
+    swapExactOut[1][1] === expectedAmountOut1
+  ){
+    console.log('🟢 Aggregator test swap exact output comet passed')
+    return true;
+  } else {
+    console.error('🔴 Aggregator test swap exact output comet failed')
+    return false;
+  }
+}
+
+
 const main = async ()=>{
   console.log(test)
   console.log(network)
@@ -688,9 +1005,12 @@ const main = async ()=>{
     default:
       throw new Error('Invalid test name');
   } */
+
     const exactInputResult = await swapExactInputAggregatorTest();
     const exactOutputResult = await swapExactOutputAggregatorTest();
     const exactInputOneProtocolTwoHops = await swap_exact_tokens_for_tokens_one_protocol_two_hops();
+    const cometExactInput = await swapExactInputAggregatorCometTest();
+    const cometExactOutput = await swapExactOutputAggregatorCometTest();
     console.log("-------------------------------------------------------");
     console.log("Test results");
     console.log("-------------------------------------------------------");
@@ -703,7 +1023,13 @@ const main = async ()=>{
       },
       'Exact input one protocol two hops': {
         'Status': exactInputOneProtocolTwoHops ? '🟢 Passed' : '🔴 Failed',
-      }
+      },
+      'Comet exact input test': {
+        'Status': cometExactInput ? '🟢 Passed' : '🔴 Failed',
+      },
+      'Comet exact output test': {
+        'Status': cometExactOutput ? '🟢 Passed' : '🔴 Failed',
+      },
     })
 
 }

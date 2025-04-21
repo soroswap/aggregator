@@ -1,7 +1,7 @@
 extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 // use crate::models::Adapter;
-use crate::test::{create_soroswap_phoenix_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
+use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
@@ -40,6 +40,8 @@ fn test_remove_adapter() {
         .remove_adapter(&String::from_str(&test.env, "soroswap"));
     test.aggregator_contract
         .remove_adapter(&String::from_str(&test.env, "phoenix"));
+    test.aggregator_contract
+    .remove_adapter(&String::from_str(&test.env, "comet"));
 
     let mut updated_protocols = test.aggregator_contract.get_adapters();
     let expected_empty_vec = vec![&test.env];
@@ -102,7 +104,7 @@ fn test_update_adapters_with_mock_auth() {
     let test = SoroswapAggregatorTest::setup();
 
     //Initialize aggregator
-    let initialize_aggregator_addresses = create_soroswap_phoenix_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
