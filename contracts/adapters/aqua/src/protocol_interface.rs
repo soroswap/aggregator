@@ -7,7 +7,7 @@ use adapter_interface::{AdapterError};
 soroban_sdk::contractimport!(
     file = "./aqua_contracts/soroban_liquidity_pool_swap_router_contract.wasm"
 );
-pub type AquaMultihopClient<'a> = Client<'a>;
+pub type AquaRouterClient<'a> = Client<'a>;
 
 fn convert_to_swaps(e: &Env, path: &Vec<Address>) -> Vec<Swap> {
     let mut swaps = Vec::new(e);
@@ -53,8 +53,20 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     _deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
-    let aqua_multihop_address = get_protocol_address(&e)?;
-    let aqua_multihop_client = AquaMultihopClient::new(&e, &aqua_multihop_address);
+    let aqua_router_address = get_protocol_address(&e)?;
+    let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
+
+    // fn swap(
+    //     e: Env,
+    //     user: Address,
+    //     tokens: Vec<Address>,
+    //     token_in: Address,
+    //     token_out: Address,
+    //     pool_index: BytesN<32>,
+    //     in_amount: u128,
+    //     out_min: u128,
+    // ) -> u128 {
+
     let operations = convert_to_swaps(e, path);
     
     // TODO: Remove this checks if we want to reduce the number of total instructions
@@ -64,7 +76,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     
     // By using max_spread_bps = None, the Aqua LP will use the maximum allowed slippage
     // amount_in is the amount being sold of the first token in the operations.
-    aqua_multihop_client.swap(
+    aqua_router_client.swap(
         &to, // recipient: Address, 
         &operations, // operations: Vec<Swap>,
         &None, // max_spread_bps: Option<i64>.
@@ -97,8 +109,8 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     _deadline: &u64,
 ) -> Result<Vec<i128>, AdapterError> {
 
-    let aqua_multihop_address = get_protocol_address(&e)?;
-    let aqua_multihop_client = AquaMultihopClient::new(&e, &aqua_multihop_address);
+    let aqua_router_address = get_protocol_address(&e)?;
+    let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
     let operations = convert_to_swaps(e, path);
 
     // We first need to get the "reverse_amount from aqua.simulate_reverse_swap"
@@ -128,7 +140,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     for op in operations.iter().rev() {
         operations_reversed.push_back(op.clone());
     }
-    let reverse_simulated_swap = aqua_multihop_client.simulate_reverse_swap(
+    let reverse_simulated_swap = aqua_router_client.simulate_reverse_swap(
         &operations_reversed, //operations: Vec<Swap>,
         amount_out); //amount: i128,
     
@@ -139,7 +151,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         panic!("Amount of token in required is greater than the maximum amount expected");
     }
 
-    aqua_multihop_client.swap(
+    aqua_router_client.swap(
         &to, // recipient: Address, 
         &operations, // operations: Vec<Swap>,
         &None, // max_spread_bps: Option<i64>.
