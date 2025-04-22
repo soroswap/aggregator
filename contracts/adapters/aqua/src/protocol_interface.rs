@@ -9,84 +9,93 @@ soroban_sdk::contractimport!(
 );
 pub type AquaRouterClient<'a> = Client<'a>;
 
-fn convert_to_swaps(e: &Env, path: &Vec<Address>) -> Vec<Swap> {
-    let mut swaps = Vec::new(e);
+/*
+        This first version of the AquaAdapter, is written just for pools with 2 tokens, so we will build from 
+        path = (TokenA, TokenB, TokenC, TokenD)
+        bytes = (pool_hash_0, pool_hash_1, pool_hash_2)
+        where pool_hash_0 = hash of the pool with tokenA and tokenB
+        where pool_hash_1 = hash of the pool with tokenB and tokenC
+        where pool_hash_2 = hash of the pool with tokenC and tokenD
+        where token_out = tokenD
+        where token_in = tokenA
+        where in_amount = amount_in
+        where out_min = amount_out_min
+    */
 
-    // Iterate through the addresses in the path, creating a Swap object for each pair
-    // If path is [token0, token1, token2, token3], swaps should be
-    // swap_0 = Swap{
-    //     offer_asset: token0,
-    //     ask_asset: token1,
-    //     ask_asset_min_amount: None,
-    // },
-    // swap_1 = Swap{
-    //     offer_asset: token1,
-    //     ask_asset: token2,
-    //     ask_asset_min_amount: None,
-    // },
-    // swap_2 = Swap{
-    //     offer_asset: token2,
-    //     ask_asset: token3,
-    //     ask_asset_min_amount: None,
-    // }
 
-    for i in 0..(path.len() - 1) {
-        let offer_asset = path.get(i).expect("Failed to get offer asset");
-        let ask_asset = path.get(i + 1).expect("Failed to get ask a    sset");
+fn convert_to_swaps_chain(
+    e: &Env, 
+    path: &Vec<Address>,
+    bytes: &Option<Vec<BytesN<32>>>,
+) -> Vec<(Vec<Address>, BytesN<32>, Address)> {
 
-        swaps.push_back(Swap {
-          offer_asset: offer_asset.clone(), // asset being sold (token_in)
-          ask_asset: ask_asset.clone(), // asset buying (token_out)
-          ask_asset_min_amount: None,
-        });
+    // We check that bytes is not None
+    let pool_hashes_vec = match bytes {
+        Some(v) => v,
+        None => {
+            panic!("Bytes is None. Aqua needs the pool hashes to swap");
+        }
+    };
+
+    // We check that the length of bytes is equal to the length of path - 1
+    if pool_hashes_vec.len() != path.len() - 1 {
+        panic!("Bytes length is not equal to path length - 1");
     }
 
-    swaps
+    let mut swaps_chain = Vec::new(e);
+    for i in 0..(path.len() - 1) {
+        let token_in = path.get(i).expect("Failed to get offer asset");
+        let token_out = path.get(i + 1).expect("Failed to get ask asset");
+        let pool_hash = pool_hashes_vec.get(i).expect("Failed to get pool hash");
+
+        swaps_chain.push_back((vec![token_in.clone(), token_out.clone()], pool_hash.clone(), token_out.clone()));
+    }
+
+    swaps_chain
 }
 
 pub fn protocol_swap_exact_tokens_for_tokens(
     e: &Env,
     amount_in: &i128,
     amount_out_min: &i128,
-    path: &Vec<Address>, 
+    path: &Vec<Address>, // (TokenA, TokenB, TokenC, TokenD), being TokenC the token to get
     to: &Address,
     _deadline: &u64,
+    bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
 ) -> Result<Vec<i128>, AdapterError> {
 
     let aqua_router_address = get_protocol_address(&e)?;
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
+    
+    let swaps_chain = convert_to_swaps_chain(e, path, bytes);
 
-    // fn swap(
+
+    // fn swap_chained(
     //     e: Env,
-    //     user: Address,
-    //     tokens: Vec<Address>,
+    //     user: Address, // to
+    //     swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
     //     token_in: Address,
-    //     token_out: Address,
-    //     pool_index: BytesN<32>,
     //     in_amount: u128,
     //     out_min: u128,
     // ) -> u128 {
-
-    let operations = convert_to_swaps(e, path);
-    
-    // TODO: Remove this checks if we want to reduce the number of total instructions
-    // TODO: Do benchmarking
+   
+    let token_in = path.get(0).expect("Failed to get token in address");
     let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
     let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
-    // By using max_spread_bps = None, the Aqua LP will use the maximum allowed slippage
-    // amount_in is the amount being sold of the first token in the operations.
-    aqua_router_client.swap(
+    let final_amount_out = aqua_router_client.swap_chained(
         &to, // recipient: Address, 
-        &operations, // operations: Vec<Swap>,
-        &None, // max_spread_bps: Option<i64>.
-        &amount_in); //amout: i128. Amount being sold. Input from the user,
-        
-    let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
+        &swaps_chain, // swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
+        &token_in, // token_in: Address,
+        &amount_in, // in_amount: i128,
+        &amount_out_min, // out_min: i128
+    );
+
     
     // check if the amount of token_out received is greater than the minimum amount expected
     // TODO: Remove this checks if we want to reduce the number of total instructions
     // TODO: Do benchmarking
+    let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).unwrap();
     if  final_amount_out < *amount_out_min {
         // panic
