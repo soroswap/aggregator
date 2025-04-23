@@ -9,13 +9,13 @@ fn test_initialize_and_get_values() {
 
     test.adapter_client_not_initialized.initialize(
         &String::from_str(&test.env, "aqua"),
-        &test.multihop_client.address);
+        &test.router.address);
 
     let protocol_id = test.adapter_client_not_initialized.get_protocol_id();
     assert_eq!(protocol_id, String::from_str(&test.env, "aqua"));
 
     let protocol_address = test.adapter_client_not_initialized.get_protocol_address();
-    assert_eq!(protocol_address, test.multihop_client.address);
+    assert_eq!(protocol_address, test.router.address);
 }
 
 // #[test]
@@ -26,7 +26,7 @@ fn test_initialize_and_get_values() {
 //     assert_eq!(protocol_id, String::from_str(&test.env, "aqua"));
 
 //     let protocol_address = test.adapter_client.get_protocol_address();
-//     assert_eq!(protocol_address, test.multihop_client.address);
+//     assert_eq!(protocol_address, test.router.address);
 // }
 
 // // test initialize twice
@@ -36,11 +36,11 @@ fn test_initialize_and_get_values() {
 
 //     test.adapter_client_not_initialized.initialize(
 //         &String::from_str(&test.env, "aqua"),
-//         &test.multihop_client.address);
+//         &test.router.address);
 
 //     let result = test.adapter_client_not_initialized.try_initialize(
 //         &String::from_str(&test.env, "aqua"),
-//         &test.multihop_client.address);
+//         &test.router.address);
 
 //     assert_eq!(result,Err(Ok(AdapterError::AlreadyInitialized)));
 // }
@@ -51,7 +51,7 @@ fn test_initialize_and_get_values() {
 
 //     let result = test.adapter_client.try_initialize(
 //         &String::from_str(&test.env, "aqua"),
-//         &test.multihop_client.address);
+//         &test.router.address);
 
 //     assert_eq!(result,Err(Ok(AdapterErrorDeployer::AlreadyInitialized)));
 // }

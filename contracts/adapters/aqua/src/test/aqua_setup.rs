@@ -1,18 +1,9 @@
 #![cfg(test)]
-// extern crate std;
-use soroban_sdk::{
-    vec,
-    // IntoVal,
-    String,
-    Env, 
-    Bytes,
-    BytesN, 
-    Address, 
-    testutils::{
-        arbitrary::std,
-        Address as _,
-    },
-};
+extern crate std;
+
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{Address, BytesN, Env, Symbol, Vec, Bytes};
+
 
 /* *************  AQUA FACTORY AND ROUTER IS THE SAME CONTRACT  *************  */
 
@@ -23,25 +14,31 @@ pub mod router {
     );
 }
 
-pub fn deploy_router_contract(e: &Env, admin: & Address) -> Address {
-    let router_wasm = e.deployer().upload_contract_wasm(factory::WASM);
-    let salt = Bytes::new(&e.clone());
-    let salt = e.crypto().sha256(&salt);
-
-    e.deployer().with_address(admin.clone(), salt).deploy(router_wasm)
-}
 
 pub use router::Client as AquaRouter;
 
+pub fn create_liqpool_router_contract<'a>(e: &Env) -> AquaRouter<'a> {
+    AquaRouter::new(e, &e.register(router::WASM, ()))
+}
+
 /* *************  TOKEN  *************  */
 
-pub mod token_contract {
+pub mod test_token {
     soroban_sdk::contractimport!(
         file = "./aqua_contracts/soroban_token_contract.wasm"
     );
 }
 
-pub use token_contract::Client as TokenClient;
+pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> test_token::Client<'a> {
+    test_token::Client::new(
+        e,
+        &e.register_stellar_asset_contract_v2(admin.clone())
+            .address(),
+    )
+}
+
+
+pub use test_token::Client as TokenClient;
 
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
@@ -51,9 +48,9 @@ pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     env.deployer().upload_contract_wasm(WASM)
 }
 
-pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract::Client<'a> {
-    token_contract::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
-}
+// pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract::Client<'a> {
+//     test_token::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
+// }
 
 
 /* *************  POOL CONTRACTS  *************  */
@@ -131,7 +128,7 @@ pub struct AquaTest<'a> {
     pub reward_boost_token: test_token::Client<'a>,
     pub reward_boost_feed: reward_boost_feed::Client<'a>,
 
-    pub router: LiquidityPoolRouterClient<'a>,
+    pub router: AquaRouter<'a>,
 
     pub emergency_admin: Address,
     pub rewards_admin: Address,
@@ -145,6 +142,8 @@ impl<'a> AquaTest<'a> {
         let env = Env::default();
         env.mock_all_auths();
         env.cost_estimate().budget().reset_unlimited();
+
+        let admin = Address::generate(&env);
 
         // let user = Address::generate(&env);
         // let initial_admin_balance = 10_000_000i128;

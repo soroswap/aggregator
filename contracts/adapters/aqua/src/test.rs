@@ -2,6 +2,8 @@
 extern crate std;
 pub mod aqua_setup;
 
+use soroban_sdk::testutils::Address as _;
+
 use soroban_sdk::{
     Env, 
     Address, 
@@ -13,9 +15,7 @@ use soroban_sdk::{
     IntoVal
 };
 use crate::{SoroswapAggregatorAquaAdapter, SoroswapAggregatorAquaAdapterClient};
-use aqua_setup::{AquaTest, MultihopClient, TokenClient, AquaFactory};
-// use factory::SoroswapFactoryClient;
-// use router::SoroswapRouterClient;
+use aqua_setup::{AquaTest, TokenClient, AquaRouter};
 
 mod deployer_contract {
     soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
@@ -44,12 +44,8 @@ pub struct AquaAggregatorAdapterTest<'a> {
     env: Env,
     adapter_client: SoroswapAggregatorAquaAdapterClientFromWasm<'a>,
     adapter_client_not_initialized: SoroswapAggregatorAquaAdapterClient<'a>,
-    factory_client: AquaFactory<'a>,
-    multihop_client: MultihopClient<'a>,
-    token_0: TokenClient<'a>,
-    token_1: TokenClient<'a>,
-    token_2: TokenClient<'a>,
-    token_3: TokenClient<'a>,
+    router: AquaRouter<'a>,
+    tokens: [TokenClient<'a>; 4],
     user: Address,
     admin: Address
 }
@@ -67,7 +63,7 @@ impl<'a> AquaAggregatorAdapterTest<'a> {
         let init_fn = Symbol::new(&test.env, &("initialize"));
 
         let protocol_id = String::from_str(&test.env, "aqua");
-        let protocol_address = test.multihop_client.address.clone();
+        let protocol_address = test.router.address.clone();
 
         // Convert the arguments into a Vec<Val>
         let init_fn_args: Vec<Val> = (protocol_id.clone(), protocol_address.clone()).into_val(&test.env);
@@ -83,17 +79,15 @@ impl<'a> AquaAggregatorAdapterTest<'a> {
 
         let adapter_client = aqua_adapter_contract::Client::new(&test.env, &contract_id);
 
+        let user = Address::generate(&test.env);
+
         AquaAggregatorAdapterTest {
             env: test.env,
             adapter_client,
             adapter_client_not_initialized,
-            factory_client: test.factory_client,
-            multihop_client: test.multihop_client,
-            token_0: test.token_0,
-            token_1: test.token_1,
-            token_2: test.token_2,
-            token_3: test.token_3,
-            user: test.user,
+            router: test.router,
+            tokens: test.tokens,
+            user,
             admin: test.admin
         }
     }

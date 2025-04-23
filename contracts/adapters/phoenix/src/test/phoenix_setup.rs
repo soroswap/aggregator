@@ -14,7 +14,7 @@ use soroban_sdk::{
     },
 };
 
-/* *************  AQUA FACTORY  *************  */
+/* *************  PHOENIX FACTORY  *************  */
 
 #[allow(clippy::too_many_arguments)]
 pub mod factory {
