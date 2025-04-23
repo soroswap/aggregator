@@ -31,12 +31,17 @@ fn convert_to_swaps_chain(
     Vec<(Vec<Address>, BytesN<32>, Address)>, // (path, pool_hash, token_out)
     AdapterError
 > {
+    
     // We check that bytes is not None
     let pool_hashes_vec = bytes.as_ref().ok_or(AdapterError::MissingPoolHashes)?;
-
+    
+    // path should have at least 2 elements. ifnot error WrongMinimumPathLength
+    if path.len() < 2 {
+        return Err(AdapterError::WrongMinimumPathLength);
+    }
     // We check that the length of bytes is equal to the length of path - 1
     if pool_hashes_vec.len() != path.len() - 1 {
-        panic!("Bytes length is not equal to path length - 1");
+        return Err(AdapterError::WrongPoolHashesLength);
     }
 
     let mut swaps_chain = Vec::new(e);
@@ -59,7 +64,6 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     amount_out_min: &i128,
     path: &Vec<Address>, // (TokenA, TokenB, TokenC, TokenD), being TokenC the token to get
     to: &Address,
-    _deadline: &u64,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
 ) -> Result<Vec<i128>, AdapterError> {
 
@@ -117,7 +121,6 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     amount_in_max: &i128,
     path: &Vec<Address>,
     to: &Address,
-    _deadline: &u64,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
 ) -> Result<Vec<i128>, AdapterError> {
 

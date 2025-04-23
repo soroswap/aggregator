@@ -30,15 +30,6 @@ fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     }
 }
 
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), AdapterError> {
-    let ledger_timestamp = e.ledger().timestamp();
-    if ledger_timestamp >= timestamp {
-        Err(AdapterError::DeadlineExpired)
-    } else {
-        Ok(())
-    }
-}
-
 fn check_initialized(e: &Env) -> Result<(), AdapterError> {
     if is_initialized(e) {
         Ok(())
@@ -88,7 +79,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
         amount_out_min: i128,
         path: Vec<Address>,
         to: Address,
-        deadline: u64,
+        _deadline: u64,
         bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
@@ -97,7 +88,6 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
 
         check_nonnegative_amount(amount_in)?;
         check_nonnegative_amount(amount_out_min)?;
-        ensure_deadline(&e, deadline)?;
 
         let swap_result = protocol_swap_exact_tokens_for_tokens(
             &e, 
@@ -105,7 +95,6 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
             &amount_out_min, 
             &path, 
             &to, 
-            &deadline, 
             &bytes,
         )?;
 
@@ -119,7 +108,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
         amount_in_max: i128,
         path: Vec<Address>,
         to: Address,
-        deadline: u64,
+        _deadline: u64,
         bytes: Option<Vec<BytesN<32>>>, 
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
@@ -128,7 +117,6 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
 
         check_nonnegative_amount(amount_out)?;
         check_nonnegative_amount(amount_in_max)?;
-        ensure_deadline(&e, deadline)?;
 
         let swap_result = protocol_swap_tokens_for_exact_tokens(
             &e, 
@@ -136,7 +124,6 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
             &amount_in_max, 
             &path, 
             &to, 
-            &deadline, 
             &bytes,
         )?;
 

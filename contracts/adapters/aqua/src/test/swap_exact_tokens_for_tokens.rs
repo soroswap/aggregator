@@ -1,127 +1,172 @@
-// use soroban_sdk::{Address, vec, Vec};
-// use crate::test::{AquaAggregatorAdapterTest, aqua_setup::deploy_and_initialize_lp};
-// use adapter_interface::AdapterError;
-// use super::aqua_adapter_contract::AdapterError as AdapterErrorDeployer;
+use soroban_sdk::{Address, vec, Vec, BytesN};
+use crate::test::{AquaAggregatorAdapterTest};
+use adapter_interface::AdapterError;
+use super::aqua_adapter_contract::AdapterError as AdapterErrorDeployer;
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_not_initialized() {
-//     let test = AquaAggregatorAdapterTest::setup();
-//     test.env.budget().reset_unlimited();
-//     let path: Vec<Address> = Vec::new(&test.env);
+#[test]
+fn swap_exact_tokens_for_tokens_not_initialized() {
+    let test = AquaAggregatorAdapterTest::setup();
+    test.env.budget().reset_unlimited();
+    let path: Vec<Address> = Vec::new(&test.env);
 
-//     let result = test.adapter_client_not_initialized.try_swap_exact_tokens_for_tokens(
-//         &0,            // amount_in
-//         &0,            // amount_out_min
-//         &path,         // path
-//         &test.user,    // to
-//         &0,            // deadline
-//     );
+    let result = test.adapter_client_not_initialized.try_swap_exact_tokens_for_tokens(
+        &0,            // amount_in
+        &0,            // amount_out_min
+        &path,         // path
+        &test.user,    // to
+        &0,            // deadline,
+        &None,
+    );
 
-//     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
+    assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
 
-// }
+}
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_amount_in_negative() {
-//     let test = AquaAggregatorAdapterTest::setup();
-//     test.env.budget().reset_unlimited();
+#[test]
+fn swap_exact_tokens_for_tokens_amount_in_negative() {
+    let test = AquaAggregatorAdapterTest::setup();
+    test.env.budget().reset_unlimited();
 
-//     let path: Vec<Address> = Vec::new(&test.env);
+    let path: Vec<Address> = Vec::new(&test.env);
 
-//     let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
-//         &-1,           // amount_in
-//         &0,            // amount_out_min
-//         &path,         // path
-//         &test.user,    // to
-//         &0,            // deadline
-//     );
+    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+        &-1,           // amount_in
+        &0,            // amount_out_min
+        &path,         // path
+        &test.user,    // to
+        &0,            // deadline
+        &None,
+    );
 
-//     assert_eq!(
-//         result,
-//         Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
-//     );
-// }
+    assert_eq!(
+        result,
+        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
+    );
+}
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
-//     let test = AquaAggregatorAdapterTest::setup();
-//     test.env.budget().reset_unlimited();
+#[test]
+fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
+    let test = AquaAggregatorAdapterTest::setup();
+    test.env.budget().reset_unlimited();
 
-//     let path: Vec<Address> = Vec::new(&test.env);
+    let path: Vec<Address> = Vec::new(&test.env);
 
-//     let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
-//         &0,            // amount_in
-//         &-1,           // amount_out_min
-//         &path,         // path
-//         &test.user,    // to
-//         &0,            // deadline
-//     );
+    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+        &0,            // amount_in
+        &-1,           // amount_out_min
+        &path,         // path
+        &test.user,    // to
+        &0,            // deadline
+        &None,
+    );
 
-//     assert_eq!(
-//         result,
-//         Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
-//     );
-// }
+    assert_eq!(
+        result,
+        Err(Ok(AdapterErrorDeployer::NegativeNotAllowed))
+    );
+}
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_expired() {
-//     let test = AquaAggregatorAdapterTest::setup();
+#[test]
+fn swap_exact_tokens_for_tokens_missing_hash() {
+    let test = AquaAggregatorAdapterTest::setup();
 
-//     let path: Vec<Address> = Vec::new(&test.env);
+    let path: Vec<Address> = Vec::new(&test.env);
 
-//     let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
-//         &0,            // amount_in
-//         &0,            // amount_out_min
-//         &path,         // path
-//         &test.user,    // to
-//         &0,            // deadline
-//     );
+    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+        &0,            // amount_in
+        &0,            // amount_out_min
+        &path,         // path
+        &test.user,    // to
+        &0,            // deadline
+        &None,
+    );
 
-//     assert_eq!(
-//         result,
-//         Err(Ok(AdapterErrorDeployer::DeadlineExpired))
-//     );
-// }
+    assert_eq!(
+        result,
+        Err(Ok(AdapterErrorDeployer::MissingPoolHashes))
+    );
+}
 
 
 
-// #[test]
-// #[should_panic] // TODO: Test the imported error
-// fn try_swap_exact_tokens_for_tokens_invalid_path() {
-//     let test = AquaAggregatorAdapterTest::setup();
+#[test]
+fn try_swap_exact_tokens_for_tokens_invalid_path_lenght() {
+    let test = AquaAggregatorAdapterTest::setup();
 
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
-//     let path: Vec<Address> = vec![&test.env, test.token_0.address.clone()];
-//     test.adapter_client.swap_exact_tokens_for_tokens(
-//         &0,        // amount_in
-//         &0,        // amount_out_min
-//         &path,     // path
-//         &test.user, // to
-//         &deadline, // deadline
-//     );
-// }
+    let path: Vec<Address> = vec![&test.env, test.tokens[0].address.clone()];
+    // vec with dummy bytes
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env, BytesN::from_array(&test.env, &[0; 32])];
+    
+    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+        &0,        // amount_in
+        &0,        // amount_out_min
+        &path,     // path
+        &test.user, // to
+        &0, // deadline
+        &Some(bytes_vec),
 
-// #[test]
-// #[should_panic] // TODO: Test the imported error
-// fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
-//     let test = AquaAggregatorAdapterTest::setup();
+    );
 
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
+    //WrongMinimumPathLength
+    assert_eq!(
+        result,
+        Err(Ok(AdapterErrorDeployer::WrongMinimumPathLength))
+    );
+}
 
-//     let mut path: Vec<Address> = Vec::new(&test.env);
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
+#[test]
+fn try_swap_exact_tokens_for_tokens_invalid_bytes_lenght() {
+    let test = AquaAggregatorAdapterTest::setup();
 
-//     test.env.budget().reset_unlimited();
-//     test.adapter_client.swap_exact_tokens_for_tokens(
-//         &0,        // amount_in
-//         &0,        // amount_out_min
-//         &path,     // path
-//         &test.user, // to
-//         &deadline, // deadline
-//     );
-//     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInsufficientInputAmount)));
-// }
+    let path: Vec<Address> = vec![&test.env,
+        test.tokens[0].address.clone(),
+        test.tokens[1].address.clone(),
+        test.tokens[2].address.clone()];
+    // vec with dummy bytes
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env, BytesN::from_array(&test.env, &[0; 32])];
+    
+    let result = test.adapter_client.try_swap_exact_tokens_for_tokens(
+        &0,        // amount_in
+        &0,        // amount_out_min
+        &path,     // path
+        &test.user, // to
+        &0, // deadline
+        &Some(bytes_vec),
+
+    );
+
+    //WrongMinimumPathLength
+    assert_eq!(
+        result,
+        Err(Ok(AdapterErrorDeployer::WrongPoolHashesLength))
+    );
+}
+
+#[test]
+// panic with error PoolNotFound = 404,
+#[should_panic(expected = "Error(Contract, #404)")]
+fn try_swap_exact_tokens_for_tokens_pool_not_found() {
+    let test = AquaAggregatorAdapterTest::setup();
+
+
+    let path: Vec<Address> = vec![&test.env,
+        test.tokens[0].address.clone(),
+        test.tokens[1].address.clone()];
+
+    // vec with dummy bytes
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env, BytesN::from_array(&test.env, &[0; 32])];
+    
+
+    test.env.budget().reset_unlimited();
+    test.adapter_client.swap_exact_tokens_for_tokens(
+        &0,        // amount_in
+        &0,        // amount_out_min
+        &path,     // path
+        &test.user, // to
+        &0, // deadline,
+        &Some(bytes_vec),
+    );
+}
 
 
 
@@ -160,52 +205,54 @@
 
 
 
-// #[test]
-// fn swap_exact_tokens_for_tokens_enough_output_amount() {
-//     let test = AquaAggregatorAdapterTest::setup();
+#[test]
+fn swap_exact_tokens_for_tokens_constant_product_pool() {
+    let test = AquaAggregatorAdapterTest::setup();
+    let deadline: u64 = 0;  
 
-//     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
+    let router = test.router.address;
+    let [token1, token2, _, _] = test.tokens;
 
-//     let mut path: Vec<Address> = Vec::new(&test.env);
+    // let mut path: Vec<Address> = Vec::new(&test.env);
 
-//     path.push_back(test.token_0.address.clone());
-//     path.push_back(test.token_1.address.clone());
-//     path.push_back(test.token_2.address.clone());
-//     path.push_back(test.token_3.address.clone());
+    // path.push_back(test.token_0.address.clone());
+    // path.push_back(test.token_1.address.clone());
+    // path.push_back(test.token_2.address.clone());
+    // path.push_back(test.token_3.address.clone());
 
-//     let amount_in = 500i128;
-//     // The next taken from aqua contract tests
-//     // TODO: Check with future versions of aqua
-//     let expected_amount_out = 500i128;
+    // let amount_in = 500i128;
+    // // The next taken from aqua contract tests
+    // // TODO: Check with future versions of aqua
+    // let expected_amount_out = 500i128;
 
-//     let initial_user_balance_0 = test.token_0.balance(&test.user);
-//     let initial_user_balance_1 = test.token_1.balance(&test.user);
-//     let initial_user_balance_2 = test.token_2.balance(&test.user);
-//     let initial_user_balance_3 = test.token_3.balance(&test.user);
+    // let initial_user_balance_0 = test.token_0.balance(&test.user);
+    // let initial_user_balance_1 = test.token_1.balance(&test.user);
+    // let initial_user_balance_2 = test.token_2.balance(&test.user);
+    // let initial_user_balance_3 = test.token_3.balance(&test.user);
 
-//     let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
+    // let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
 
-//     assert_eq!(token_out_address, test.token_3.address);
+    // assert_eq!(token_out_address, test.token_3.address);
     
-//     test.env.budget().reset_unlimited();
-//     let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
-//         &amount_in,       // amount_in
-//         &(expected_amount_out),  // amount_out_min
-//         &path,            // path
-//         &test.user,       // to
-//         &deadline,        // deadline
-//     );
+    // test.env.budget().reset_unlimited();
+    // let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
+    //     &amount_in,       // amount_in
+    //     &(expected_amount_out),  // amount_out_min
+    //     &path,            // path
+    //     &test.user,       // to
+    //     &deadline,        // deadline
+    // );
 
 
-//     assert_eq!(test.token_0.balance(&test.user), initial_user_balance_0 - amount_in);
-//     assert_eq!(test.token_1.balance(&test.user), initial_user_balance_1);
-//     assert_eq!(test.token_2.balance(&test.user), initial_user_balance_2);
-//     assert_eq!(test.token_3.balance(&test.user), initial_user_balance_3 + expected_amount_out);
+    // assert_eq!(test.token_0.balance(&test.user), initial_user_balance_0 - amount_in);
+    // assert_eq!(test.token_1.balance(&test.user), initial_user_balance_1);
+    // assert_eq!(test.token_2.balance(&test.user), initial_user_balance_2);
+    // assert_eq!(test.token_3.balance(&test.user), initial_user_balance_3 + expected_amount_out);
 
-//     // WE NEED TO RETURN THE VALUES
-//     assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
-//     assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
-// }
+    // // WE NEED TO RETURN THE VALUES
+    // assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
+    // assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
+}
 
 
 
