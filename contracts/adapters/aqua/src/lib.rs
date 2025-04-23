@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String, BytesN};
 mod event;
 mod storage;
 mod protocol_interface;
@@ -89,6 +89,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -105,6 +106,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
             &path, 
             &to, 
             &deadline, 
+            &bytes,
         )?;
 
         event::swap(&e, amount_in, path, to);
@@ -118,6 +120,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        bytes: Option<Vec<BytesN<32>>>, 
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -134,6 +137,7 @@ impl AdapterTrait for SoroswapAggregatorAquaAdapter {
             &path, 
             &to, 
             &deadline, 
+            &bytes,
         )?;
 
         event::swap(&e, amount_in_max, path, to);
