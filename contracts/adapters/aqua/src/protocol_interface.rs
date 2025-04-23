@@ -1,4 +1,4 @@
-use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient, BytesN};
+use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient, BytesN, vec};
 use crate::storage::{get_protocol_address};
 use adapter_interface::{AdapterError};
 
@@ -27,15 +27,12 @@ fn convert_to_swaps_chain(
     e: &Env, 
     path: &Vec<Address>,
     bytes: &Option<Vec<BytesN<32>>>,
-) -> Vec<(Vec<Address>, BytesN<32>, Address)> {
-
+) -> Result<
+    Vec<(Vec<Address>, BytesN<32>, Address)>, // (path, pool_hash, token_out)
+    AdapterError
+> {
     // We check that bytes is not None
-    let pool_hashes_vec = match bytes {
-        Some(v) => v,
-        None => {
-            panic!("Bytes is None. Aqua needs the pool hashes to swap");
-        }
-    };
+    let pool_hashes_vec = bytes.as_ref().ok_or(AdapterError::MissingPoolHashes)?;
 
     // We check that the length of bytes is equal to the length of path - 1
     if pool_hashes_vec.len() != path.len() - 1 {
@@ -48,14 +45,12 @@ fn convert_to_swaps_chain(
         let token_out = path.get(i + 1).expect("Failed to get token out");
         let pool_hash = pool_hashes_vec.get(i).expect("Failed to get pool hash");
 
-        let mut swap_chain_path: Vec<Address> = Vec::new(e);
-        swap_chain_path.push_back(token_in.clone());
-        swap_chain_path.push_back(token_out.clone());
+        let swap_chain_path = vec![&e, token_in.clone(), token_out.clone()];
 
         swaps_chain.push_back((swap_chain_path, pool_hash.clone(), token_out.clone()));
     }
 
-    swaps_chain
+    Ok(swaps_chain)
 }
 
 pub fn protocol_swap_exact_tokens_for_tokens(
@@ -70,7 +65,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
 
     let aqua_router_address = get_protocol_address(&e)?;
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);  
-    let swaps_chain = convert_to_swaps_chain(e, path, bytes);
+    let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
 
 
     // fn   (
@@ -80,13 +75,16 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     //     token_in: Address,
     //     in_amount: u128,
     //     out_min: u128,
-    // ) -> u128 {
+    // ) -> u128 { // final_amount_out
    
     let token_in = path.get(0).expect("Failed to get token in address");
     let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
+
+    // TODO Remove this if we remove the check
     let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
-    let final_amount_out = aqua_router_client.swap_chained(
+    // let final_amount_out = aqua_router_client.swap_chained(
+    aqua_router_client.swap_chained(
         &to, // user: Address 
         &swaps_chain, // swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
         &token_in, // token_in: Address,
@@ -95,9 +93,10 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     );
 
     
-    // check if the amount of token_out received is greater than the minimum amount expected
+    // Check if the amount of token_out received is greater than the minimum amount expected
     // TODO: Remove this checks if we want to reduce the number of total instructions
     // TODO: Do benchmarking
+    // We could get the final_amount_out from the aqua_router_client.swap_chained function
     let final_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     let final_amount_out = final_token_out_balance.checked_sub(initial_token_out_balance).unwrap();
     if  final_amount_out < *amount_out_min {
@@ -106,7 +105,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     }
  
     let mut swap_amounts: Vec<i128> = Vec::new(e);
-    swap_amounts.push_back(amount_in.clone());
+    swap_amounts.push_back(*amount_in);
     swap_amounts.push_back(final_amount_out as i128);
 
     Ok(swap_amounts)
@@ -124,24 +123,34 @@ pub fn protocol_swap_tokens_for_exact_tokens(
 
     let aqua_router_address = get_protocol_address(&e)?;
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
-    let swaps_chain = convert_to_swaps_chain(e, path, bytes);
+    let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
+    /*
+        fn swap_chained_strict_receive(
+            e: Env,
+            user: Address,
+            swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
+            token_in: Address,
+            out_amount: u128, // fixed amount of output token to receive
+            max_in: u128,     // maximum input token amount allowed
+        ) -> u128 // final_amount_in
+    */
 
 
     let token_in = path.get(0).expect("Failed to get token in address");
     // let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
     // let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
-    let final_amount_out = aqua_router_client.swap_chained(
+    let final_amount_in = aqua_router_client.swap_chained(
         &to, // user: Address 
         &swaps_chain, // swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
         &token_in, // token_in: Address,
-        &(*amount_in_max as u128), // in_amount: i128,
-        &(*amount_out as u128), // out_min: i128
+        &(*amount_out as u128), // out_amount: u128,
+        &(*amount_in_max as u128), // max_in: u128,
     );
 
     let mut swap_amounts: Vec<i128> = Vec::new(e);
-    swap_amounts.push_back(amount_in_max.clone());
-    swap_amounts.push_back(final_amount_out as i128);
+    swap_amounts.push_back(final_amount_in as i128);
+    swap_amounts.push_back(*amount_out);
 
     Ok(swap_amounts)
 }

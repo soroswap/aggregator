@@ -77,3 +77,34 @@ swap_chained(
         CAS3…OWMA, 
     220000000u128, 
     57425672u128) → 57468384u128
+
+
+
+    # Strict Receive
+    https://stellar.expert/explorer/public/tx/7ee1805bce4fe383358c0387d9adaa56de9032b997a34cf5879ce528c846a124
+
+    ```
+    fn swap_chained_strict_receive(
+        e: Env,
+        user: Address,
+        swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
+        token_in: Address,
+        out_amount: u128, // fixed amount of output token to receive
+        max_in: u128,     // maximum input token amount allowed
+    ) -> u128
+
+    ```
+    
+    swap_chained_strict_receive(
+        GA3C…T5SO, 
+        [
+            [
+                [CAS3…OWMA, CAUI…OJPK], 
+                N7lV83CNrnSMrUZUQfytcLJv/icjhSJ6SnNyNK5Cm98=bytes, 
+                CAUI…OJPK
+                ]
+            ], 
+        CAS3…OWMA, 
+    100000000u128, 
+    263446u128) → 
+    260838
