@@ -1,5 +1,6 @@
-use soroban_sdk::{Address, vec, Vec, BytesN};
-use crate::test::{AquaAggregatorAdapterTest};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{Address, vec, Vec, BytesN, Symbol, token::TokenClient, U256, FromVal};
+use crate::test::{AquaAggregatorAdapterTest, };
 use adapter_interface::AdapterError;
 use super::aqua_adapter_contract::AdapterError as AdapterErrorDeployer;
 
@@ -206,52 +207,103 @@ fn try_swap_exact_tokens_for_tokens_pool_not_found() {
 
 
 #[test]
-fn swap_exact_tokens_for_tokens_constant_product_pool() {
+fn swap_exact_tokens_for_tokens_constant_product_pool_1_hop() {
     let test = AquaAggregatorAdapterTest::setup();
     let deadline: u64 = 0;  
 
-    let router = test.router.address;
+    let router = test.router;
     let [token1, token2, _, _] = test.tokens;
 
-    // let mut path: Vec<Address> = Vec::new(&test.env);
+    let tokens = Vec::from_array(&test.env, [token1.address.clone(), token2.address.clone()]);
+    let user1 = Address::generate(&test.env);
+    test.reward_token.mint(&user1, &10_0000000);
 
-    // path.push_back(test.token_0.address.clone());
-    // path.push_back(test.token_1.address.clone());
-    // path.push_back(test.token_2.address.clone());
-    // path.push_back(test.token_3.address.clone());
+    let (pool_hash, pool_address) = router.init_standard_pool(&user1, &tokens, &30);
+    assert_eq!(
+        router.pool_type(&tokens, &pool_hash),
+        Symbol::new(&test.env, "constant_product")
+    );
+    let pool_info = router.get_info(&tokens, &pool_hash);
+    assert_eq!(
+        Symbol::from_val(&test.env, &pool_info.get(Symbol::new(&test.env, "pool_type")).unwrap()),
+        Symbol::new(&test.env, "constant_product")
+    );
 
-    // let amount_in = 500i128;
-    // // The next taken from aqua contract tests
-    // // TODO: Check with future versions of aqua
-    // let expected_amount_out = 500i128;
+    let token_share = TokenClient::new(&test.env, &router.share_id(&tokens, &pool_hash));
 
-    // let initial_user_balance_0 = test.token_0.balance(&test.user);
-    // let initial_user_balance_1 = test.token_1.balance(&test.user);
-    // let initial_user_balance_2 = test.token_2.balance(&test.user);
-    // let initial_user_balance_3 = test.token_3.balance(&test.user);
+    token1.mint(&user1, &1000);
+    assert_eq!(token1.balance(&user1), 1000);
 
-    // let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
+    token2.mint(&user1, &1000);
+    assert_eq!(token2.balance(&user1), 1000);
 
-    // assert_eq!(token_out_address, test.token_3.address);
-    
-    // test.env.budget().reset_unlimited();
-    // let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
-    //     &amount_in,       // amount_in
-    //     &(expected_amount_out),  // amount_out_min
-    //     &path,            // path
-    //     &test.user,       // to
-    //     &deadline,        // deadline
+    assert_eq!(token_share.balance(&user1), 0);
+
+    let desired_amounts = Vec::from_array(&test.env, [100, 100]);
+    router.deposit(&user1, &tokens, &pool_hash, &desired_amounts, &0);
+    assert_eq!(router.get_total_liquidity(&tokens), U256::from_u32(&test.env, 2));
+
+    assert_eq!(token_share.balance(&user1), 100);
+    assert_eq!(router.get_total_shares(&tokens, &pool_hash), 100);
+    assert_eq!(token_share.balance(&pool_address), 0);
+    assert_eq!(token1.balance(&user1), 900);
+    assert_eq!(token1.balance(&pool_address), 100);
+    assert_eq!(token2.balance(&user1), 900);
+    assert_eq!(token2.balance(&pool_address), 100);
+
+    assert_eq!(
+        router.get_reserves(&tokens, &pool_hash),
+        Vec::from_array(&test.env, [100, 100])
+    );
+
+    assert_eq!(
+        router.estimate_swap(&tokens, &token1.address, &token2.address, &pool_hash, &97),
+        48
+    );
+
+    // Here we will swap using the adapter instead of directly using the pool:
+    // assert_eq!(
+    //     router.swap(
+    //         &user1,
+    //         &tokens,
+    //         &token1.address,
+    //         &token2.address,
+    //         &pool_hash,
+    //         &97_u128, // amount_in
+    //         &48_u128, // amount_out_min
+    //     ),
+    //     48
     // );
 
+    let path: Vec<Address> = vec![&test.env,
+        token1.address.clone(),
+        token2.address.clone()];
 
-    // assert_eq!(test.token_0.balance(&test.user), initial_user_balance_0 - amount_in);
-    // assert_eq!(test.token_1.balance(&test.user), initial_user_balance_1);
-    // assert_eq!(test.token_2.balance(&test.user), initial_user_balance_2);
-    // assert_eq!(test.token_3.balance(&test.user), initial_user_balance_3 + expected_amount_out);
+    // vec pool hash
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env, pool_hash.clone()];
 
-    // // WE NEED TO RETURN THE VALUES
-    // assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
-    // assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
+    let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
+        &97,        // amount_in
+        &48,        // amount_out_min
+        &path,     // path
+        &user1, // to
+        &0, // deadline,
+        &Some(bytes_vec),
+    );
+
+    
+    assert_eq!(token1.balance(&user1), 803);
+    assert_eq!(token1.balance(&pool_address), 197);
+    assert_eq!(token2.balance(&user1), 948);
+    assert_eq!(token2.balance(&pool_address), 52);
+    assert_eq!(
+        router.get_reserves(&tokens, &pool_hash),
+        Vec::from_array(&test.env, [197, 52])
+    );
+
+
+    assert_eq!(executed_amounts.get(0).unwrap(), 97);
+    assert_eq!(executed_amounts.get(1).unwrap(), 48);
 }
 
 

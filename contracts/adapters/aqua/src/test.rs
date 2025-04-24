@@ -47,7 +47,8 @@ pub struct AquaAggregatorAdapterTest<'a> {
     router: AquaRouter<'a>,
     tokens: [TokenClient<'a>; 4],
     user: Address,
-    admin: Address
+    admin: Address,
+    reward_token: TokenClient<'a>,
 }
 
 impl<'a> AquaAggregatorAdapterTest<'a> {
@@ -88,7 +89,8 @@ impl<'a> AquaAggregatorAdapterTest<'a> {
             router: test.router,
             tokens: test.tokens,
             user,
-            admin: test.admin
+            admin: test.admin,
+            reward_token: test.reward_token,
         }
     }
 }
