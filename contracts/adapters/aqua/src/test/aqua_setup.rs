@@ -125,16 +125,16 @@ pub struct AquaTest<'a> {
 
     pub tokens: [test_token::Client<'a>; 4],
     pub reward_token: test_token::Client<'a>,
-    pub reward_boost_token: test_token::Client<'a>,
-    pub reward_boost_feed: reward_boost_feed::Client<'a>,
+    // pub reward_boost_token: test_token::Client<'a>,
+    // pub reward_boost_feed: reward_boost_feed::Client<'a>,
 
     pub router: AquaRouter<'a>,
 
-    pub emergency_admin: Address,
-    pub rewards_admin: Address,
-    pub operations_admin: Address,
-    pub pause_admin: Address,
-    pub emergency_pause_admin: Address,
+    // pub emergency_admin: Address,
+    // pub rewards_admin: Address,
+    // pub operations_admin: Address,
+    // pub pause_admin: Address,
+    // pub emergency_pause_admin: Address,
 }
 
 impl<'a> AquaTest<'a> {
@@ -238,13 +238,13 @@ impl<'a> AquaTest<'a> {
         tokens,
         reward_token,
         router,
-        emergency_admin,
-        rewards_admin,
-        operations_admin,
-        pause_admin,
-        emergency_pause_admin,
-        reward_boost_token,
-        reward_boost_feed,
+        // emergency_admin,
+        // rewards_admin,
+        // operations_admin,
+        // pause_admin,
+        // emergency_pause_admin,
+        // reward_boost_token,
+        // reward_boost_feed,
         }
     }
 }

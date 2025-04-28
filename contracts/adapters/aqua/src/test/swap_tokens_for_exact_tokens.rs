@@ -3,7 +3,7 @@ use soroban_sdk::testutils::{
 };
 use soroban_sdk::{
     Address, 
-    vec, Vec, BytesN, Symbol, token::TokenClient, U256, FromVal, IntoVal};
+    vec, Vec, BytesN, Symbol, token::TokenClient, U256, FromVal};
 use crate::test::{AquaAggregatorAdapterTest, };
 use adapter_interface::AdapterError;
 use super::aqua_adapter_contract::AdapterError as AdapterErrorDeployer;
@@ -150,7 +150,6 @@ fn try_swap_tokens_for_exact_tokens_pool_not_found() {
 #[test]
 fn swap_tokens_for_exact_tokens_constant_product_pool_1_hop() {
     let test = AquaAggregatorAdapterTest::setup();
-    let deadline: u64 = 0;  
 
     let router = test.router;
     let [token1, token2, _, _] = test.tokens;
@@ -241,7 +240,6 @@ fn swap_tokens_for_exact_tokens_constant_product_pool_1_hop() {
 #[test]
 fn swap_tokens_for_exact_tokens_constant_product_pool_2_hops() {
     let test = AquaAggregatorAdapterTest::setup();
-    let deadline: u64 = 0;  
 
     let router = test.router;
     let admin = test.admin;
