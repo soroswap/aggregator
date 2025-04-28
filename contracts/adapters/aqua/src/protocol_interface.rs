@@ -40,15 +40,15 @@ fn convert_to_swaps_chain(
         return Err(AdapterError::WrongMinimumPathLength);
     }
     // We check that the length of bytes is equal to the length of path - 1
-    if pool_hashes_vec.len() != path.len() - 1 {
+    if pool_hashes_vec.len() != path.len().checked_sub(1).unwrap() { // unwrap safe as we checked the length of path
         return Err(AdapterError::WrongPoolHashesLength);
     }
 
     let mut swaps_chain = Vec::new(e);
     for i in 0..(path.len() - 1) {
-        let token_in = path.get(i).expect("Failed to get token in ");
-        let token_out = path.get(i + 1).expect("Failed to get token out");
-        let pool_hash = pool_hashes_vec.get(i).expect("Failed to get pool hash");
+        let token_in = path.get(i).unwrap(); // This should be safe as we checked the length of path
+        let token_out = path.get(i + 1).unwrap(); // This should be safe as we checked the length of path
+        let pool_hash = pool_hashes_vec.get(i).unwrap(); // This should be safe as we checked the length of pool_hashes_vec
 
         let swap_chain_path = vec![&e, token_in.clone(), token_out.clone()];
 
@@ -71,18 +71,8 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);  
     let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
 
-
-    // fn   (
-    //     e: Env,
-    //     user: Address, // to
-    //     swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
-    //     token_in: Address,
-    //     in_amount: u128,
-    //     out_min: u128,
-    // ) -> u128 { // final_amount_out
-   
-    let token_in = path.get(0).expect("Failed to get token in address");
-    let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
+    let token_in = path.get(0).expect("Failed to get token in address"); // should be safe as we checked the length of path
+    let token_out_address = path.get(path.len().checked_sub(1).unwrap()).expect("Failed to get token out address"); // should be safe as we checked the length of path
 
     // TODO Remove this if we remove the check
     let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
@@ -140,8 +130,6 @@ pub fn protocol_swap_tokens_for_exact_tokens(
 
 
     let token_in = path.get(0).expect("Failed to get token in address");
-    // let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
-    // let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
     let final_amount_in = aqua_router_client.swap_chained_strict_receive(
         &to, // user: Address 

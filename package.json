@@ -8,6 +8,7 @@
     "deploy": "tsc && node dist/deploy.js",
     "deploy-phoenix-adapter": "tsc && node dist/deploy_phoenix_adapter.js",
     "deploy-comet-adapter": "tsc && node dist/deploy_comet_adapter.js",
+    "deploy-aqua-adapter": "tsc && node dist/deploy_aqua_adapter.js",
     "add-liquidity:phoenix": "tsc && node dist/protocols/phoenix/add_liquidity.js",
     "setup-protocols": "tsc && node dist/protocols/setup_protocols.js",
     "test": "tsc && node dist/test.js",
@@ -31,7 +32,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@stellar/stellar-sdk": "^13.0.0",
+    "@stellar/stellar-sdk": "^13.1.0",
     "dotenv": "^16.4.5"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"

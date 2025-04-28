@@ -12,5 +12,6 @@ pub enum AdapterError {
     MissingPoolHashes = 406, // For AQUA
     WrongMinimumPathLength = 407,
     WrongPoolHashesLength = 408, // For AQUA
+    
 }
 

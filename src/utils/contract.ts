@@ -35,6 +35,7 @@ const CONTRACT_REL_PATH: object = {
   comet_adapter: '../../contracts/target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm',
   comet_factory: '../../contracts/adapters/comet/comet_contracts/comet_factory.wasm',
   comet_pool: '../../contracts/adapters/comet/comet_contracts/comet_pool.wasm',
+  aqua_adapter: '../../contracts/target/wasm32-unknown-unknown/release/aqua_adapter.optimized.wasm',
 };
 
 const network = process.argv[2];
