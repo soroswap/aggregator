@@ -1,6 +1,5 @@
 use soroban_sdk::testutils::{
     Address as _,
-    MockAuth, MockAuthInvoke
 };
 use soroban_sdk::{
     Address, 
@@ -13,7 +12,7 @@ use crate::test::aqua_setup::create_token_contract;
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
     let test = AquaAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_client_not_initialized.try_swap_exact_tokens_for_tokens(
@@ -32,7 +31,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 #[test]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = AquaAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -54,7 +53,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 #[test]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test = AquaAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -93,7 +92,6 @@ fn swap_exact_tokens_for_tokens_missing_hash() {
         Err(Ok(AdapterErrorDeployer::MissingPoolHashes))
     );
 }
-
 
 
 #[test]
@@ -162,9 +160,8 @@ fn try_swap_exact_tokens_for_tokens_pool_not_found() {
 
     // vec with dummy bytes
     let bytes_vec: Vec<BytesN<32>> = vec![&test.env, BytesN::from_array(&test.env, &[0; 32])];
-    
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_client.swap_exact_tokens_for_tokens(
         &0,        // amount_in
         &0,        // amount_out_min

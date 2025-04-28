@@ -143,7 +143,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     // let token_out_address = path.get(path.len() - 1).expect("Failed to get token out address");
     // let initial_token_out_balance = TokenClient::new(&e, &token_out_address).balance(&to);
     
-    let final_amount_in = aqua_router_client.swap_chained(
+    let final_amount_in = aqua_router_client.swap_chained_strict_receive(
         &to, // user: Address 
         &swaps_chain, // swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
         &token_in, // token_in: Address,
