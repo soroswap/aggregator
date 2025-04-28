@@ -93,6 +93,8 @@ swap_chained(
         max_in: u128,     // maximum input token amount allowed
     ) -> u128
 
+    // Returns The amount of the input token spent after all swaps have been executed.
+
     ```
     
     swap_chained_strict_receive(
