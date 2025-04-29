@@ -36,14 +36,14 @@ mod deployer_contract {
 pub use deployer_contract::DeployerClient;
 
 fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
-    let deployer_address = &e.register_contract_wasm(None, deployer_contract::WASM);
+    let deployer_address = &e.register(deployer_contract::WASM, ());
     let deployer = DeployerClient::new(e, deployer_address);
     deployer
 }
 
 // SoroswapAggregator Contract [THE MAIN CONTRACT]
 fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
-    SoroswapAggregatorClient::new(e, &e.register_contract(None, SoroswapAggregator {}))
+    SoroswapAggregatorClient::new(e, &e.register(SoroswapAggregator {}, ()))
 }
 
 pub mod soroswap_aggregator_contract {
@@ -60,7 +60,7 @@ mod token {
 }
 use token::TokenClient;
 pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
-    TokenClient::new(&e, &e.register_stellar_asset_contract(admin.clone()))
+    TokenClient::new(&e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
@@ -212,7 +212,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         
         /*  INITIALIZE SOROSWAP FACTORY, ROUTER AND LPS */
         /************************************************/
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
         let soroswap_router_contract = create_soroswap_router(&env);
         let soroswap_factory_contract = create_soroswap_factory(&env, &admin);
         soroswap_router_contract.initialize(&soroswap_factory_contract.address);

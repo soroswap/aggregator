@@ -391,6 +391,7 @@ fn swap_exact_tokens_for_tokens_event() {
         &distribution_vec.clone(),
         &test.user.clone(),
         &deadline,
+        &None
     );
     // check the event
     let swap_event = test.env.events().all().last().unwrap();
@@ -453,6 +454,7 @@ fn swap_tokens_for_exact_tokens_event() {
         &distribution_vec.clone(),
         &test.user.clone(),
         &deadline,
+        &None
     );
     // check the event
     let swap_event = test.env.events().all().last().unwrap();

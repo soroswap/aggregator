@@ -12,10 +12,10 @@ fn test_initialize_and_get_values() {
     test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
     
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("initialize() - cpu: {}, mem: {}", cpu, mem);
-    test.env.budget().print();
+    test.env.cost_estimate().budget().print();
 
     // get admin
     let admin = test.aggregator_contract_not_initialized.get_admin();

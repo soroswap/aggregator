@@ -24,14 +24,14 @@ mod deployer_contract {
 use deployer_contract::DeployerClient;
 
 fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
-    let deployer_address = &e.register_contract_wasm(None, deployer_contract::WASM);
+    let deployer_address = &e.register(deployer_contract::WASM, ());
     let deployer = DeployerClient::new(e, deployer_address);
     deployer
 }
 
 // SoroswapAggregatorAdapter Contract
 fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterClient<'a> {
-    SoroswapAggregatorAdapterClient::new(e, &e.register_contract(None, SoroswapAggregatorAdapter {}))
+    SoroswapAggregatorAdapterClient::new(e, &e.register(SoroswapAggregatorAdapter {}, ()))
 }
 
 pub mod soroswap_adapter_contract {

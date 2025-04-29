@@ -11,32 +11,32 @@ fn budget() {
     //initialize ()
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
     
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("initialize()                                             | cpu: {},      mem: {}", cpu, mem);
 
     // update_adapters()
     let update_aggregator_addresses = new_update_adapters_addresses_deployer(&test);
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.aggregator_contract
         .update_adapters(&update_aggregator_addresses);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("update_adapters()                                        | cpu: {},      mem: {}", cpu, mem);
 
 
     //set_pause()
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.aggregator_contract
     .set_pause(&String::from_str(&test.env, "soroswap"), &true);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("set_pause()                                              | cpu: {},      mem: {}", cpu, mem);
     //unpause
     test.aggregator_contract
@@ -46,10 +46,10 @@ fn budget() {
 
     // set_admin
     let new_admin = Address::generate(&test.env);
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.aggregator_contract.set_admin(&new_admin);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("set_admin()                                              | cpu: {},      mem: {}", cpu, mem);
 
 
@@ -85,7 +85,7 @@ fn budget() {
     distribution_vec.push_back(distribution_1);
 
     let total_expected_amount_in = 123_456_789;
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.aggregator_contract.swap_exact_tokens_for_tokens(
         &test.token_0.address.clone(),
         &test.token_1.address.clone(),
@@ -94,9 +94,10 @@ fn budget() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None,
     );
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("swap_exact_tokens_for_tokens(s_p_protocol_one_hop)       | cpu: {},    mem: {}", cpu, mem);
     std::println!("-----------------------------------");
 
@@ -114,7 +115,7 @@ fn budget() {
 
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
-        test.env.budget().reset_unlimited();
+        test.env.cost_estimate().budget().reset_unlimited();
         test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
@@ -123,9 +124,10 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
+            &None,
         );
-        let mem = test.env.budget().memory_bytes_cost();
-        let cpu = test.env.budget().cpu_instruction_cost();
+        let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+        let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
         
         std::println!("swap_exact_tokens_for_tokens({}_protocol_one_hop)       | cpu: {},    mem: {}", n, cpu, mem);
     
@@ -150,7 +152,7 @@ fn budget() {
 
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
-        test.env.budget().reset_unlimited();
+        test.env.cost_estimate().budget().reset_unlimited();
         test.aggregator_contract.swap_exact_tokens_for_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
@@ -159,9 +161,10 @@ fn budget() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
+            &None,
         );
-        let mem = test.env.budget().memory_bytes_cost();
-        let cpu = test.env.budget().cpu_instruction_cost();
+        let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+        let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
         std::println!("swap_exact_tokens_for_tokens({}_protocol_two_hop)       | cpu: {},    mem: {}", n, cpu, mem);
     }
     std::println!("-----------------------------------");
@@ -182,7 +185,7 @@ fn budget() {
 
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
-        test.env.budget().reset_unlimited();
+        test.env.cost_estimate().budget().reset_unlimited();
         test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_1.address.clone(),
@@ -191,9 +194,10 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
+            &None,
         );
-        let mem = test.env.budget().memory_bytes_cost();
-        let cpu = test.env.budget().cpu_instruction_cost();
+        let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+        let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
         
         std::println!("swap_tokens_for_exact_tokens({}_protocol_one_hop)       | cpu: {},    mem: {}", n, cpu, mem);
     
@@ -217,7 +221,7 @@ fn budget() {
     // makle FOR cycl N from 1 to 5r
     for n in 1..7 {
         distribution_vec.push_back(distribution_0.clone());
-        test.env.budget().reset_unlimited();
+        test.env.cost_estimate().budget().reset_unlimited();
         test.aggregator_contract.swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),
             &test.token_2.address.clone(),
@@ -226,9 +230,10 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
+            &None,
         );
-        let mem = test.env.budget().memory_bytes_cost();
-        let cpu = test.env.budget().cpu_instruction_cost();
+        let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+        let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
         
         std::println!("swap_tokens_for_exact_tokens({}_protocol_two_hop)       | cpu: {},    mem: {}", n, cpu, mem);
     
@@ -243,11 +248,11 @@ fn budget() {
    
 
      //remove_adapter()
-     test.env.budget().reset_unlimited();
+     test.env.cost_estimate().budget().reset_unlimited();
      test.aggregator_contract
         .remove_adapter(&String::from_str(&test.env, "soroswap"));
-     let mem = test.env.budget().memory_bytes_cost();
-     let cpu = test.env.budget().cpu_instruction_cost();
+     let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+     let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
      std::println!("remove_adapter()                                         | cpu: {},      mem: {}", cpu, mem);
     
 

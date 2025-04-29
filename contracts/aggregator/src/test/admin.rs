@@ -1,7 +1,6 @@
 // TODO: Test set_admin function and events
 // TODO: Test upgreade wasm
-use soroban_sdk::{
-    testutils::{Address as _}, Address};
+use soroban_sdk::{Address, testutils::Address as _};
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
@@ -18,7 +17,7 @@ fn set_admin() {
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
 
-    test.env.budget().reset_default();
+    test.env.cost_estimate().budget().reset_default();
     test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
     

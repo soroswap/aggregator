@@ -34,7 +34,7 @@ mod soroswap_aggregator_contract {
 #[test]
 fn test_deploy_from_contract_soroswap_adapter() {
     let env = Env::default();
-    let deployer_client = DeployerClient::new(&env, &env.register_contract(None, Deployer));
+    let deployer_client = DeployerClient::new(&env, &env.register(Deployer, ()));
 
     // Upload the Wasm to be deployed from the deployer contract.
     // This can also be called from within a contract if needed.
@@ -75,7 +75,7 @@ fn test_deploy_from_contract_soroswap_adapter() {
 #[test]
 fn test_deploy_from_address_soroswap_adapter() {
     let env = Env::default();
-    let deployer_client = DeployerClient::new(&env, &env.register_contract(None, Deployer));
+    let deployer_client = DeployerClient::new(&env, &env.register(Deployer, ()));
 
     // Upload the Wasm to be deployed from the deployer contract.
     // This can also be called from within a contract if needed.
@@ -141,7 +141,7 @@ fn test_deploy_from_address_soroswap_adapter() {
 #[test]
 fn test_deploy_from_address_phoenix_adapter() {
     let env = Env::default();
-    let deployer_client = DeployerClient::new(&env, &env.register_contract(None, Deployer));
+    let deployer_client = DeployerClient::new(&env, &env.register(Deployer, ()));
 
     // Upload the Wasm to be deployed from the deployer contract.
     // This can also be called from within a contract if needed.
@@ -207,7 +207,7 @@ fn test_deploy_from_address_phoenix_adapter() {
 #[test]
 fn test_deploy_from_address_soroswap_aggregator() {
     let env = Env::default();
-    let deployer_client = DeployerClient::new(&env, &env.register_contract(None, Deployer));
+    let deployer_client = DeployerClient::new(&env, &env.register(Deployer, ()));
 
     // Upload the Wasm to be deployed from the deployer contract.
     // This can also be called from within a contract if needed.

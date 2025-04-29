@@ -69,7 +69,7 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     let salt = Bytes::new(&e.clone());
     let salt = e.crypto().sha256(&salt);
 
-    e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
+    e.deployer().with_address(admin.clone(), salt).deploy_v2(factory_wasm, ())
 }
 
 pub use factory::Client as PhoenixFactory;
@@ -95,7 +95,7 @@ pub fn deploy_multihop_contract<'a>(
 ) -> MultihopClient<'a> {
     let admin = admin.into().unwrap_or(Address::generate(env));
 
-    let multihop_address = &env.register_contract_wasm(None, multihop::WASM);
+    let multihop_address = &env.register(multihop::WASM, ());
     let multihop = MultihopClient::new(env, multihop_address); 
 
     multihop.initialize(&admin, factory);

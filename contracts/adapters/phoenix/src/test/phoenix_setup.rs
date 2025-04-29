@@ -29,7 +29,7 @@ pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
     let salt = Bytes::new(&e.clone());
     let salt = e.crypto().sha256(&salt);
 
-    e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
+    e.deployer().with_address(admin.clone(), salt).deploy_v2(factory_wasm, ())
 }
 
 pub use factory::Client as PhoenixFactory;
@@ -57,7 +57,7 @@ pub fn deploy_multihop_contract<'a>(
 ) -> MultihopClient<'a> {
     let admin = admin.into().unwrap_or(Address::generate(env));
 
-    let multihop_address = &env.register_contract_wasm(None, multihop::WASM);
+    let multihop_address = &env.register(multihop::WASM, ());
     let multihop = MultihopClient::new(env, multihop_address); 
 
     multihop.initialize(&admin, factory);
@@ -97,7 +97,7 @@ pub fn install_token_wasm(env: &Env) -> BytesN<32> {
 }
 
 pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract::Client<'a> {
-    token_contract::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
+    token_contract::Client::new(env, &env.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 
@@ -303,7 +303,7 @@ impl<'a> PhoenixTest<'a> {
     pub fn phoenix_setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         let admin = Address::generate(&env);
         let user = Address::generate(&env);

@@ -23,7 +23,7 @@ use factory::CometFactoryClient;
 pub fn create_comet_factory<'a>(e: &Env) -> CometFactoryClient{
     let pair_hash = pair_contract_wasm(e);
 
-    let factory_address = e.register_contract_wasm(None, factory::WASM);
+    let factory_address = e.register(factory::WASM, ());
     let factory_client = CometFactoryClient::new(&e.clone(), &factory_address);
 
     factory_client.init(&pair_hash);
@@ -32,7 +32,7 @@ pub fn create_comet_factory<'a>(e: &Env) -> CometFactoryClient{
 }
 
 pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> (TokenClient<'a>, TokenAdminClient<'a>) {
-    let address = e.register_stellar_asset_contract(admin.clone());
+    let stellar_asset_contract = e.register_stellar_asset_contract_v2(admin.clone());
     
-    (TokenClient::new(&e, &address), TokenAdminClient::new(&e, &address))
+    (TokenClient::new(&e, &stellar_asset_contract.address()), TokenAdminClient::new(&e, &stellar_asset_contract.address()))
 }
