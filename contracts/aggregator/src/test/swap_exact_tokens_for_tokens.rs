@@ -26,6 +26,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
         &Vec::new(&test.env),
         &test.user.clone(),
         &100,
+        &None
     );
     assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
@@ -63,6 +64,7 @@ fn swap_exact_tokens_for_tokens_negative_amount_in() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
 }
 
@@ -114,6 +116,7 @@ fn swap_exact_tokens_for_tokens_negible_amount() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
 
     assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
@@ -191,6 +194,8 @@ fn swap_exact_tokens_for_tokens_deadline_expired() {
         &distribution_vec,
         &test.user.clone(),
         &0,
+
+        &None
     );
 }
 
@@ -224,6 +229,7 @@ fn swap_exact_tokens_for_tokens_distribution_over_max() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::DistributionLengthExceeded)));
@@ -261,6 +267,7 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ZeroDistributionPart)));
@@ -295,6 +302,7 @@ fn swap_exact_tokens_for_tokens_protocol_not_found() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
@@ -334,6 +342,7 @@ fn swap_exact_tokens_for_tokens_paused_protocol() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolPaused)));
@@ -374,6 +383,7 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_start() {
         &distribution_vec,                      
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
@@ -414,6 +424,7 @@ fn swap_exact_tokens_for_tokens_malformed_path_wrong_end() {
         &distribution_vec,                      
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
@@ -453,6 +464,7 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
@@ -520,6 +532,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
+            &None
         );
 
     //     // CHECK THAT WE SAW IT IN THE PREVIOUS AUTORIZED TXS
@@ -633,6 +646,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_one_protocol_two_hops() {
         &distribution_vec.clone(),
         &test.user.clone(),
         &deadline,
+        &None
     );
 
     let user_balance_after_0 = test.token_0.balance(&test.user);
@@ -734,6 +748,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
@@ -751,6 +766,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_same_protocol_twice() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
 
     // check balance after
@@ -853,6 +869,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InsufficientOutputAmount)));
@@ -870,6 +887,7 @@ fn swap_exact_tokens_for_tokens_succeed_correctly_two_protocols() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
+        &None
     );
 
     // check balance after
@@ -957,6 +975,7 @@ fn swap_exact_tokens_for_tokens_succeed_comet() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
+            &None
         );
 
     // check new user balances
@@ -1066,6 +1085,7 @@ fn swap_exact_tokens_for_tokens_succeed_comet_soroswap_two_hops() {
         &distribution_vec.clone(),
         &test.user.clone(),
         &deadline,
+        &None
     );
 
     let user_balance_after_0 = test.token_0.balance(&test.user);

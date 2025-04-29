@@ -8,7 +8,7 @@ use super::phoenix_adapter_contract::AdapterError as AdapterErrorDeployer;
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_client_not_initialized.try_swap_tokens_for_exact_tokens(
@@ -17,6 +17,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -26,7 +27,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
 #[test]
 fn swap_tokens_for_exact_tokens_amount_out_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -36,6 +37,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(
@@ -47,7 +49,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
 #[test]
 fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -57,6 +59,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(
@@ -77,6 +80,7 @@ fn swap_tokens_for_exact_tokens_expired() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(
@@ -101,6 +105,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
    
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInvalidPath)));
@@ -125,7 +130,9 @@ fn try_swap_tokens_for_exact_tokens_pair_does_not_exist() {
         &0,  // amount_in_max
         &path, // path
         &test.user, // to
-        &deadline); // deadline
+        &deadline, // deadline
+        &None
+    );
 }
 
 
@@ -141,13 +148,14 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
     path.push_back(test.token_1.address.clone());
 
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_client.swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInsufficientOutputAmount)));
 }
@@ -157,7 +165,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
 #[should_panic(expected = "HostError: Error(WasmVm, InvalidAction)")] //TODO: Why it changed using the deployer?
 fn try_swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // test.adapter_client_not_initialized.initialize(
     //     &String::from_str(&test.env, "phoenix"),
@@ -179,6 +187,7 @@ fn try_swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
         &path,                // path
         &test.user,           // to
         &deadline,            // deadline
+        &None
     );
 
 
@@ -192,7 +201,7 @@ fn try_swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
 #[test]
 fn swap_tokens_for_exact_tokens_amount_in_should() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
@@ -212,7 +221,9 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
         &(amount_in_should),  // amount_in_max
         &path, // path
         &test.user, // to
-        &deadline); // deadline
+        &deadline, // deadline
+        &None
+        );
 
     assert_eq!(amounts.get(0).unwrap(), amount_in_should);
     assert_eq!(amounts.get(1).unwrap(), expected_amount_out);
@@ -227,7 +238,7 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
 #[test]
 fn swap_tokens_for_exact_tokens_3_hops() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let ledger_timestamp = 100;
     let desired_deadline = 1000;
@@ -256,8 +267,9 @@ fn swap_tokens_for_exact_tokens_3_hops() {
         &amount_in_should,  // amount_in_max
         &path, // path
         &test.user, // to
-        &desired_deadline); // deadline
-
+        &desired_deadline, // deadline
+        &None
+    );
 
     assert_eq!(amounts.get(0).unwrap(), amount_in_should); 
     assert_eq!(amounts.get(1).unwrap(), expected_amount_out);
