@@ -5,7 +5,8 @@ extern crate std;
 use crate::{Deployer, DeployerClient};
 use alloc::vec;
 use soroban_sdk::{
-    symbol_short, testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, xdr::{self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgs, Uint256}, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec, vec as sorovec
+    symbol_short, testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, xdr::{self, ContractIdPreimage, ContractIdPreimageFromAddress, CreateContractArgsV2, Uint256}, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec, vec as sorovec,
+    xdr::VecM
 };
 use soroswap_aggregator_contract::Adapter;
 
@@ -117,13 +118,18 @@ fn test_deploy_from_address_soroswap_adapter() {
         // From `deploy` function the 'create contract' host function has to be
         // authorized.
         sub_invocations: vec![AuthorizedInvocation {
-            function: AuthorizedFunction::CreateContractHostFn(CreateContractArgs {
+            function: AuthorizedFunction::CreateContractV2HostFn(
+                CreateContractArgsV2 {
                 contract_id_preimage: ContractIdPreimage::Address(ContractIdPreimageFromAddress {
                     address: deployer.clone().try_into().unwrap(),
                     salt: Uint256([0; 32]),
+                    
                 }),
                 executable: xdr::ContractExecutable::Wasm(xdr::Hash(wasm_hash.into_val(&env))),
+                constructor_args: VecM::default(),
             }),
+            
+            
             sub_invocations: vec![],
         }],
     };
@@ -183,12 +189,13 @@ fn test_deploy_from_address_phoenix_adapter() {
         // From `deploy` function the 'create contract' host function has to be
         // authorized.
         sub_invocations: vec![AuthorizedInvocation {
-            function: AuthorizedFunction::CreateContractHostFn(CreateContractArgs {
+            function: AuthorizedFunction::CreateContractV2HostFn(CreateContractArgsV2 {
                 contract_id_preimage: ContractIdPreimage::Address(ContractIdPreimageFromAddress {
                     address: deployer.clone().try_into().unwrap(),
                     salt: Uint256([0; 32]),
                 }),
                 executable: xdr::ContractExecutable::Wasm(xdr::Hash(wasm_hash.into_val(&env))),
+                constructor_args: VecM::default(),
             }),
             sub_invocations: vec![],
         }],
@@ -260,12 +267,13 @@ fn test_deploy_from_address_soroswap_aggregator() {
         // authorized.
         sub_invocations: vec![
           AuthorizedInvocation {
-            function: AuthorizedFunction::CreateContractHostFn(CreateContractArgs {
+            function: AuthorizedFunction::CreateContractV2HostFn(CreateContractArgsV2 {
                 contract_id_preimage: ContractIdPreimage::Address(ContractIdPreimageFromAddress {
                     address: deployer.clone().try_into().unwrap(),
                     salt: Uint256([0; 32]),
                 }),
                 executable: xdr::ContractExecutable::Wasm(xdr::Hash(wasm_hash.into_val(&env))),
+                constructor_args: VecM::default(),
             }),
             sub_invocations: vec![],
         },

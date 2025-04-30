@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "adapter-interface"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "soroban-sdk",
 ]
@@ -1264,7 +1264,7 @@ dependencies = [
 
 [[package]]
 name = "soroswap-aggregator"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "adapter-interface",
  "soroban-sdk",
@@ -1272,7 +1272,7 @@ dependencies = [
 
 [[package]]
 name = "soroswap-aggregator-deployer"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "adapter-interface",
  "soroban-sdk",
