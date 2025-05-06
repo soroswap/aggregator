@@ -72,7 +72,7 @@ cd /workspace/contracts
 make build
 ```
 
-### Compile other protocols
+### (Optional) Compile other protocols
 If you are considering other protocol that have changed their wasm versions, upgrade them.
 Make sure that you did a recursive pull
 
@@ -83,6 +83,13 @@ For Phoenix:
 cd protocols/phoenix-contracts/
 make build
 cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+# make sure the tests still pass
+
+rustup install 1.79.0 # Phoenix needs to downgrade
+rustup override set 1.79.0
+rustup target add wasm32-unknown-unknown
+make test
+
 ```
 
 For Aqua:
@@ -120,6 +127,14 @@ cargo test budget -- --nocapture > aggregator_budget.txt
 ```
 
 ## 4.- Deployment
+
+### 4.1- (Optional) Deploy each protocol.
+Sometimes projects do not keep a testnet version of their protocols. If you need to deploy your own Phoenix, Comet or Aqua version of the protocol, do:
+
+```
+yarn setup-phoenix testnet # To Setup Phoenix
+
+```
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
