@@ -73,7 +73,10 @@ make build
 ```
 
 ### Compile other protocols
-If you are considering other protocol that have changed their wasm versions, upgrade them:
+If you are considering other protocol that have changed their wasm versions, upgrade them.
+Make sure that you did a recursive pull
+
+However, you dont need to do this very often.
 
 For Phoenix:
 ```
@@ -131,6 +134,13 @@ after the WASMs are built you can run this to deploy, networks can be `testnet`,
 ```bash
 cd /workspace
 yarn deploy <network>
+```
+
+NOTE: For Testnet we will use the deployed tokens on the soroswap core repo, so make sure to pull the last version:
+
+```
+cd protocols/soroswap/
+git pull origin main
 ```
 You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
 
