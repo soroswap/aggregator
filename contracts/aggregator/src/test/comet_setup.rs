@@ -2,7 +2,7 @@
 use comet_adapter::CometAdapterClient;
 use pair::CometPairClient;
 use soroban_sdk::{vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec};
-use super::{generate_salt, DeployerClient};
+use test_utils::phoenix_setup::{generate_salt, DeployerClient};
 
 pub mod pair {
     soroban_sdk::contractimport!(file = "../adapters/comet/comet_contracts/comet_pool.wasm");

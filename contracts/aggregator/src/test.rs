@@ -18,8 +18,9 @@ use soroswap_setup::{
     SoroswapRouterClient,
 };
 
-mod phoenix_setup;
-use phoenix_setup::{
+// mod phoenix_setup;
+use test_utils::phoenix_setup::{
+    create_deployer,
     create_phoenix_adapter,
     deploy_and_initialize_factory as phoenix_deploy_and_initialize_factory,
     deploy_and_initialize_lp as phoenix_deploy_and_initialize_lp,
@@ -29,17 +30,17 @@ use phoenix_setup::{
 
 mod comet_setup;
 
-mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
-    pub type DeployerClient<'a> = Client<'a>;
-}
-pub use deployer_contract::DeployerClient;
+// mod deployer_contract {
+//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+//     pub type DeployerClient<'a> = Client<'a>;
+// }
+// pub use deployer_contract::DeployerClient;
 
-fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
-    let deployer_address = &e.register(deployer_contract::WASM, ());
-    let deployer = DeployerClient::new(e, deployer_address);
-    deployer
-}
+// fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
+//     let deployer_address = &e.register(deployer_contract::WASM, ());
+//     let deployer = DeployerClient::new(e, deployer_address);
+//     deployer
+// }
 
 // SoroswapAggregator Contract [THE MAIN CONTRACT]
 fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
@@ -63,12 +64,12 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
     TokenClient::new(&e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
-pub fn install_token_wasm(env: &Env) -> BytesN<32> {
-    soroban_sdk::contractimport!(
-        file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm"
-    );
-    env.deployer().upload_contract_wasm(WASM)
-}
+// pub fn install_token_wasm(env: &Env) -> BytesN<32> {
+//     soroban_sdk::contractimport!(
+//         file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm"
+//     );
+//     env.deployer().upload_contract_wasm(WASM)
+// }
 
 
 // Helper function to initialize / update soroswap aggregator protocols

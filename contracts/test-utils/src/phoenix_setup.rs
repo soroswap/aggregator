@@ -2,7 +2,11 @@
 // extern crate std;
 use soroban_sdk::{
     vec,
+    Vec,
     // IntoVal,
+    Symbol,
+    Val,
+    IntoVal,
     String,
     Env, 
     BytesN, 
@@ -398,3 +402,76 @@ impl<'a> PhoenixTest<'a> {
         }
     }
 }
+
+
+
+mod deployer_contract {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    pub type DeployerClient<'a> = Client<'a>;
+}
+pub use deployer_contract::DeployerClient;
+
+
+pub fn generate_salt(initial: u8) -> [u8; 32] {
+    let mut salt = [0u8; 32];
+    salt[0] = initial;
+    salt
+}
+
+pub fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
+    let deployer_address = &e.register(deployer_contract::WASM, ());
+    let deployer = DeployerClient::new(e, deployer_address);
+    deployer
+}
+
+
+// For Phoenix
+mod phoenix_adapter {
+    soroban_sdk::contractimport!(
+        file =
+            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+    );
+    pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
+}
+pub use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
+// use crate::test::install_token_wasm;
+// Adapter for phoenix
+// pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+//     let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
+//     let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
+//     adapter
+// }
+
+pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, multihop_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+    let wasm_hash = e.deployer().upload_contract_wasm(phoenix_adapter::WASM);
+
+    // Deploy contract using deployer, and include an init function to call.
+    let salt = BytesN::from_array(&e, &generate_salt(1));
+    let init_fn = Symbol::new(&e, &("initialize"));
+
+    let protocol_id = String::from_str(&e, "phoenix");
+    let protocol_address = multihop_contract.clone();
+
+    // Convert the arguments into a Vec<Val>
+    
+    
+// // Convert protocol_id and protocol_address to a soroban_sdk::Vec<Val>
+//     let mut init_fn_args: Vec<Val> = Vec::new(e); // Initialize an empty soroban_sdk::Vec
+//     init_fn_args.push(protocol_id.clone().into_val(e)); // Convert String to Val
+//     init_fn_args.push(protocol_address.clone().into_val(e)); // Convert Address to Val
+    let init_fn_args: Vec<Val> = (protocol_id.clone(), protocol_address.clone()).into_val(e);
+
+
+    let (contract_id, _init_result) = deployer_client.deploy(
+        &admin,
+        &wasm_hash,
+        &salt,
+        &init_fn,
+        &init_fn_args,
+    );
+
+    let adapter_contract = SoroswapAggregatorAdapterForPhoenixClient::new(e, &contract_id);
+    adapter_contract
+}
+
+
