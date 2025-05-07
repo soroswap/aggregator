@@ -1,5 +1,7 @@
+#[cfg(test)]
 use soroban_sdk::{Address, vec, Vec};
-use crate::test::{PhoenixAggregatorAdapterTest, phoenix_setup::deploy_and_initialize_lp};
+use crate::test::{PhoenixAggregatorAdapterTest};
+use test_utils::phoenix_setup::deploy_and_initialize_lp;
 use adapter_interface::AdapterError;
 use super::phoenix_adapter_contract::AdapterError as AdapterErrorDeployer;
 

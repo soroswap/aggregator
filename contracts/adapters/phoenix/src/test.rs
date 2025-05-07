@@ -1,7 +1,5 @@
 #![cfg(test)]
 extern crate std;
-pub mod phoenix_setup;
-
 use soroban_sdk::{
     Env, 
     Address, 
@@ -13,7 +11,7 @@ use soroban_sdk::{
     IntoVal
 };
 use crate::{SoroswapAggregatorPhoenixAdapter, SoroswapAggregatorPhoenixAdapterClient};
-use phoenix_setup::{PhoenixTest, MultihopClient, TokenClient, PhoenixFactory};
+use test_utils::phoenix_setup::{PhoenixTest, MultihopClient, TokenClient, PhoenixFactory};
 // use factory::SoroswapFactoryClient;
 // use router::SoroswapRouterClient;
 
