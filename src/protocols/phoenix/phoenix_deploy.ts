@@ -1,6 +1,6 @@
 import { Address, Keypair, nativeToScVal } from '@stellar/stellar-sdk';
 import { AddressBook } from '../../utils/address_book.js';
-import { bumpContractCode, deployContract, installContract, invokeContract } from '../../utils/contract.js';
+import { bumpContractCode, deployContract, deployContractWithArgs, installContract, invokeContract } from '../../utils/contract.js';
 import { config } from '../../utils/env_config.js';
 
 
@@ -28,30 +28,23 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
   await installContract('phoenix_stake', addressBook, phoenixAdmin);
   await bumpContractCode('phoenix_stake', addressBook, phoenixAdmin);
 
-  console.log('-------------------------------------------------------');
-  console.log('Deploying Phoenix Factory');
-  console.log('-------------------------------------------------------');
-  await deployContract('phoenix_factory', 'phoenix_factory', addressBook, phoenixAdmin);
 
-  console.log('-------------------------------------------------------');
-  console.log('Deploying Phoenix Multihop');
-  console.log('-------------------------------------------------------');
-  await deployContract('phoenix_multihop', 'phoenix_multihop', addressBook, phoenixAdmin);
 
+  console.log('-------------------------------------------------------'); 
+  console.log('Deploying Phoenix Factory With Constructor');
   console.log('-------------------------------------------------------');
-  console.log('Initializing Phoenix Multihop');
-  console.log('-------------------------------------------------------');
-  // Initializing Phoenix Multihop
-  const multihopInitParams = [
-    new Address(phoenixAdmin.publicKey()).toScVal(),
-    new Address(addressBook.getContractId('phoenix_factory')).toScVal(),
-  ];
-  console.log("Phoenix Factory Address", addressBook.getContractId('phoenix_factory'))
-  await invokeContract('phoenix_multihop', addressBook, 'initialize', multihopInitParams, phoenixAdmin);
 
-  console.log('-------------------------------------------------------');
-  console.log('Initializing Phoenix Factory');
-  console.log('-------------------------------------------------------');
+
+  //     let args = ( 
+//         admin.clone(),
+//         multihop_wasm_hash,
+//         lp_wasm_hash,
+//         stable_wasm_hash,
+//         stake_wasm_hash,
+//         token_wasm_hash,
+//         whitelisted_accounts,
+//         10u32,
+//     );
 
   // Initializing Phoenix Factory
   const factoryInitParams = [
@@ -65,7 +58,20 @@ export async function deployAndInitPhoenix(addressBook: AddressBook, phoenixAdmi
     nativeToScVal(7, { type: 'u32' })
   ];
 
-  await invokeContract('phoenix_factory', addressBook, 'initialize', factoryInitParams, phoenixAdmin);
+  // export async function deployContractWithArgs(
+  //   contractKey: string,
+  //   wasmKey: string,
+  //   addressBook: AddressBook,
+  //   args: xdr.ScVal[],
+  //   source: Keypair
+  // )
+
+  await deployContractWithArgs(
+    'phoenix_factory',
+    'phoenix_factory',
+    addressBook,
+    factoryInitParams,
+    phoenixAdmin);
 }
 
 const network = process.argv[2];

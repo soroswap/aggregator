@@ -55,7 +55,7 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   console.log("** Comet Adapter");
 
-  await cometSetup(loadedConfig, addressBook)
+  // await cometSetup(loadedConfig, addressBook)
 
 
   console.log('-------------------------------------------------------');

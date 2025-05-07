@@ -59,6 +59,54 @@ export async function installContract(wasmKey: string, addressBook: AddressBook,
   await invoke(op, source, false);
 }
 
+
+export async function deployContractWithArgs(
+  contractKey: string,
+  wasmKey: string,
+  addressBook: AddressBook,
+  args: xdr.ScVal[],
+  source: Keypair
+) {
+  const contractIdSalt = randomBytes(32);
+  const networkId = hash(Buffer.from(loadedConfig.passphrase));
+  const contractIdPreimage =
+    xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+      new xdr.ContractIdPreimageFromAddress({
+        address: Address.fromString(source.publicKey()).toScAddress(),
+        salt: contractIdSalt,
+      })
+    );
+
+  const hashIdPreimage = xdr.HashIdPreimage.envelopeTypeContractId(
+    new xdr.HashIdPreimageContractId({
+      networkId: networkId,
+      contractIdPreimage: contractIdPreimage,
+    })
+  );
+  console.log("Deploying WASM", wasmKey, "for", contractKey);
+  const contractId = StrKey.encodeContract(hash(hashIdPreimage.toXDR()));
+  addressBook.setContractId(contractKey, contractId);
+  const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), "hex");
+
+  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContractV2(
+    new xdr.CreateContractArgsV2({
+      contractIdPreimage,
+      executable: xdr.ContractExecutable.contractExecutableWasm(wasmHash),
+      constructorArgs: args,
+    })
+  );
+
+  addressBook.writeToFile();
+  await invoke(
+    Operation.invokeHostFunction({
+      func: deployFunction,
+      auth: [],
+    }),
+    source,
+    false
+  );
+}
+
 export async function deployContract(
   contractKey: string,
   wasmKey: string,
