@@ -50,7 +50,11 @@ fn convert_to_swaps_chain(
         let token_out = path.get(i + 1).unwrap(); // This should be safe as we checked the length of path
         let pool_hash = pool_hashes_vec.get(i).unwrap(); // This should be safe as we checked the length of pool_hashes_vec
 
-        let swap_chain_path = vec![&e, token_in.clone(), token_out.clone()];
+        let swap_chain_path = if token_in < token_out {
+            vec![&e, token_in.clone(), token_out.clone()]
+        } else {
+            vec![&e, token_out.clone(), token_in.clone()]
+        };
 
         swaps_chain.push_back((swap_chain_path, pool_hash.clone(), token_out.clone()));
     }
