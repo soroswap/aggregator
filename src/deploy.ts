@@ -7,11 +7,11 @@ import { airdropAccount, deployContract, installContract, invokeContract } from 
 import { config } from './utils/env_config.js';
 import { TokensBook } from './utils/tokens_book.js';
 import { cometSetup } from './protocols/comet/comet_setup.js';
+import {Protocol} from './utils/types.js';
+import { deployAdapter } from './utils/adapters.js';
 
-export async function deployAndInitAggregator(addressBook: AddressBook) {
-  // if(network == 'mainnet') throw new Error('Mainnet not yet supported')
+export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
   await airdropAccount(loadedConfig.admin);
-
 
   console.log('-------------------------------------------------------');
   console.log('Deploying Deployer');
@@ -22,39 +22,25 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
   console.log('-------------------------------------------------------');
   console.log('Deploying Adapters using the deployer');
   console.log('-------------------------------------------------------');
-  console.log("** Soroswap Adapter");
-  await installContract('soroswap_adapter', addressBook, loadedConfig.admin);
+
+  let soroswapRouter = soroswapAddressBook.getContractId('router');
+  let aquaRouter = aquaAddressBook.getContractId('aqua_router');
+
+  let phoenixMultihop;
+
+  if (network == 'mainnet') {
+    phoenixMultihop = phoenixAddressBook.getContractId('phoenix_multihop');
+  }
+  else { // On Tesntet we will get from contracts we have deployed
+    phoenixMultihop = addressBook.getContractId('phoenix_multihop');
+  }
+
+  await deployAdapter(addressBook, loadedConfig, 'soroswap', soroswapRouter);
+  await deployAdapter(addressBook, loadedConfig, 'phoenix', phoenixMultihop);
+  await deployAdapter(addressBook, loadedConfig, 'aqua', aquaRouter);
+
   
-  const routerAddress = soroswapAddressBook.getContractId('router');
-
-  const initArgs = xdr.ScVal.scvVec([
-    xdr.ScVal.scvString("soroswap"), // protocol_id as ScVal string
-    new Address(routerAddress).toScVal() // protocol_address as ScVal address
-  ]);
-
-  const soroswapAdapterDeployParams: xdr.ScVal[] = [
-    new Address(loadedConfig.admin.publicKey()).toScVal(),
-    nativeToScVal(Buffer.from(addressBook.getWasmHash("soroswap_adapter"), "hex")),
-    nativeToScVal(randomBytes(32)),
-    xdr.ScVal.scvSymbol('initialize'),
-    initArgs
-  ]
-
-  const response = await invokeContract(
-    'deployer',
-    addressBook,
-    'deploy',
-    soroswapAdapterDeployParams,
-    loadedConfig.admin
-  );
-
-  const soroswapAdapterAddress = scValToNative(response.returnValue)[0]
-  console.log('🚀 « soroswapAdapterAddress:', soroswapAdapterAddress);
-  // SAVE ADDRES IN ADDRESS BOOK
-  addressBook.setContractId("soroswap_adapter", soroswapAdapterAddress)
-
-  console.log("** Comet Adapter");
-
+  // console.log("** Comet Adapter");
   // await cometSetup(loadedConfig, addressBook)
 
 
@@ -71,15 +57,15 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
       paused: false
     },
     {
-      protocol_id: "comet_blend",
-      address: new Address(addressBook.getContractId('comet_adapter')),
-      paused: false
-    },
-    {
       protocol_id: "phoenix",
       address: new Address(addressBook.getContractId('phoenix_adapter')),
       paused: false
-    }
+    },
+    {
+      protocol_id: "aqua",
+      address: new Address(addressBook.getContractId('aqua_adapter')),
+      paused: false
+    },
   ];
 
   const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
@@ -126,21 +112,21 @@ export async function deployAndInitAggregator(addressBook: AddressBook) {
 
   console.log("Aggregator initialized")
 
-  const adaptersNames =  adaptersVec.map((adapter) => {
-    const protocol_id = adapter.protocol_id.toString()
-    return protocol_id + ', '
-  }
-  )
-  if (network != 'mainnet') {
-    console.log("Setting up Phoenix protocol")
+  // const adaptersNames =  adaptersVec.map((adapter) => {
+  //   const protocol_id = adapter.protocol_id.toString()
+  //   return protocol_id + ', '
+  // }
+  // )
+  // if (network != 'mainnet') {
+  //   console.log("Setting up Phoenix protocol")
 
-    await phoenixSetup(loadedConfig, addressBook);
-    console.log("Updating adapters on aggregator.. adding: ", ...adaptersNames)
-    await updateAdapters(addressBook, adaptersVec);
-  }
+  //   await phoenixSetup(loadedConfig, addressBook);
+  //   console.log("Updating adapters on aggregator.. adding: ", ...adaptersNames)
+  //   await updateAdapters(addressBook, adaptersVec);
+  // }
 
-  // TODO: IF MAINNET, UPDATE PHOENIX ADAPTERS WITH MAINNET DEPLOYMENT ADDRESS
-  console.log("Aggregator setup complete")
+  // // TODO: IF MAINNET, UPDATE PHOENIX ADAPTERS WITH MAINNET DEPLOYMENT ADDRESS
+  // console.log("Aggregator setup complete")
 }
 
 const network = process.argv[2];
@@ -155,7 +141,18 @@ const soroswapTokensBook = TokensBook.loadFromFile(
   `../../protocols/soroswap/${soroswapDir}`
 );
 
+const phoenixAddressBook = AddressBook.loadFromFile(
+  network,
+  `../../protocols/phoenix-addresses`
+);
+
+const aquaAddressBook = AddressBook.loadFromFile(
+  network,
+  `../../protocols/aqua-addresses`
+);
+
+
 const loadedConfig = config(network);
 
-await deployAndInitAggregator(addressBook);
+await deployAdaptersAndAggregator(addressBook);
 addressBook.writeToFile();

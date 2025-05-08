@@ -24,28 +24,28 @@ export async function phoenixSetup(loadedConfig: any, addressBook: any) {
     const tokensAdminAccount = loadedConfig.getUser("TEST_TOKENS_ADMIN_SECRET_KEY");
     await airdropAccount(tokensAdminAccount);
 
-    // console.log('Deploying and Initalizing Phoenix');
-    // await deployAndInitPhoenix(addressBook, phoenixAdmin)
+    console.log('Deploying and Initalizing Phoenix');
+    await deployAndInitPhoenix(addressBook, phoenixAdmin)
     
-    // console.log("Phoenix Adapter");
-    // console.log('Installing Phoenix Adapter Contract');
-    // await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
-    // await deployContract('phoenix_adapter', 'phoenix_adapter', addressBook, loadedConfig.admin);
+    console.log("Phoenix Adapter");
+    console.log('Installing Phoenix Adapter Contract');
+    await installContract('phoenix_adapter', addressBook, loadedConfig.admin);
+    await deployContract('phoenix_adapter', 'phoenix_adapter', addressBook, loadedConfig.admin);
   
-    // const multihopAddress = addressBook.getContractId('phoenix_multihop');
-    // const phoenixAdapterInitParams: xdr.ScVal[] = [
-    //   nativeToScVal("phoenix"), // protocol_id
-    //   new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
-    // ];
+    const multihopAddress = addressBook.getContractId('phoenix_multihop');
+    const phoenixAdapterInitParams: xdr.ScVal[] = [
+      nativeToScVal("phoenix"), // protocol_id
+      new Address(multihopAddress).toScVal(), // protocol_address (soroswap router)
+    ];
   
-    // console.log("Initializing Phoenix Adapter")
-    // await invokeContract(
-    //   'phoenix_adapter',
-    //   addressBook,
-    //   'initialize',
-    //   phoenixAdapterInitParams,
-    //   loadedConfig.admin
-    // );
+    console.log("Initializing Phoenix Adapter")
+    await invokeContract(
+      'phoenix_adapter',
+      addressBook,
+      'initialize',
+      phoenixAdapterInitParams,
+      loadedConfig.admin
+    );
 
     await phoenixMultiAddLiquidity(3, soroswapTokensBook, addressBook, phoenixAdmin, tokensAdminAccount);
   }

@@ -72,8 +72,8 @@ cd /workspace/contracts
 make build
 ```
 
-### (Optional) Compile other protocols
-If you are considering other protocol that have changed their wasm versions, upgrade them.
+### (Optional) Upgrade, Compile other protocols and test
+If you are considering other protocol that have changed their versions, upgrade them.
 Make sure that you did a recursive pull
 
 However, you dont need to do this very often.
@@ -83,8 +83,9 @@ For Phoenix:
 cd protocols/phoenix-contracts/
 make build
 cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
-# make sure the tests still pass
 
+# make sure the tests still pass
+cd /workspace/contracts/adapters/phoenix
 rustup install 1.79.0 # Phoenix needs to downgrade
 rustup override set 1.79.0
 rustup target add wasm32-unknown-unknown
@@ -129,17 +130,22 @@ cargo test budget -- --nocapture > aggregator_budget.txt
 ## 4.- Deployment
 
 ### 4.1- (Optional) Deploy each protocol.
-Sometimes projects do not keep a testnet version of their protocols. If you need to deploy your own Phoenix, Comet or Aqua version of the protocol, do:
+We will consider other protocol addresses from your local ignored files `.soroban/mainnet.contrats.json` and `.soroban/testnet.contrats.json`.
+
+If you want to change their addresses do it there. Also sometimes projects do not keep a testnet version of their protocols. If you need to deploy your own Phoenix, Comet or Aqua version of the protocol, do:
 
 ```
-yarn setup-phoenix testnet # To Setup Phoenix
+cd /workspace
+yarn build
+yarn setup-phoenix testnet # To Setup Phoenix. Now you will have the new deployed addresses in .soroban/testnet.contrats.json
 
 ```
+### 4.2 Deploy all adapters and Aggregator
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
-cd /workspace
-yarn build
+cd /workspace/contracts
+make build
 ```
 The .wasm files will already be optimized and will be available in 
 `/workspace/contracts/target/wasm32-unknown-unknown/release/` with a name like `[NAME-OF-CONTRACT].optimized.wasm`
@@ -148,25 +154,20 @@ after the WASMs are built you can run this to deploy, networks can be `testnet`,
 
 ```bash
 cd /workspace
-yarn deploy <network>
+yarn build
+yarn deploy <network> # use testnet or mainnet
 ```
 
-NOTE: For Testnet we will use the deployed tokens on the soroswap core repo, so make sure to pull the last version:
+NOTE: For Testnet we will use the deployed addresse on the soroswap core repo, so make sure to pull the last version:
 
 ```
 cd protocols/soroswap/
 git pull origin main
 ```
-You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
-If you deployed in Testnet. A new version of Phoenix will be deployed, so you will need to add liquidity to these pairs
-```
-yarn 
-```
-
-
+## 6.- Run Tests directly on the Blockchain
 Run javascript tests
 ```
 cd /workspace
