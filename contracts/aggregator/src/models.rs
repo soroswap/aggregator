@@ -25,7 +25,7 @@
 /// This approach allows for dynamic and flexible distribution of swap amounts across various
 /// DEX protocols, accommodating complex swapping strategies that may involve multi-hop paths
 /// and varying liquidity sources.
-use soroban_sdk::{contracttype, Address, String, Vec};
+use soroban_sdk::{contracttype, Address, String, Vec, BytesN};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -33,6 +33,8 @@ pub struct DexDistribution {
     pub protocol_id: String,
     pub path: Vec<Address>,
     pub parts: u32,
+    pub bytes: Option<Vec<BytesN<32>>>
+
 }
 
 #[contracttype]

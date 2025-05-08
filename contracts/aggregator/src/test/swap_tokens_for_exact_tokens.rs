@@ -16,7 +16,6 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
         &Vec::new(&test.env),
         &test.user.clone(),
         &100,
-        &None
     );
     assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
@@ -41,6 +40,7 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
@@ -53,7 +53,6 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 }
 
@@ -71,11 +70,13 @@ fn swap_tokens_for_exact_tokens_negible_amount() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1000,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -96,7 +97,6 @@ fn swap_tokens_for_exact_tokens_negible_amount() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 
     assert_eq!(result, Err(Ok(AggregatorError::NegibleAmount)));
@@ -129,6 +129,7 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
@@ -141,7 +142,6 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 
     assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
@@ -167,6 +167,7 @@ fn swap_tokens_for_exact_tokens_deadline_expired() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -178,7 +179,6 @@ fn swap_tokens_for_exact_tokens_deadline_expired() {
         &distribution_vec,
         &test.user.clone(),
         &0,
-        &None
     );
 }
 
@@ -200,6 +200,7 @@ fn swap_tokens_for_exact_tokens_distribution_over_max() {
             protocol_id: String::from_str(&test.env, "protocol_id"),
             path: Vec::new(&test.env),
             parts: 1,
+            bytes: None
         };
         distribution_vec.push_back(distribution);
     }
@@ -212,7 +213,6 @@ fn swap_tokens_for_exact_tokens_distribution_over_max() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::DistributionLengthExceeded)));
@@ -233,11 +233,13 @@ fn swap_tokens_for_exact_tokens_zero_parts() {
         protocol_id: String::from_str(&test.env, "protocol_id"),
         path: Vec::new(&test.env),
         parts: 1,
+        bytes: None
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "protocol_id"),
         path: Vec::new(&test.env),
         parts: 0,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -250,7 +252,6 @@ fn swap_tokens_for_exact_tokens_zero_parts() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ZeroDistributionPart)));
@@ -273,6 +274,7 @@ fn swap_tokens_for_exact_tokens_protocol_not_found() {
         protocol_id: String::from_str(&test.env, "protocol"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -284,7 +286,6 @@ fn swap_tokens_for_exact_tokens_protocol_not_found() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
@@ -307,6 +308,7 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -322,7 +324,6 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::ProtocolPaused)));
@@ -347,6 +348,7 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_start() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -360,7 +362,6 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_start() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
@@ -386,6 +387,7 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_end() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -399,7 +401,6 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_end() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // compare the error
     assert_eq!(result, Err(Ok(AggregatorError::InvalidPath)));
@@ -423,6 +424,7 @@ fn swap_tokens_for_exact_tokens_excessive_input_amount() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -441,7 +443,6 @@ fn swap_tokens_for_exact_tokens_excessive_input_amount() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
 }
@@ -463,6 +464,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -485,7 +487,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 
     // TODO test specific mock auth
@@ -533,6 +534,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -572,7 +574,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
         &distribution_vec,             // path
         &test.user,                    // to
         &deadline,
-        &None
     ); // deadline
 
     let user_balance_after_0 = test.token_0.balance(&test.user);
@@ -618,11 +619,13 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 3,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -672,7 +675,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 
     assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
@@ -690,7 +692,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // check new balances and compare with result
     let user_balance_after_0 = test.token_0.balance(&test.user);
@@ -742,11 +743,13 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "phoenix"),
         path: path.clone(),
         parts: 3,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -786,7 +789,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
 
     assert_eq!(result, Err(Ok(AggregatorError::ExcessiveInputAmount)));
@@ -804,7 +806,6 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None
     );
     // check new balances and compare with result
     let user_balance_after_0 = test.token_0.balance(&test.user);
@@ -852,6 +853,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet() {
         protocol_id: String::from_str(&test.env, "comet"),
         path,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -894,7 +896,6 @@ fn swap_tokens_for_exact_tokens_succeed_comet() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
-            &None
         );
 
     // check new user balances
@@ -936,6 +937,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path_soroswap,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
 
@@ -947,6 +949,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
         protocol_id: String::from_str(&test.env, "comet"),
         path: path_comet,
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_1);
 
@@ -1014,7 +1017,6 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
-            &None
         );
 
     // check new user balances

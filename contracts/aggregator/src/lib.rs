@@ -256,7 +256,6 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-        bytes: Option<Vec<BytesN<32>>>
     ) -> Result<Vec<Vec<i128>>, AggregatorError>;
 
     /// Swaps tokens for an exact amount of output tokens across multiple DEXes.
@@ -295,7 +294,6 @@ pub trait SoroswapAggregatorTrait {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-        bytes: Option<Vec<BytesN<32>>>
     ) -> Result<Vec<Vec<i128>>, AggregatorError>;
 
     /*  *** Read only functions: *** */
@@ -569,7 +567,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-        bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<Vec<i128>>, AggregatorError> {
         extend_instance_ttl(&e);
         check_parameters(
@@ -596,7 +593,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 &dist.path,
                 &to,
                 &deadline,
-                &bytes,
+                &dist.bytes,
             );
             swap_responses.push_back(response);
         }
@@ -660,7 +657,6 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         distribution: Vec<DexDistribution>,
         to: Address,
         deadline: u64,
-        bytes: Option<Vec<BytesN<32>>>
     ) -> Result<Vec<Vec<i128>>, AggregatorError> {
         extend_instance_ttl(&e);
         check_parameters(
@@ -687,7 +683,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 &dist.path,   //path
                 &to,          //to
                 &deadline,    //deadline
-                &bytes,       //bytes
+                &dist.bytes,       //bytes
             );
             swap_responses.push_back(response);
         }

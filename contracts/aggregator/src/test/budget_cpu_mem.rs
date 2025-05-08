@@ -75,11 +75,13 @@ fn budget() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     let distribution_1 = DexDistribution {
         protocol_id: String::from_str(&test.env, "phoenix"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     distribution_vec.push_back(distribution_0);
     distribution_vec.push_back(distribution_1);
@@ -94,7 +96,6 @@ fn budget() {
         &distribution_vec,
         &test.user.clone(),
         &deadline,
-        &None,
     );
     let mem = test.env.cost_estimate().budget().memory_bytes_cost();
     let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
@@ -111,6 +112,7 @@ fn budget() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
 
     for n in 1..7 {
@@ -124,7 +126,7 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
-            &None,
+
         );
         let mem = test.env.cost_estimate().budget().memory_bytes_cost();
         let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
@@ -147,6 +149,7 @@ fn budget() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path,
         parts: 1,
+        bytes: None
     };
     let amount_in = 123_456_789;
 
@@ -161,7 +164,7 @@ fn budget() {
             &distribution_vec.clone(),
             &test.user.clone(),
             &deadline,
-            &None,
+
         );
         let mem = test.env.cost_estimate().budget().memory_bytes_cost();
         let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
@@ -180,6 +183,7 @@ fn budget() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
     let expected_amount_out = 123_456_789;
 
@@ -194,7 +198,7 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
-            &None,
+
         );
         let mem = test.env.cost_estimate().budget().memory_bytes_cost();
         let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
@@ -216,6 +220,7 @@ fn budget() {
         protocol_id: String::from_str(&test.env, "soroswap"),
         path: path.clone(),
         parts: 1,
+        bytes: None
     };
 
     // makle FOR cycl N from 1 to 5r
@@ -230,7 +235,7 @@ fn budget() {
             &distribution_vec,
             &test.user.clone(),
             &deadline,
-            &None,
+
         );
         let mem = test.env.cost_estimate().budget().memory_bytes_cost();
         let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
