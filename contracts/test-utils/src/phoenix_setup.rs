@@ -143,7 +143,7 @@ pub fn deploy_and_mint_tokens<'a>(
 
 
 pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFactory<'a> {
-    // let factory_addr = deploy_factory_contract(&env, &admin.clone());
+
     let multihop_wasm_hash = install_multihop_wasm(env);
     let whitelisted_accounts = vec![env, admin.clone()];
     
@@ -151,31 +151,6 @@ pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFa
     let stable_wasm_hash = install_stable_contract(env);
     let stake_wasm_hash = install_stake_wasm(env);
     let token_wasm_hash = install_token_wasm(env);
-    
-    // fn initialize(
-        //     env: Env,
-        //     admin: Address,
-        //     multihop_wasm_hash: BytesN<32>,
-        //     lp_wasm_hash: BytesN<32>,
-        //     stable_wasm_hash: BytesN<32>,
-        //     stake_wasm_hash: BytesN<32>,
-        //     token_wasm_hash: BytesN<32>,
-        //     whitelisted_accounts: Vec<Address>,
-        //     lp_token_decimals: u32,
-        // );
-        
-    // let factory_client = PhoenixFactory::new(env, &factory_addr);
-    // factory_client.initialize( 
-    //     &admin.clone(),
-    //     &multihop_wasm_hash,
-    //     &lp_wasm_hash,
-    //     &stable_wasm_hash,
-    //     &stake_wasm_hash,
-    //     &token_wasm_hash,
-    //     &whitelisted_accounts,
-    //     &10u32,
-    // );
-    // factory_client
 
     let args = ( 
         admin.clone(),
