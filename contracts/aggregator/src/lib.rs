@@ -588,6 +588,11 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 .ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter = get_adapter(&e, protocol_id.clone())?;
+
+            if adapter.paused {
+                return Err(AggregatorError::ProtocolPaused);
+            }
+
             let response = match protocol_id {
                 models::Protocol::Soroswap => {
                     adapters::soroswap::protocol_swap_exact_tokens_for_tokens(
@@ -716,6 +721,11 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 .ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
             let adapter = get_adapter(&e, protocol_id.clone())?;
+
+            if adapter.paused {
+                return Err(AggregatorError::ProtocolPaused);
+            }
+
             let response = match protocol_id {
                 models::Protocol::Soroswap => {
                     adapters::soroswap::protocol_swap_tokens_for_exact_tokens(
