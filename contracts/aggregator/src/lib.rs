@@ -714,7 +714,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     adapters::soroswap::protocol_swap_tokens_for_exact_tokens(
                         &e,
                         &adapter.router,
-                        swap_amount,
+                        &swap_amount,
                         &amount_out,
                         &dist.path,
                         &to,
@@ -725,7 +725,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     adapters::phoenix::protocol_swap_tokens_for_exact_tokens(
                         &e,
                         &adapter.router,
-                        swap_amount,
+                        &swap_amount,
                         &amount_out,
                         &dist.path,
                         &to,
@@ -736,7 +736,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     adapters::aqua::protocol_swap_tokens_for_exact_tokens(
                         &e,
                         &adapter.router,
-                        swap_amount,
+                        &swap_amount,
                         &amount_out,
                         &dist.path,
                         &to,

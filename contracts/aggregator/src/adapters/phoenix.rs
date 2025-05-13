@@ -1,7 +1,8 @@
 // based on https://github.com/Phoenix-Protocol-Group/phoenix_contracts/tree/v1.0.0
 
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
-use adapter_interface::AdapterError;
+
+use crate::error::AggregatorError;
 // use phoenix_contracts::PoolType;
 
 soroban_sdk::contractimport!(
@@ -52,7 +53,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     path: &Vec<Address>, 
     to: &Address,
     _deadline: &u64,
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
@@ -115,7 +116,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     path: &Vec<Address>,
     to: &Address,
     _deadline: &u64,
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let phoenix_multihop_client = PhoenixMultihopClient::new(&e, &phoenix_multihop_address);
     let operations = convert_to_swaps(e, path);
