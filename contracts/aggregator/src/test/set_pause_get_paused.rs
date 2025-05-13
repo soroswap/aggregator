@@ -28,7 +28,7 @@ fn test_set_pause_true_false() {
 
     //Initialize aggregator
     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_adapter_contract.address.clone(), test.phoenix_adapter_contract.address.clone(), test.comet_adapter_contract.address.clone());
+    let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&test.env, test.soroswap_router_address.clone(), test.phoenix_multihop_address.clone(), test.comet_router_address.clone());
     // test.aggregator_contract_not_initialized
     //     .initialize(&test.admin, &initialize_aggregator_addresses);
 
@@ -49,18 +49,18 @@ fn test_set_pause_true_false() {
         &test.env,
         Adapter {
             protocol_id: Protocol::Soroswap,
-            router: test.soroswap_adapter_contract.address.clone(),
+            router: test.soroswap_router_address.clone(),
 
             paused: true,
         },
         Adapter {
             protocol_id: Protocol::Phoenix,
-            router: test.phoenix_adapter_contract.address.clone(),
+            router: test.phoenix_multihop_address.clone(),
             paused: false,
         },
         Adapter {
             protocol_id: Protocol::Comet,
-            router: test.comet_adapter_contract.address.clone(),
+            router: test.comet_router_address.clone(),
             paused: false,
         },
     ];
