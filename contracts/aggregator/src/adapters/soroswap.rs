@@ -1,5 +1,6 @@
 use soroban_sdk::{Env, Address, Vec};
-use adapter_interface::AdapterError;
+
+use crate::error::AggregatorError;
 
 soroban_sdk::contractimport!(
     file = "./soroswap_contracts/soroswap_router.wasm"
@@ -14,7 +15,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     path: &Vec<Address>,
     to: &Address,
     deadline: &u64,
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let soroswap_router_client = SoroswapRouterClient::new(&e, &soroswap_router_address);
 
@@ -35,7 +36,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     path: &Vec<Address>,
     to: &Address,
     deadline: &u64,
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let soroswap_router_client = SoroswapRouterClient::new(&e, &soroswap_router_address);
 

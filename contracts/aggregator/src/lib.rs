@@ -744,7 +744,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     )?
                 }
                 _ => {
-                    return Err(AggregatorError::InvalidProtocol);
+                    return Err(AggregatorError::ProtocolNotFound);
                 }
             };
             swap_responses.push_back(response);
