@@ -759,10 +759,17 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &to,
                         &dist.bytes,
                     )?
-                }
-                _ => {
-                    return Err(AggregatorError::ProtocolNotFound);
-                }
+                },
+                models::Protocol::Comet => {
+                    adapters::comet::protocol_swap_tokens_for_exact_tokens(
+                        &e,
+                        &adapter.router,
+                        &swap_amount,
+                        &i128::MAX,   // amount_in_max
+                        &dist.path,
+                        &to,
+                    )?
+                },
             };
             swap_responses.push_back(response);
         }
