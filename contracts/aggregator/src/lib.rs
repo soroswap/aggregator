@@ -3,6 +3,7 @@ use soroban_sdk::{
     contract, contractimpl, token::Client as TokenClient, Address, BytesN, Env, String, Vec,
 };
 
+mod adapters;
 mod error;
 mod event;
 mod models;
@@ -586,16 +587,47 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 .get(index as u32)
                 .ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
-            let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
-            let response = adapter_client.swap_exact_tokens_for_tokens(
-                &swap_amount, // amount_in
-                &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
-                &dist.path,
-                &to,
-                &deadline,
-                &dist.bytes,
-            );
+            let adapter = get_adapter(&e, protocol_id.clone())?;
+            let response = match protocol_id {
+                models::Protocol::Soroswap => {
+                    adapters::soroswap::protocol_swap_exact_tokens_for_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out_min,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                    
+                },
+                models::Protocol::Phoenix => {
+                    adapters::phoenix::protocol_swap_exact_tokens_for_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out_min,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                },
+                models::Protocol::Aqua => {
+                    adapters::aqua::protocol_swap_exact_tokens_for_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out_min,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                }
+                _ => {
+                    return Err(AggregatorError::InvalidProtocol);
+                }
             swap_responses.push_back(response);
+            };
         }
 
         // Check final token out balance
@@ -676,15 +708,45 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 .get(index as u32)
                 .ok_or(AggregatorError::ArithmeticError)?;
             let protocol_id = dist.protocol_id;
-            let adapter_client = get_adapter_client(&e, protocol_id.clone())?;
-            let response = adapter_client.swap_tokens_for_exact_tokens(
-                &swap_amount, // amount_out
-                &i128::MAX,   // amount_in_max
-                &dist.path,   //path
-                &to,          //to
-                &deadline,    //deadline
-                &dist.bytes,       //bytes
-            );
+            let adapter = get_adapter(&e, protocol_id.clone())?;
+            let response = match protocol_id {
+                models::Protocol::Soroswap => {
+                    adapters::soroswap::protocol_swap_tokens_for_exact_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                },
+                models::Protocol::Phoenix => {
+                    adapters::phoenix::protocol_swap_tokens_for_exact_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                },
+                models::Protocol::Aqua => {
+                    adapters::aqua::protocol_swap_tokens_for_exact_tokens(
+                        &e,
+                        &adapter.router,
+                        swap_amount,
+                        &amount_out,
+                        &dist.path,
+                        &to,
+                        &deadline,
+                    )?
+                }
+                _ => {
+                    return Err(AggregatorError::InvalidProtocol);
+                }
+            };
             swap_responses.push_back(response);
         }
         // Check final token in balance, so we did not spend more than amount_in_max
@@ -730,37 +792,37 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
         Ok(get_admin(&e)?)
     }
 
-    /// Retrieves the list of adapters registered in the contract.
-    ///
-    /// This function returns a vector containing all the adapters registered in the contract.
-    ///
-    /// # Arguments
-    ///
-    /// * `e` - A reference to the runtime environment.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `AggregatorError` if the contract is not initialized or if there are issues retrieving adapters.
-    ///
-    /// # Returns
-    ///
-    /// Returns a vector of `Adapter` objects if the operation is successful.
-    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
-        check_initialized(&e)?;
+    // /// Retrieves the list of adapters registered in the contract.
+    // ///
+    // /// This function returns a vector containing all the adapters registered in the contract.
+    // ///
+    // /// # Arguments
+    // ///
+    // /// * `e` - A reference to the runtime environment.
+    // ///
+    // /// # Errors
+    // ///
+    // /// Returns an `AggregatorError` if the contract is not initialized or if there are issues retrieving adapters.
+    // ///
+    // /// # Returns
+    // ///
+    // /// Returns a vector of `Adapter` objects if the operation is successful.
+    // fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
+    //     check_initialized(&e)?;
 
-        let protocol_ids = get_protocol_ids(e);
-        let mut adapter_vec = Vec::new(e);
+    //     let protocol_ids = get_protocol_ids(e);
+    //     let mut adapter_vec = Vec::new(e);
 
-        // Iterate over each protocol ID and collect their adapter object
-        for protocol_id in protocol_ids.iter() {
-            if has_adapter(e, protocol_id.clone()) {
-                let adapter = get_adapter(e, protocol_id.clone())?;
-                adapter_vec.push_back(adapter);
-            }
-        }
+    //     // Iterate over each protocol ID and collect their adapter object
+    //     for protocol_id in protocol_ids.iter() {
+    //         if has_adapter(e, protocol_id.clone()) {
+    //             let adapter = get_adapter(e, protocol_id.clone())?;
+    //             adapter_vec.push_back(adapter);
+    //         }
+    //     }
 
-        Ok(adapter_vec)
-    }
+    //     Ok(adapter_vec)
+    // }
 
     /// Retrieves the paused state of a specific protocol adapter.
     ///

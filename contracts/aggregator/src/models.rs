@@ -27,10 +27,18 @@
 /// and varying liquidity sources.
 use soroban_sdk::{contracttype, Address, String, Vec, BytesN};
 
+#[derive(Clone, PartialEq)]
+#[repr(u32)]
+pub enum Protocol {
+    Soroswap = 0,
+    Phoenix = 1,
+    Aqua = 2,
+}
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct DexDistribution {
-    pub protocol_id: String,
+    pub protocol_id: Protocol, 
     pub path: Vec<Address>,
     pub parts: u32,
     pub bytes: Option<Vec<BytesN<32>>>
@@ -40,8 +48,8 @@ pub struct DexDistribution {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Adapter {
-    pub protocol_id: String,
-    pub address: Address,
+    pub protocol_id: Protocol,
+    pub router: Address,
     pub paused: bool,
 }
 
