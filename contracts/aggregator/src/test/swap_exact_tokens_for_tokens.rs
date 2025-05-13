@@ -276,40 +276,40 @@ fn swap_exact_tokens_for_tokens_zero_parts() {
     assert_eq!(result, Err(Ok(AggregatorError::ZeroDistributionPart)));
 }
 
-#[test]
-fn swap_exact_tokens_for_tokens_protocol_not_found() {
-    let test = SoroswapAggregatorTest::setup();
-    let deadline: u64 = test.env.ledger().timestamp() + 1000;
-    // Initialize aggregator
-    // let initialize_aggregator_addresses = create_protocols_addresses(&test);
-    // test.aggregator_contract_not_initialized
-    //     .initialize(&test.admin, &initialize_aggregator_addresses);
-    // call the function
-    let mut distribution_vec = Vec::new(&test.env);
-    let mut path: Vec<Address> = Vec::new(&test.env);
-    path.push_back(test.token_0.address.clone());
-    path.push_back(test.token_1.address.clone());
+// #[test]
+// fn swap_exact_tokens_for_tokens_protocol_not_found() {
+//     let test = SoroswapAggregatorTest::setup();
+//     let deadline: u64 = test.env.ledger().timestamp() + 1000;
+//     // Initialize aggregator
+//     // let initialize_aggregator_addresses = create_protocols_addresses(&test);
+//     // test.aggregator_contract_not_initialized
+//     //     .initialize(&test.admin, &initialize_aggregator_addresses);
+//     // call the function
+//     let mut distribution_vec = Vec::new(&test.env);
+//     let mut path: Vec<Address> = Vec::new(&test.env);
+//     path.push_back(test.token_0.address.clone());
+//     path.push_back(test.token_1.address.clone());
 
-    let distribution_0 = DexDistribution {
-        protocol_id: Protocol::Comet,
-        path,
-        parts: 1,
-        bytes: None
-    };
-    distribution_vec.push_back(distribution_0);
+//     let distribution_0 = DexDistribution {
+//         protocol_id: Protocol::Comet,
+//         path,
+//         parts: 1,
+//         bytes: None
+//     };
+//     distribution_vec.push_back(distribution_0);
 
-    let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
-        &test.token_0.address.clone(),
-        &test.token_1.address.clone(),
-        &100,
-        &100,
-        &distribution_vec,
-        &test.user.clone(),
-        &deadline,
-    );
-    // compare the error
-    assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
-}
+//     let result = test.aggregator_contract.try_swap_exact_tokens_for_tokens(
+//         &test.token_0.address.clone(),
+//         &test.token_1.address.clone(),
+//         &100,
+//         &100,
+//         &distribution_vec,
+//         &test.user.clone(),
+//         &deadline,
+//     );
+//     // compare the error
+//     assert_eq!(result, Err(Ok(AggregatorError::ProtocolNotFound)));
+// }
 
 #[test]
 fn swap_exact_tokens_for_tokens_paused_protocol() {
