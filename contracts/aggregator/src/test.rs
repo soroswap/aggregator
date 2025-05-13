@@ -80,7 +80,7 @@ pub fn create_protocols_addresses_from_wasm(test: &SoroswapAggregatorTest) -> Ve
         &test.env,
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
-            router: test.soroswap_adapter_contract.address.clone(),
+            router: test.soroswap_router_address.clone(),
             paused: false,
         }
     ]
@@ -91,7 +91,7 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
         &test.env,
         Adapter {
             protocol_id: Protocol::Soroswap,
-            router: test.soroswap_adapter_contract.address.clone(),
+            router: test.soroswap_router_address.clone(),
             paused: false,
         }
     ]
@@ -114,22 +114,22 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
 //     ]
 // }
 
-pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_adapter: Address, phoenix_adapter: Address, comet_adapter: Address) -> Vec<AdapterFromWasm> {
+pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_router_address: Address, phoenix_multihop_address: Address, comet_router_address: Address) -> Vec<AdapterFromWasm> {
     vec![
         env,
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
-            router: soroswap_adapter.clone(),
+            router: soroswap_router_address.clone(),
             paused: false,
         },
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Phoenix,
-            router: soroswap_adapter.clone(),
+            router: phoenix_multihop_address.clone(),
             paused: false,
         },
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Comet,
-            router: comet_adapter.clone(),
+            router: comet_router_address.clone(),
             paused: false,
         },
     ]
@@ -140,7 +140,7 @@ pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapt
         &test.env,
         Adapter {
             protocol_id: Protocol::Soroswap,
-            router: test.soroswap_router_contract.address.clone(),
+            router: test.soroswap_router_address.clone(),
             paused: false,
         },
     ]
@@ -151,7 +151,7 @@ pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> 
         &test.env,
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
-            router: test.soroswap_router_contract.address.clone(),
+            router: test.soroswap_router_address.clone(),
             paused: false,
         },
     ]
@@ -195,7 +195,11 @@ pub struct SoroswapAggregatorTest<'a> {
     token_2: TokenClient<'a>,
     user: Address,
     admin: Address,
+    soroswap_router_address: Address,
+    phoenix_multihop_address: Address,
+    comet_router_address: Address,
 }
+
 
 impl<'a> SoroswapAggregatorTest<'a> {
     fn setup() -> Self {
@@ -358,7 +362,11 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
         
         // Deploy aggregator using deployer, and include an init function to call.
-        let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&env, soroswap_adapter_contract.address.clone(), phoenix_adapter_contract.address.clone(), comet_adapter_contract.address.clone());
+        let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&env, 
+            soroswap_router_contract.address.clone(),
+            phoenix_multihop_client.address.clone(),
+            comet_pair.address.clone()
+        );
 
         // Convert the arguments into a Vec<Val>
         let init_fn_args: Vec<Val> = (admin.clone(), initialize_aggregator_addresses).into_val(&env);
@@ -372,6 +380,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
         );
 
         let aggregator_contract = SoroswapAggregatorClientFromWasm::new(&env, &contract_id);
+        let soroswap_router_address = soroswap_router_contract.address.clone();
 
         SoroswapAggregatorTest {
             env,
@@ -387,20 +396,23 @@ impl<'a> SoroswapAggregatorTest<'a> {
             token_2,
             user,
             admin,
+            soroswap_router_address, 
+            phoenix_multihop_address: phoenix_multihop_client.address.clone(),
+            comet_router_address: comet_pair.address.clone(),
         }
     }
 }
 
 // pub mod events;
 // pub mod get_adapters;
-pub mod initialize;
+    pub mod initialize;
 // pub mod remove_adapter;
-pub mod set_pause_get_paused;
-pub mod swap_exact_tokens_for_tokens;
-pub mod swap_tokens_for_exact_tokens;
-// pub mod update_adapters;
-pub mod budget_cpu_mem;
-// pub mod swap;
-pub mod admin;
+    pub mod set_pause_get_paused;
+    pub mod swap_exact_tokens_for_tokens;
+//     pub mod swap_tokens_for_exact_tokens;
+// // pub mod update_adapters;
+//     pub mod budget_cpu_mem;
+// // pub mod swap;
+//     pub mod admin;
 // test upgrade wasm
 
