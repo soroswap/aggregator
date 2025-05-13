@@ -5,6 +5,7 @@ use crate::error::AggregatorError as AggregatorErrorFromCrate;
 use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
 use soroban_sdk::{vec, String, Vec};
 use super::soroswap_aggregator_contract::Protocol;
+use crate::test::Protocol as ProtocolOriginal;
 
 
 use super::soroswap_aggregator_contract::{Adapter, AggregatorError};
@@ -277,7 +278,7 @@ fn test_set_pause_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test
         .aggregator_contract_not_initialized
-        .try_set_pause(&Protocol::Soroswap, &true);
+        .try_set_pause(&ProtocolOriginal::Soroswap, &true);
 
     assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }

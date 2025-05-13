@@ -1,6 +1,6 @@
 extern crate std;
 use crate::error::AggregatorError;
-use crate::test::{create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, SoroswapAggregatorTest};
+use crate::test::{create_protocols_addresses, create_protocols_addresses_from_wasm, create_soroswap_phoenix_comet_addresses_for_deployer, SoroswapAggregatorTest};
 use super::soroswap_aggregator_contract::AggregatorError as AggregatorErrorDeployer;
 
 #[test]
@@ -9,6 +9,7 @@ fn test_initialize_and_get_values() {
 
     //Initialize aggregator
     let initialize_aggregator_addresses = create_protocols_addresses(&test);
+    let initialize_aggregator_addresses_from_wasm = create_protocols_addresses_from_wasm(&test);
     test.aggregator_contract_not_initialized
         .initialize(&test.admin, &initialize_aggregator_addresses);
     
@@ -26,10 +27,10 @@ fn test_initialize_and_get_values() {
     assert_eq!(protocols, initialize_aggregator_addresses);
 
     // get is protocol paused
-    for protocol_address in initialize_aggregator_addresses {
+    for protocol_address in initialize_aggregator_addresses_from_wasm {
         let is_protocol_paused = test
             .aggregator_contract
-            .get_paused(&protocol_address.protocol_id.clone());
+            .get_paused(&protocol_address.protocol_id);
         assert_eq!(is_protocol_paused, false);
     }
 }

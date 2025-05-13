@@ -75,11 +75,22 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
 
 
 // Helper function to initialize / update soroswap aggregator protocols
+pub fn create_protocols_addresses_from_wasm(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+    vec![
+        &test.env,
+        AdapterFromWasm {
+            protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+            router: test.soroswap_adapter_contract.address.clone(),
+            paused: false,
+        }
+    ]
+}
+
 pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
     vec![
         &test.env,
         Adapter {
-            protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+            protocol_id: Protocol::Soroswap,
             router: test.soroswap_adapter_contract.address.clone(),
             paused: false,
         }
