@@ -1,6 +1,5 @@
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient, BytesN, vec};
-use crate::storage::{get_protocol_address};
-use adapter_interface::{AdapterError};
+use crate::{error::AggregatorError, storage::get_protocol_address};
 
 soroban_sdk::contractimport!(
     file = "./aqua_contracts/soroban_liquidity_pool_router_contract.wasm"
@@ -29,19 +28,19 @@ fn convert_to_swaps_chain(
     bytes: &Option<Vec<BytesN<32>>>,
 ) -> Result<
     Vec<(Vec<Address>, BytesN<32>, Address)>, // (path, pool_hash, token_out)
-    AdapterError
+    AggregatorError
 > {
     
     // We check that bytes is not None
-    let pool_hashes_vec = bytes.as_ref().ok_or(AdapterError::MissingPoolHashes)?;
+    let pool_hashes_vec = bytes.as_ref().ok_or(AggregatorError::MissingPoolHashes)?;
     
     // path should have at least 2 elements. ifnot error WrongMinimumPathLength
     if path.len() < 2 {
-        return Err(AdapterError::WrongMinimumPathLength);
+        return Err(AggregatorError::WrongMinimumPathLength);
     }
     // We check that the length of bytes is equal to the length of path - 1
     if pool_hashes_vec.len() != path.len().checked_sub(1).unwrap() { // unwrap safe as we checked the length of path
-        return Err(AdapterError::WrongPoolHashesLength);
+        return Err(AggregatorError::WrongPoolHashesLength);
     }
 
     let mut swaps_chain = Vec::new(e);
@@ -70,7 +69,7 @@ pub fn protocol_swap_exact_tokens_for_tokens(
     path: &Vec<Address>, // (TokenA, TokenB, TokenC, TokenD), being TokenC the token to get
     to: &Address,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);  
     let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
@@ -117,7 +116,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     path: &Vec<Address>,
     to: &Address,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
-) -> Result<Vec<i128>, AdapterError> {
+) -> Result<Vec<i128>, AggregatorError> {
 
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
     let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
