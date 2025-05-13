@@ -626,8 +626,8 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                 _ => {
                     return Err(AggregatorError::InvalidProtocol);
                 }
-            swap_responses.push_back(response);
             };
+            swap_responses.push_back(response);
         }
 
         // Check final token out balance
