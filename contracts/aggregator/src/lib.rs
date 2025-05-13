@@ -594,7 +594,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out_min,
+                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
                         &dist.path,
                         &to,
                         &deadline,
@@ -606,7 +606,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out_min,
+                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
                         &dist.path,
                         &to,
                         &deadline,
@@ -617,7 +617,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out_min,
+                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
                         &dist.path,
                         &to,
                         &dist.bytes,
@@ -715,7 +715,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out,
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &deadline,
@@ -726,7 +726,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out,
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &deadline,
@@ -737,7 +737,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_out,
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &dist.bytes,
