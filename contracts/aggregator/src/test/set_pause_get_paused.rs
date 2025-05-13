@@ -9,7 +9,7 @@ use super::soroswap_aggregator_contract::Protocol;
 
 use super::soroswap_aggregator_contract::{Adapter, AggregatorError};
 
-pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,

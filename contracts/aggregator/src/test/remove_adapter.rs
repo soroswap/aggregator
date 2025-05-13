@@ -9,7 +9,7 @@ use soroban_sdk::{
 use soroban_sdk::{vec, String, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, Adapter};
 
-pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
