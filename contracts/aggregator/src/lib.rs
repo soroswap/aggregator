@@ -623,9 +623,16 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &dist.bytes,
                     )?
                 },
-                _ => {
-                    return Err(AggregatorError::ProtocolNotFound);
-                }
+                models::Protocol::Comet => {
+                    adapters::comet::protocol_swap_exact_tokens_for_tokens(
+                        &e,
+                        &adapter.router,
+                        &swap_amount,
+                        &0, // amount_out_min: amount out min per protocol will allways be 0, we will then compare the toal amoiunt out
+                        &dist.path,
+                        &to,
+                    )?
+                },
             };
             swap_responses.push_back(response);
         }
