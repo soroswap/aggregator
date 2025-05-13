@@ -25,9 +25,10 @@
 /// This approach allows for dynamic and flexible distribution of swap amounts across various
 /// DEX protocols, accommodating complex swapping strategies that may involve multi-hop paths
 /// and varying liquidity sources.
-use soroban_sdk::{contracttype, Address, String, Vec, BytesN};
+use soroban_sdk::{contracttype, Address, Vec, BytesN};
 
-#[derive(Clone, PartialEq)]
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[repr(u32)]
 pub enum Protocol {
     Soroswap = 0,

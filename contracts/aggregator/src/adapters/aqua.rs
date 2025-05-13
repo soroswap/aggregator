@@ -1,5 +1,5 @@
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient, BytesN, vec};
-use crate::{error::AggregatorError, storage::get_protocol_address};
+use adapter_interface::{AdapterError};
 
 soroban_sdk::contractimport!(
     file = "./aqua_contracts/soroban_liquidity_pool_router_contract.wasm"

@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, token::Client as TokenClient, Address, BytesN, Env, String, Vec,
+    contract, contractimpl, token::Client as TokenClient, Address, BytesN, Env, Vec,
 };
 
 mod adapters;
@@ -11,7 +11,7 @@ mod storage;
 mod test;
 
 use error::AggregatorError;
-use models::{Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
+use models::{Protocol, Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
 use adapter_interface::AdapterClient;
 use storage::{
     extend_instance_ttl, get_adapter, get_admin, get_protocol_ids, has_adapter, is_initialized,
@@ -107,13 +107,13 @@ fn calculate_distribution_amounts_and_check_paths(
 
 pub fn get_adapter_client(
     e: &Env,
-    protocol_id: String,
+    protocol_id: Protocol,
 ) -> Result<AdapterClient, AggregatorError> {
     let adapter = get_adapter(&e, protocol_id.clone())?;
     if adapter.paused {
         return Err(AggregatorError::ProtocolPaused);
     }
-    Ok(AdapterClient::new(&e, &adapter.address))
+    Ok(AdapterClient::new(&e, &adapter.router))
 }
 
 /*
@@ -176,7 +176,7 @@ pub trait SoroswapAggregatorTrait {
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError>;
+    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), AggregatorError>;
 
     /// Sets the paused state of the protocol in the aggregator.
     ///
@@ -187,7 +187,7 @@ pub trait SoroswapAggregatorTrait {
     ///
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError>;
+    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), AggregatorError>;
 
     /// Upgrades the contract with new WebAssembly (WASM) code.
     ///
@@ -350,7 +350,7 @@ pub trait SoroswapAggregatorTrait {
     /// # Returns
     ///
     /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError>;
+    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, AggregatorError>;
 
     /// Retrieves the version number of the contract.
     ///
@@ -454,7 +454,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// # Returns
     ///
     /// Returns `Ok(())` if the adapter is successfully removed.
-    fn remove_adapter(e: Env, protocol_id: String) -> Result<(), AggregatorError> {
+    fn remove_adapter(e: Env, protocol_id: Protocol) -> Result<(), AggregatorError> {
         check_admin(&e)?;
 
         remove_adapter(&e, protocol_id.clone());
@@ -473,7 +473,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     ///
     /// # Returns
     /// Returns `Ok(())` if the operation is successful, otherwise returns an `AggregatorError`.
-    fn set_pause(e: Env, protocol_id: String, paused: bool) -> Result<(), AggregatorError> {
+    fn set_pause(e: Env, protocol_id: Protocol, paused: bool) -> Result<(), AggregatorError> {
         check_admin(&e)?;
 
         set_pause_protocol(&e, protocol_id.clone(), paused)?;
@@ -807,22 +807,22 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     // /// # Returns
     // ///
     // /// Returns a vector of `Adapter` objects if the operation is successful.
-    // fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
-    //     check_initialized(&e)?;
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
+        check_initialized(&e)?;
 
-    //     let protocol_ids = get_protocol_ids(e);
-    //     let mut adapter_vec = Vec::new(e);
+        let protocol_ids = get_protocol_ids(e);
+        let mut adapter_vec = Vec::new(e);
 
-    //     // Iterate over each protocol ID and collect their adapter object
-    //     for protocol_id in protocol_ids.iter() {
-    //         if has_adapter(e, protocol_id.clone()) {
-    //             let adapter = get_adapter(e, protocol_id.clone())?;
-    //             adapter_vec.push_back(adapter);
-    //         }
-    //     }
+        // Iterate over each protocol ID and collect their adapter object
+        for protocol_id in protocol_ids.iter() {
+            if has_adapter(e, protocol_id.clone()) {
+                let adapter = get_adapter(e, protocol_id.clone())?;
+                adapter_vec.push_back(adapter);
+            }
+        }
 
-    //     Ok(adapter_vec)
-    // }
+        Ok(adapter_vec)
+    }
 
     /// Retrieves the paused state of a specific protocol adapter.
     ///
@@ -840,7 +840,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     /// # Returns
     ///
     /// Returns `true` if the adapter is paused, otherwise `false`.
-    fn get_paused(e: &Env, protocol_id: String) -> Result<bool, AggregatorError> {
+    fn get_paused(e: &Env, protocol_id: Protocol) -> Result<bool, AggregatorError> {
         let adapter = get_adapter(e, protocol_id)?;
         Ok(adapter.paused)
     }

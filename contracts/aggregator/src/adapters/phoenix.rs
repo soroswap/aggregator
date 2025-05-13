@@ -1,7 +1,6 @@
 // based on https://github.com/Phoenix-Protocol-Group/phoenix_contracts/tree/v1.0.0
 
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient};
-use crate::storage::get_protocol_address;
 use adapter_interface::AdapterError;
 // use phoenix_contracts::PoolType;
 
