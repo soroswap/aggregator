@@ -1,5 +1,4 @@
 use soroban_sdk::{Env, Address, Vec};
-use crate::storage::get_protocol_address;
 use adapter_interface::AdapterError;
 
 soroban_sdk::contractimport!(

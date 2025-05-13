@@ -807,22 +807,22 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
     // /// # Returns
     // ///
     // /// Returns a vector of `Adapter` objects if the operation is successful.
-    // fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
-    //     check_initialized(&e)?;
+    fn get_adapters(e: &Env) -> Result<Vec<Adapter>, AggregatorError> {
+        check_initialized(&e)?;
 
-    //     let protocol_ids = get_protocol_ids(e);
-    //     let mut adapter_vec = Vec::new(e);
+        let protocol_ids = get_protocol_ids(e);
+        let mut adapter_vec = Vec::new(e);
 
-    //     // Iterate over each protocol ID and collect their adapter object
-    //     for protocol_id in protocol_ids.iter() {
-    //         if has_adapter(e, protocol_id.clone()) {
-    //             let adapter = get_adapter(e, protocol_id.clone())?;
-    //             adapter_vec.push_back(adapter);
-    //         }
-    //     }
+        // Iterate over each protocol ID and collect their adapter object
+        for protocol_id in protocol_ids.iter() {
+            if has_adapter(e, protocol_id.clone()) {
+                let adapter = get_adapter(e, protocol_id.clone())?;
+                adapter_vec.push_back(adapter);
+            }
+        }
 
-    //     Ok(adapter_vec)
-    // }
+        Ok(adapter_vec)
+    }
 
     /// Retrieves the paused state of a specific protocol adapter.
     ///
