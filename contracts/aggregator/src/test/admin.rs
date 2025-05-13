@@ -67,7 +67,7 @@ fn test_set_admin_with_mock_auth() {
     //  MOCK THE SPECIFIC AUTHORIZATION
     test.aggregator_contract_not_initialized
         .mock_auths(&[MockAuth {
-            address: &test.admin.clone(),
+            router: &test.admin.clone(),
             invoke: &MockAuthInvoke {
                 contract: &test.aggregator_contract_not_initialized.address.clone(),
                 fn_name: "set_admin",

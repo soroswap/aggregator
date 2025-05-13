@@ -34,6 +34,7 @@ pub enum Protocol {
     Soroswap = 0,
     Phoenix = 1,
     Aqua = 2,
+    Comet = 3,
 }
 
 #[contracttype]

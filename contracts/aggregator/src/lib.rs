@@ -622,6 +622,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &to,
                         &dist.bytes,
                     )?
+                },
+                _ => {
+                    return Err(AggregatorError::ProtocolNotFound);
                 }
             };
             swap_responses.push_back(response);
@@ -739,6 +742,9 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &to,
                         &dist.bytes,
                     )?
+                }
+                _ => {
+                    return Err(AggregatorError::ProtocolNotFound);
                 }
             };
             swap_responses.push_back(response);

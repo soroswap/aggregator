@@ -2,6 +2,7 @@ extern crate std;
 use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest};
 use soroban_sdk::{String, Vec, Address, testutils::Address as _};
 use super::soroswap_aggregator_contract::DexDistribution;
+use super::soroswap_aggregator_contract::Protocol;
 
 
 #[test]
@@ -34,13 +35,13 @@ fn budget() {
     //set_pause()
     test.env.cost_estimate().budget().reset_unlimited();
     test.aggregator_contract
-    .set_pause(&String::from_str(&test.env, "soroswap"), &true);
+    .set_pause(&Protocol::Soroswap, &true);
     let mem = test.env.cost_estimate().budget().memory_bytes_cost();
     let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("set_pause()                                              | cpu: {},      mem: {}", cpu, mem);
     //unpause
     test.aggregator_contract
-    .set_pause(&String::from_str(&test.env, "soroswap"), &false);
+    .set_pause(&Protocol::Soroswap, &false);
 
    
 
@@ -72,13 +73,13 @@ fn budget() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
     };
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "phoenix"),
+        protocol_id: Protocol::Phoenix,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -109,7 +110,7 @@ fn budget() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -146,7 +147,7 @@ fn budget() {
     path.push_back(test.token_2.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -180,7 +181,7 @@ fn budget() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -217,7 +218,7 @@ fn budget() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -255,7 +256,8 @@ fn budget() {
      //remove_adapter()
      test.env.cost_estimate().budget().reset_unlimited();
      test.aggregator_contract
-        .remove_adapter(&String::from_str(&test.env, "soroswap"));
+        .remove_adapter(&Protocol::Soroswap);
+
      let mem = test.env.cost_estimate().budget().memory_bytes_cost();
      let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
      std::println!("remove_adapter()                                         | cpu: {},      mem: {}", cpu, mem);

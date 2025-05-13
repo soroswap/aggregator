@@ -7,6 +7,8 @@ use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
     IntoVal, Symbol,
 };
+use super::soroswap_aggregator_contract::Protocol;
+
 use soroban_sdk::{vec, String, Vec};
 use super::soroswap_aggregator_contract::Adapter;
 
@@ -18,8 +20,8 @@ pub fn update_overwrite_soroswap_protocols_addresses(
     vec![
         &test.env,
         Adapter {
-            protocol_id: String::from_str(&test.env, "soroswap"),
-            address: new_router.address,
+            protocol_id: Protocol::Soroswap,
+            router: new_router.address,
             paused: false,
         },
     ]
@@ -139,7 +141,7 @@ fn test_update_adapters_with_mock_auth() {
     //  MOCK THE SPECIFIC AUTHORIZATION
     test.aggregator_contract_not_initialized
         .mock_auths(&[MockAuth {
-            address: &test.admin.clone(),
+            router: &test.admin.clone(),
             invoke: &MockAuthInvoke {
                 contract: &test.aggregator_contract_not_initialized.address.clone(),
                 fn_name: "update_adapters",

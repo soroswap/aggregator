@@ -4,6 +4,8 @@ use crate::test::SoroswapAggregatorTest;
 // use crate::DexDistribution;
 use soroban_sdk::{Address, String, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
+use super::soroswap_aggregator_contract::Protocol;
+
 
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
@@ -37,7 +39,7 @@ fn swap_tokens_for_exact_tokens_negative_amount_out() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -67,13 +69,13 @@ fn swap_tokens_for_exact_tokens_negible_amount() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
     };
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1000,
         bytes: None
@@ -126,7 +128,7 @@ fn swap_tokens_for_exact_tokens_negative_amount_in_max() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -164,7 +166,7 @@ fn swap_tokens_for_exact_tokens_deadline_expired() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -197,7 +199,7 @@ fn swap_tokens_for_exact_tokens_distribution_over_max() {
     for _i in 0..MAX_DISTRIBUTION_LENGTH + 1 {
         // this will be 16
         let distribution = DexDistribution {
-            protocol_id: String::from_str(&test.env, "protocol_id"),
+            protocol_id: Protocol::Comet,
             path: Vec::new(&test.env),
             parts: 1,
             bytes: None
@@ -230,13 +232,13 @@ fn swap_tokens_for_exact_tokens_zero_parts() {
     let mut distribution_vec = Vec::new(&test.env);
     // add one with part 1 and other with part 0
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "protocol_id"),
+        protocol_id: Protocol::Comet,
         path: Vec::new(&test.env),
         parts: 1,
         bytes: None
     };
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "protocol_id"),
+        protocol_id: Protocol::Comet,
         path: Vec::new(&test.env),
         parts: 0,
         bytes: None
@@ -271,7 +273,7 @@ fn swap_tokens_for_exact_tokens_protocol_not_found() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "protocol"),
+        protocol_id: Protocol::Comet,
         path,
         parts: 1,
         bytes: None
@@ -305,7 +307,7 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -314,7 +316,7 @@ fn swap_tokens_for_exact_tokens_paused_protocol() {
 
     // pause the protocol
     test.aggregator_contract
-        .set_pause(&String::from_str(&test.env, "soroswap"), &true);
+        .set_pause(&Protocol::Soroswap, &true);
 
     let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
         &test.token_0.address.clone(),
@@ -345,7 +347,7 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_start() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -384,7 +386,7 @@ fn swap_tokens_for_exact_tokens_malformed_path_wrong_end() {
     path.push_back(test.token_0.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -421,7 +423,7 @@ fn swap_tokens_for_exact_tokens_excessive_input_amount() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -461,7 +463,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
@@ -531,7 +533,7 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_one_protocol_two_hops() {
     path.push_back(test.token_2.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
         bytes: None
@@ -616,13 +618,13 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_same_protocol_twice() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
     };
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 3,
         bytes: None
@@ -740,13 +742,13 @@ fn swap_tokens_for_exact_tokens_succeed_correctly_two_protocols() {
     let mut distribution_vec = Vec::new(&test.env);
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
         bytes: None
     };
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "phoenix"),
+        protocol_id: Protocol::Phoenix,
         path: path.clone(),
         parts: 3,
         bytes: None
@@ -850,7 +852,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet() {
     path.push_back(test.token_2.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "comet"),
+        protocol_id: Protocol::Comet,
         path,
         parts: 1,
         bytes: None
@@ -934,7 +936,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
     path_soroswap.push_back(test.token_2.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path_soroswap,
         parts: 1,
         bytes: None
@@ -946,7 +948,7 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
     path_comet.push_back(test.token_2.address.clone());
 
     let distribution_1 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "comet"),
+        protocol_id: Protocol::Comet,
         path: path_comet,
         parts: 1,
         bytes: None
