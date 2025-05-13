@@ -59,7 +59,7 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
     },
     {
       protocol_id: 1,
-      router: new Address(aquaRouter),
+      router: new Address(phoenixMultihop),
       paused: false
     },
     {
