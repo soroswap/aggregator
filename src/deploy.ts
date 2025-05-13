@@ -18,14 +18,9 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
   console.log('-------------------------------------------------------');
   await installContract('deployer', addressBook, loadedConfig.admin);
   await deployContract('deployer', 'deployer', addressBook, loadedConfig.admin);
-
-  console.log('-------------------------------------------------------');
-  console.log('Deploying Adapters using the deployer');
-  console.log('-------------------------------------------------------');
-
+  
   let soroswapRouter = soroswapAddressBook.getContractId('router');
   let aquaRouter = aquaAddressBook.getContractId('aqua_router');
-
   let phoenixMultihop;
 
   if (network == 'mainnet') {
@@ -35,9 +30,15 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
     phoenixMultihop = addressBook.getContractId('phoenix_multihop');
   }
 
-  await deployAdapter(addressBook, loadedConfig, 'soroswap', soroswapRouter);
-  await deployAdapter(addressBook, loadedConfig, 'phoenix', phoenixMultihop);
-  await deployAdapter(addressBook, loadedConfig, 'aqua', aquaRouter);
+  // console.log('-------------------------------------------------------');
+  // console.log('Deploying Adapters using the deployer');
+  // console.log('-------------------------------------------------------');
+
+
+
+  // await deployAdapter(addressBook, loadedConfig, 'soroswap', soroswapRouter);
+  // await deployAdapter(addressBook, loadedConfig, 'phoenix', phoenixMultihop);
+  // await deployAdapter(addressBook, loadedConfig, 'aqua', aquaRouter);
 
   
   // console.log("** Comet Adapter");
@@ -52,18 +53,18 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
   
   const adaptersVec = [
     {
-      protocol_id: "soroswap",
-      address: new Address(addressBook.getContractId('soroswap_adapter')),
+      protocol_id: 0,
+      router: new Address(soroswapRouter),
       paused: false
     },
     {
-      protocol_id: "phoenix",
-      address: new Address(addressBook.getContractId('phoenix_adapter')),
+      protocol_id: 1,
+      router: new Address(aquaRouter),
       paused: false
     },
     {
-      protocol_id: "aqua",
-      address: new Address(addressBook.getContractId('aqua_adapter')),
+      protocol_id: 2,
+      router: new Address(aquaRouter),
       paused: false
     },
   ];
@@ -71,16 +72,16 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
   const adaptersVecScVal = xdr.ScVal.scvVec(adaptersVec.map((adapter) => {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol('address'),
-        val: adapter.address.toScVal(),
-      }),
-      new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('paused'),
         val: nativeToScVal(adapter.paused),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('protocol_id'),
-        val: xdr.ScVal.scvString(adapter.protocol_id),
+        val: nativeToScVal(adapter.protocol_id, {type: 'u32'}),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('router'),
+        val: adapter.router.toScVal(),
       }),
     ]);
   }));
