@@ -4,11 +4,11 @@ use soroban_sdk::{self, contracterror};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum AggregatorError {
-    NotInitialized = 601,
-    AlreadyInitialized = 602,
-    NegativeNotAllowed = 603,
-    ProtocolNotFound = 604,
-    DeadlineExpired = 605,
+    NotInitialized = 501,
+    AlreadyInitialized = 502,
+    NegativeNotAllowed = 503,
+    ProtocolNotFound = 504,
+    DeadlineExpired = 505,
     
     // checks of the desired amount.
     // if at the end, the total output is too low (insufficient) for what we expected as amount_out_min
@@ -26,4 +26,11 @@ pub enum AggregatorError {
     InvalidPath = 615,
 
     NegibleAmount = 616,
+
+
+    // Adapter Errors
+    ProtocolAddressNotFound = 404,
+    MissingPoolHashes = 406, // For AQUA
+    WrongMinimumPathLength = 407,
+    WrongPoolHashesLength = 408, // For AQUA
 }

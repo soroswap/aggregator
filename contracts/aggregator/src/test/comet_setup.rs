@@ -2,7 +2,7 @@
 use comet_adapter::CometAdapterClient;
 use pair::CometPairClient;
 use soroban_sdk::{vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec};
-use super::{generate_salt, DeployerClient};
+use test_utils::phoenix_setup::{generate_salt, DeployerClient};
 
 pub mod pair {
     soroban_sdk::contractimport!(file = "../adapters/comet/comet_contracts/comet_pool.wasm");
@@ -27,7 +27,7 @@ pub mod comet_adapter{
 pub fn create_comet_factory<'a>(e: &Env) -> CometFactoryClient {
     let pair_hash = pair_contract_wasm(e);
 
-    let factory_address = e.register_contract_wasm(None, factory::WASM);
+    let factory_address = e.register(factory::WASM, ());
     let factory_client = CometFactoryClient::new(&e.clone(), &factory_address);
 
     factory_client.init(&pair_hash);

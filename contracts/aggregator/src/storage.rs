@@ -1,11 +1,11 @@
-use crate::{error::AggregatorError, models::Adapter};
-use soroban_sdk::{contracttype, Address, Env, String, Vec};
+use crate::{error::AggregatorError, models::Adapter, models::Protocol};
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
     ProtocolList,
-    Adapter(String),
+    Adapter(Protocol),
     Initialized,
     Admin,
 }
@@ -48,11 +48,11 @@ pub fn put_adapter(e: &Env, adapter: Adapter) {
     add_protocol_id(e, adapter.protocol_id);
 }
 
-pub fn has_adapter(e: &Env, protocol_id: String) -> bool {
+pub fn has_adapter(e: &Env, protocol_id: Protocol) -> bool {
     e.storage().instance().has(&DataKey::Adapter(protocol_id))
 }
 
-pub fn get_adapter(e: &Env, protocol_id: String) -> Result<Adapter, AggregatorError> {
+pub fn get_adapter(e: &Env, protocol_id: Protocol) -> Result<Adapter, AggregatorError> {
     match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
         Some(adapter) => Ok(adapter),
         None => Err(AggregatorError::ProtocolNotFound),
@@ -60,7 +60,7 @@ pub fn get_adapter(e: &Env, protocol_id: String) -> Result<Adapter, AggregatorEr
 }
 
 // TODO, THIS SHOULD FAIL IF PROXY DOES NOT EXIST
-pub fn remove_adapter(e: &Env, protocol_id: String) {
+pub fn remove_adapter(e: &Env, protocol_id: Protocol) {
     if has_adapter(e, protocol_id.clone()) {
         e.storage()
             .instance()
@@ -69,7 +69,7 @@ pub fn remove_adapter(e: &Env, protocol_id: String) {
     }
 }
 
-pub fn add_protocol_id(e: &Env, protocol_id: String) {
+pub fn add_protocol_id(e: &Env, protocol_id: Protocol) {
     let mut protocols = get_protocol_ids(e);
     if !protocols.contains(&protocol_id) {
         protocols.push_back(protocol_id);
@@ -79,14 +79,14 @@ pub fn add_protocol_id(e: &Env, protocol_id: String) {
     }
 }
 
-pub fn get_protocol_ids(e: &Env) -> Vec<String> {
+pub fn get_protocol_ids(e: &Env) -> Vec<Protocol> {
     match e.storage().instance().get(&DataKey::ProtocolList) {
         Some(protocol_ids) => protocol_ids,
         None => Vec::new(e),
     }
 }
 
-pub fn remove_protocol_id(e: &Env, protocol_id: String) {
+pub fn remove_protocol_id(e: &Env, protocol_id: Protocol) {
     let protocols = get_protocol_ids(e);
     let mut new_protocols = Vec::new(e);
 
@@ -103,7 +103,7 @@ pub fn remove_protocol_id(e: &Env, protocol_id: String) {
 
 pub fn set_pause_protocol(
     e: &Env,
-    protocol_id: String,
+    protocol_id: Protocol,
     paused: bool,
 ) -> Result<(), AggregatorError> {
     let mut protocol = get_adapter(&e, protocol_id)?;

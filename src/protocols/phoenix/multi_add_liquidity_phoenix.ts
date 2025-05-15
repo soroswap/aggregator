@@ -7,6 +7,39 @@ import { signWithKeypair } from '../../utils/tx.js';
 import * as PhoenixFactoryContract from './bindgins/factory_bindings.js';
 
 const network = process.argv[2];
+import { StrKey } from "@stellar/stellar-sdk";
+
+function compareAddressesAsBytes(tokenA: string, tokenB: string): number {
+    // Decode StrKey to raw bytes
+    const bytesA = StrKey.decodeContract(tokenA); // Use decodeEd25519PublicKey for accounts
+    const bytesB = StrKey.decodeContract(tokenB);
+
+    // Compare byte arrays lexicographically
+    for (let i = 0; i < 32; i++) {
+        if (bytesA[i] < bytesB[i]) return -1;
+        if (bytesA[i] > bytesB[i]) return 1;
+    }
+    return 0; // Equal
+}
+
+function sortTokens(tokenA: string, tokenB: string): [string, string] {
+    console.log("Previous tokenA:", tokenA);
+    console.log("Previous tokenB:", tokenB);
+    if (tokenA === tokenB) {
+        console.error(`Tokens must be different: ${tokenA}`);
+        throw new Error("IdenticalTokens");
+    }
+    // Use byte comparison instead of string comparison
+    if (compareAddressesAsBytes(tokenA, tokenB) > 0) {
+        console.log('🚀 « tokenA > tokenB (byte comparison):', tokenA, tokenB);
+        console.log("tokenA:", tokenB);
+        console.log("tokenB:", tokenA);
+        return [tokenB, tokenA];
+    }
+    console.log("tokenA:", tokenA);
+    console.log("tokenB:", tokenB);
+    return [tokenA, tokenB];
+}
 
 export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook: TokensBook, addressBook: AddressBook, phoenixAdmin: Keypair, tokensAdminAccount: Keypair) {
   const tokens = tokensBook.getTokensByNetwork(network);
@@ -27,12 +60,8 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
       const path = paths[i];
       console.log('🚀 « path:', path);
       for (let i = 0; i < path.length - 1; i++) {
-        let tokenA = path[i];
-        let tokenB = path[i + 1];
+        let [tokenA, tokenB] = sortTokens(path[i], path[i + 1]);
         
-        if (tokenA > tokenB) {
-          [tokenA, tokenB] = [tokenB, tokenA];
-        }
         
         // Mint tokens
         // export async function mintToken(contractId: string, amount: number, to: string, admin: Keypair) {
@@ -76,7 +105,17 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
     //     default_slippage_bps: i64,
     //     max_allowed_fee_bps: i64,
     // ) 
-        const tx = await factory_contract.create_liquidity_pool({ 
+  //   let lp = factory.create_liquidity_pool(
+  //     &admin.clone(), //     sender: Address,
+  //     &lp_init_info, //     lp_init_info: LiquidityPoolInitInfo,
+  //     &String::from_str(env, "Pool"),  //     share_token_name: String,
+  //     &String::from_str(env, "PHO/XLM"),//     share_token_symbol: String,
+  //     &PoolType::Xyk, //     pool_type: PoolType,
+  //     &None::<u64>,//     amp: Option<u64>,
+  //     &100i64, //     default_slippage_bps: i64,
+  //     &2_000,//     max_allowed_fee_bps: i64,
+  // );
+        const tx = await factory_contract.create_liquidity_pool({  
           sender: phoenixAdmin.publicKey(),
           lp_init_info: {
             admin: phoenixAdmin.publicKey(),
@@ -138,7 +177,8 @@ export async function phoenixMultiAddLiquidity(numberOfPaths: number, tokensBook
           nativeToScVal(2000000000000, { type: "i128" }),
           nativeToScVal(null),
           nativeToScVal(null),
-          nativeToScVal(null)
+          nativeToScVal(null),
+          nativeToScVal(false),
         ]
         
         await invokeCustomContract(scValToNative(pairAddress.result.retval), 'provide_liquidity', addLiquidityParams, phoenixAdmin)

@@ -1,7 +1,7 @@
 {
-    "protocolVersion": "21",
-    "previewHash": "21.0.0_node_20@sha256:d8546f6a3bf75b9fa4a481af6be872e3e69f59896948c537912f2bb0df3cd0d9",
-    "quickstartHash": "v426-latest-amd64@sha256:274395daab6fa8033b9213f152d56699358917fb01d7c7e95392a37fc00c9d01",
+    "protocolVersion": "22",
+    "previewHash": "22.0.1@sha256:e020c9c3925bd83ddfbde7b69397a0e6aa1e68d4a4a78eb9fac5a37875f8961a",
+    "quickstartHash": "latest@sha256:b7f5a1b2c8ec06cb30a1b79b377ad2bc762cf8cb69ce1fcf7b91185b2acd8a15",
     "networkConfig": [
         {
             "network": "mainnet",

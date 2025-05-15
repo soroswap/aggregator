@@ -1,11 +1,14 @@
-#![cfg(test)]
+// #![cfg(test)]
 // extern crate std;
 use soroban_sdk::{
     vec,
+    Vec,
     // IntoVal,
+    Symbol,
+    Val,
+    IntoVal,
     String,
     Env, 
-    Bytes,
     BytesN, 
     Address, 
     testutils::{
@@ -19,18 +22,10 @@ use soroban_sdk::{
 #[allow(clippy::too_many_arguments)]
 pub mod factory {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_factory.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/phoenix_factory.wasm"
     );
 }
-use crate::test::phoenix_setup::factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
-
-pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
-    let factory_wasm = e.deployer().upload_contract_wasm(factory::WASM);
-    let salt = Bytes::new(&e.clone());
-    let salt = e.crypto().sha256(&salt);
-
-    e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
-}
+use factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
 
 pub use factory::Client as PhoenixFactory;
 
@@ -39,14 +34,14 @@ pub use factory::PoolType;
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
 pub mod multihop {
-    soroban_sdk::contractimport!(file = "./phoenix_contracts/phoenix_multihop.wasm");
+    soroban_sdk::contractimport!(file = "../adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm");
     pub type MultihopClient<'a> = Client<'a>;
 }
 pub use multihop::MultihopClient; 
 
 pub fn install_multihop_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_multihop.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -57,18 +52,15 @@ pub fn deploy_multihop_contract<'a>(
 ) -> MultihopClient<'a> {
     let admin = admin.into().unwrap_or(Address::generate(env));
 
-    let multihop_address = &env.register_contract_wasm(None, multihop::WASM);
-    let multihop = MultihopClient::new(env, multihop_address); 
-
-    multihop.initialize(&admin, factory);
-    multihop
+    let args = (admin, factory);
+    MultihopClient::new(env, &env.register(multihop::WASM, args))
 }
 
 /* *************  TOKEN  *************  */
 
 pub mod token_contract {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/soroban_token_contract.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm"
     );
 }
 
@@ -91,13 +83,13 @@ pub use token_contract::Client as TokenClient;
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/soroban_token_contract.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
 
 pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract::Client<'a> {
-    token_contract::Client::new(env, &env.register_stellar_asset_contract(admin.clone()))
+    token_contract::Client::new(env, &env.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 
@@ -106,7 +98,7 @@ pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract
 #[allow(clippy::too_many_arguments)]
 pub mod stable_contract {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_pool_stable.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/phoenix_pool_stable.wasm"
     );
 }
 
@@ -119,7 +111,7 @@ pub fn install_stable_contract(env: &Env) -> BytesN<32> {
 #[allow(clippy::too_many_arguments)]
 pub mod lp_contract {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_pool.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/phoenix_pool.wasm"
     );
 }
 
@@ -133,7 +125,7 @@ pub fn install_lp_contract(env: &Env) -> BytesN<32> {
 #[allow(clippy::too_many_arguments)]
 pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "./phoenix_contracts/phoenix_stake.wasm"
+        file = "../adapters/phoenix/phoenix_contracts/phoenix_stake.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -151,39 +143,26 @@ pub fn deploy_and_mint_tokens<'a>(
 
 
 pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFactory<'a> {
-    let factory_addr = deploy_factory_contract(&env, &admin.clone());
-    let factory_client = PhoenixFactory::new(env, &factory_addr);
+
     let multihop_wasm_hash = install_multihop_wasm(env);
     let whitelisted_accounts = vec![env, admin.clone()];
-
+    
     let lp_wasm_hash = install_lp_contract(env);
     let stable_wasm_hash = install_stable_contract(env);
     let stake_wasm_hash = install_stake_wasm(env);
     let token_wasm_hash = install_token_wasm(env);
 
-    // fn initialize(
-    //     env: Env,
-    //     admin: Address,
-    //     multihop_wasm_hash: BytesN<32>,
-    //     lp_wasm_hash: BytesN<32>,
-    //     stable_wasm_hash: BytesN<32>,
-    //     stake_wasm_hash: BytesN<32>,
-    //     token_wasm_hash: BytesN<32>,
-    //     whitelisted_accounts: Vec<Address>,
-    //     lp_token_decimals: u32,
-    // );
-
-    factory_client.initialize( 
-        &admin.clone(),
-        &multihop_wasm_hash,
-        &lp_wasm_hash,
-        &stable_wasm_hash,
-        &stake_wasm_hash,
-        &token_wasm_hash,
-        &whitelisted_accounts,
-        &10u32,
+    let args = ( 
+        admin.clone(),
+        multihop_wasm_hash,
+        lp_wasm_hash,
+        stable_wasm_hash,
+        stake_wasm_hash,
+        token_wasm_hash,
+        whitelisted_accounts,
+        10u32,
     );
-    factory_client
+    PhoenixFactory::new(env, &env.register(factory::WASM, args))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -226,6 +205,18 @@ pub fn deploy_and_initialize_lp(
     //     pub token_init_info: TokenInitInfo,
     //     pub stake_init_info: StakeInitInfo,
     // }
+
+    // LiquidityPoolInitInfo {
+    //     admin: admin.clone(),
+    //     swap_fee_bps: 0,
+    //     fee_recipient: fee_recipient.clone(),
+    //     max_allowed_slippage_bps: 5000,
+    //     default_slippage_bps: 2_500,
+    //     max_allowed_spread_bps: 500,
+    //     max_referral_bps: 5000,
+    //     token_init_info,
+    //     stake_init_info,
+    // }
     
     let lp_init_info = LiquidityPoolInitInfo {
         admin: admin.clone(),
@@ -251,6 +242,17 @@ pub fn deploy_and_initialize_lp(
     //     max_allowed_fee_bps: i64,
     // ) -> Address;
 
+    // factory.create_liquidity_pool(
+    //     &admin,
+    //     &lp_init_info,
+    //     &String::from_str(&env, "Pool"),
+    //     &String::from_str(&env, "PHO/BTC"),
+    //     &PoolType::Xyk,
+    //     &None::<u64>,
+    //     &100i64,
+    //     &1_000,
+    // );
+
     let lp = factory.create_liquidity_pool(
         &admin.clone(), //     sender: Address,
         &lp_init_info, //     lp_init_info: LiquidityPoolInitInfo,
@@ -273,6 +275,7 @@ pub fn deploy_and_initialize_lp(
     //     min_b: Option<i128>,
     //     custom_slippage_bps: Option<i64>,
     //     deadline: Option<u64>,
+    //     auto_stake: bool,
     // );
 
     lp_client.provide_liquidity(
@@ -283,6 +286,7 @@ pub fn deploy_and_initialize_lp(
         &None, //     min_b: Option<i128>,
         &None::<i64>, //     custom_slippage_bps: Option<i64>,
         &None::<u64>, //     deadline: Option<u64>,
+        &false, //     auto_stake: bool,
     );
 }
 
@@ -303,7 +307,7 @@ impl<'a> PhoenixTest<'a> {
     pub fn phoenix_setup() -> Self {
         let env = Env::default();
         env.mock_all_auths();
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         let admin = Address::generate(&env);
         let user = Address::generate(&env);
@@ -373,3 +377,76 @@ impl<'a> PhoenixTest<'a> {
         }
     }
 }
+
+
+
+mod deployer_contract {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    pub type DeployerClient<'a> = Client<'a>;
+}
+pub use deployer_contract::DeployerClient;
+
+
+pub fn generate_salt(initial: u8) -> [u8; 32] {
+    let mut salt = [0u8; 32];
+    salt[0] = initial;
+    salt
+}
+
+pub fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
+    let deployer_address = &e.register(deployer_contract::WASM, ());
+    let deployer = DeployerClient::new(e, deployer_address);
+    deployer
+}
+
+
+// For Phoenix
+mod phoenix_adapter {
+    soroban_sdk::contractimport!(
+        file =
+            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+    );
+    pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
+}
+pub use phoenix_adapter::SoroswapAggregatorAdapterForPhoenixClient;
+// use crate::test::install_token_wasm;
+// Adapter for phoenix
+// pub fn create_phoenix_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+//     let adapter_address = &e.register_contract_wasm(None, phoenix_adapter::WASM);
+//     let adapter = SoroswapAggregatorAdapterForPhoenixClient::new(e, adapter_address);
+//     adapter
+// }
+
+pub fn create_phoenix_adapter<'a>(e: &Env, deployer_client: &DeployerClient<'a>, multihop_contract: Address, admin: Address) -> SoroswapAggregatorAdapterForPhoenixClient<'a> {
+    let wasm_hash = e.deployer().upload_contract_wasm(phoenix_adapter::WASM);
+
+    // Deploy contract using deployer, and include an init function to call.
+    let salt = BytesN::from_array(&e, &generate_salt(1));
+    let init_fn = Symbol::new(&e, &("initialize"));
+
+    let protocol_id = String::from_str(&e, "phoenix");
+    let protocol_address = multihop_contract.clone();
+
+    // Convert the arguments into a Vec<Val>
+    
+    
+// // Convert protocol_id and protocol_address to a soroban_sdk::Vec<Val>
+//     let mut init_fn_args: Vec<Val> = Vec::new(e); // Initialize an empty soroban_sdk::Vec
+//     init_fn_args.push(protocol_id.clone().into_val(e)); // Convert String to Val
+//     init_fn_args.push(protocol_address.clone().into_val(e)); // Convert Address to Val
+    let init_fn_args: Vec<Val> = (protocol_id.clone(), protocol_address.clone()).into_val(e);
+
+
+    let (contract_id, _init_result) = deployer_client.deploy(
+        &admin,
+        &wasm_hash,
+        &salt,
+        &init_fn,
+        &init_fn_args,
+    );
+
+    let adapter_contract = SoroswapAggregatorAdapterForPhoenixClient::new(e, &contract_id);
+    adapter_contract
+}
+
+

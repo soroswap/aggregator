@@ -9,5 +9,9 @@ pub enum AdapterError {
     NegativeNotAllowed = 403,
     ProtocolAddressNotFound = 404,
     DeadlineExpired = 405,
+    MissingPoolHashes = 406, // For AQUA
+    WrongMinimumPathLength = 407,
+    WrongPoolHashesLength = 408, // For AQUA
+    
 }
 

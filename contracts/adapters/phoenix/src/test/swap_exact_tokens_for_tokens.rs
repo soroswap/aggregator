@@ -1,12 +1,14 @@
+#[cfg(test)]
 use soroban_sdk::{Address, vec, Vec};
-use crate::test::{PhoenixAggregatorAdapterTest, phoenix_setup::deploy_and_initialize_lp};
+use crate::test::{PhoenixAggregatorAdapterTest};
+use test_utils::phoenix_setup::deploy_and_initialize_lp;
 use adapter_interface::AdapterError;
 use super::phoenix_adapter_contract::AdapterError as AdapterErrorDeployer;
 
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_client_not_initialized.try_swap_exact_tokens_for_tokens(
@@ -15,6 +17,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -24,7 +27,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 #[test]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -34,6 +37,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 
     assert_eq!(
@@ -45,7 +49,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 #[test]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test = PhoenixAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -55,6 +59,7 @@ fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 
     assert_eq!(
@@ -75,6 +80,7 @@ fn swap_exact_tokens_for_tokens_expired() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 
     assert_eq!(
@@ -98,6 +104,7 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
 }
 
@@ -112,13 +119,14 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_client.swap_exact_tokens_for_tokens(
         &0,        // amount_in
         &0,        // amount_out_min
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInsufficientInputAmount)));
 }
@@ -148,13 +156,14 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     // The next taken from phoenix contract tests
     let expected_amount_out = 50i128;
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_client.swap_exact_tokens_for_tokens(
         &amount_in,       // amount_in
         &(expected_amount_out + 1),  // amount_out_min
         &path,            // path
         &test.user,       // to
         &deadline,        // deadline
+        &None
     );
 }
 
@@ -187,13 +196,14 @@ fn swap_exact_tokens_for_tokens_enough_output_amount() {
 
     assert_eq!(token_out_address, test.token_3.address);
     
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
         &amount_in,       // amount_in
         &(expected_amount_out),  // amount_out_min
         &path,            // path
         &test.user,       // to
         &deadline,        // deadline
+        &None
     );
 
 
@@ -248,13 +258,14 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
     let initial_user_balance_2 = test.token_2.balance(&test.user);
     // let initial_user_balance_3 = test.token_3.balance(&test.user);
     
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let executed_amounts = test.adapter_client.swap_exact_tokens_for_tokens(
         &amount_in,       // amount_in
         &(expected_amount_out),  // amount_out_min
         &path,            // path
         &test.user,       // to
         &deadline,        // deadline
+        &None
     );
 
 
@@ -293,7 +304,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -387,7 +398,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -496,7 +507,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
@@ -555,7 +566,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 3_001_000i128);
@@ -604,7 +615,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
@@ -665,7 +676,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -762,7 +773,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -901,7 +912,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -993,7 +1004,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 1_001_000i128);
@@ -1062,7 +1073,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 //     let admin = Address::generate(&env);
 
 //     env.mock_all_auths();
-//     env.budget().reset_unlimited();
+//     env.cost_estimate().budget().reset_unlimited();
 
 //     let token1 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
 //     let token2 = deploy_and_mint_tokens(&env, &admin, 10_000_000i128);
@@ -1147,7 +1158,7 @@ fn swap_exact_tokens_for_tokens_enough_output_amount_with_fees() {
 // #[test]
 // fn swap_exact_tokens_for_tokens_2_hops() {
 //     let test = PhoenixAggregatorAdapterTest::setup();
-//     test.env.budget().reset_unlimited();
+//     test.env.cost_estimate().budget().reset_unlimited();
 //     test.adapter_client.initialize(
 //         &String::from_str(&test.env, "phoenix"),
 //         &test.multihop_client.address);

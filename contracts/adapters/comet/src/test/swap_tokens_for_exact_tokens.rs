@@ -7,7 +7,7 @@ use adapter_interface::AdapterError;
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
     let test = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_contract_not_initialized.try_swap_tokens_for_exact_tokens(
@@ -16,6 +16,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -26,7 +27,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
 #[should_panic(expected = "HostError: Error(Contract, #37)")]
 fn swap_tokens_for_exact_tokens_amount_out_negative() {
     let test = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = vec![&test.env, test.token_0.address, test.token_1.address];
 
@@ -36,6 +37,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
         &path,     // path
         &test.user, // to
         &1,        // deadline
+        &None
     );
 }
 
@@ -43,7 +45,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
 #[should_panic(expected = "HostError: Error(Contract, #37)")]
 fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
     let test = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = vec![&test.env, test.token_0.address, test.token_1.address];
 
@@ -53,6 +55,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
         &path,     // path
         &test.user, // to
         &1,        // deadline
+        &None
     );
 }
 
@@ -69,6 +72,7 @@ fn swap_tokens_for_exact_tokens_expired() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 }
 
@@ -88,6 +92,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
    
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInvalidPath)));
@@ -106,7 +111,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_input_amount() {
     path.push_back(test.token_1.address.clone());
 
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let amount_out = 1_000_000;
     let expected_amount_in = 1_003_015;
@@ -140,6 +145,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_input_amount() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
 }
 
@@ -154,7 +160,7 @@ fn try_swap_tokens_for_exact_tokens_sufficient_input_amount() {
     path.push_back(test.token_1.address.clone());
 
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let amount_out = 1_000_000;
     let expected_amount_in = 1_003_015;
@@ -190,6 +196,7 @@ fn try_swap_tokens_for_exact_tokens_sufficient_input_amount() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
 
     assert_eq!(executed_amounts.get(0).unwrap(), expected_amount_in);

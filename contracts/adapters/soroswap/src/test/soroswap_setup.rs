@@ -18,7 +18,7 @@ pub mod token {
 use token::TokenClient;
 
 pub fn create_token_contract<'a>(e: &Env, admin: & Address) -> TokenClient<'a> {
-    TokenClient::new(&e, &e.register_stellar_asset_contract(admin.clone()))
+    TokenClient::new(&e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 // Pair Contract
@@ -45,7 +45,7 @@ use factory::SoroswapFactoryClient;
 
 fn create_soroswap_factory<'a>(e: & Env, setter: & Address) -> SoroswapFactoryClient<'a> {
     let pair_hash = pair_contract_wasm(&e);  
-    let factory_address = &e.register_contract_wasm(None, factory::WASM);
+    let factory_address = &e.register(factory::WASM, ());
     let factory = SoroswapFactoryClient::new(e, factory_address); 
     factory.initialize(&setter, &pair_hash);
     factory
@@ -60,7 +60,7 @@ use router::SoroswapRouterClient;
 
 // SoroswapRouter Contract
 fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
-    let router_address = &e.register_contract_wasm(None, router::WASM);
+    let router_address = &e.register(router::WASM, ());
     let router = SoroswapRouterClient::new(e, router_address); 
     router
 }
@@ -97,7 +97,7 @@ impl<'a> SoroswapTest<'a> {
         token_2.mint(&user, &initial_user_balance);
 
         let factory_contract = create_soroswap_factory(&env, &admin);
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         let ledger_timestamp = 100;
         let desired_deadline = 1000;

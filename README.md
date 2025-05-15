@@ -1,12 +1,14 @@
 # Soroswap Aggregator 
 
-The Soroswap Aggregator Contract currently aggregates different Soroban based AMMs
+The Soroswap Aggregator aggregates liquidity from different Soroban based AMMs
 
+📚 Documentation: [Soroswap Documentation](https://docs.soroswap.finance/)
 
-Check the documentation in https://docs.soroswap.finance/ and the [Security Audit Report](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf) and the [Security Audit Findings Summary](audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf) written by [Runtime Verification](https://runtimeverification.com).
+🔒 Audit Report: [Runtime Verification](./audits/2024-08-31_Soroswap_Aggregator_Audit_by_RuntimeVerification.pdf)
 
+📑 Audit Summary: [Runtime Verification](./audits/2024-08-31_Soroswap_Aggregator_Audit_Summary_by_RuntimeVerification.pdf)
 
-For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
+🌐 Deployed Address: [`./public/mainnet.json`](./public/mainnet.json)
 
 
 # Setup and Deployment
@@ -18,7 +20,7 @@ For Deployed address check the [`./public/mainnet.json`](./public/mainnet.json)
 
 ## 1. Setup
 
-1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, or to deploy on Standalone those protocols.
+1.1. Clone this repo. Submodules are necesary to get the Public and Testnet addresses of the underlying protocols like Soroswap, Phoenix, Aqua, etc... or to deploy on Standalone and Testnet those protocols.
 
 ```bash
 git clone --recurse-submodules http://github.com/soroswap/aggregator.git
@@ -31,6 +33,11 @@ If there was a Testnet reset, and the soroswap/core repo has new Tesnet deployme
 ```
 cd protocols/soroswap/
 git pull origin main
+```
+> [!NOTE]
+If you want to update the submodules, do
+```
+git pull --recurse-submodules
 ```
 
 1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
@@ -65,15 +72,34 @@ cd /workspace/contracts
 make build
 ```
 
-### Compile other protocols
-If you are considering other protocol that have changed their wasm versions, upgrade them:
-For example, for phoenix:
+### (Optional) Upgrade, Compile other protocols and test
+If you are considering other protocol that have changed their versions, upgrade them.
+Make sure that you did a recursive pull
+
+However, you dont need to do this very often.
+
+For Phoenix:
 ```
 cd protocols/phoenix-contracts/
 make build
 cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+
+# make sure the tests still pass
+cd /workspace/contracts/adapters/phoenix
+rustup install 1.79.0 # Phoenix needs to downgrade
+rustup override set 1.79.0
+rustup target add wasm32-unknown-unknown
+make test
+
 ```
 
+For Aqua:
+```
+cd protocols/aqua
+npm install -g @go-task/cli
+task build
+cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/aqua/aqua_contracts/
+```
 
 ## 2. Run Tests and Scout Audit
 ```
@@ -103,10 +129,23 @@ cargo test budget -- --nocapture > aggregator_budget.txt
 
 ## 4.- Deployment
 
-To deploy the smart contracts you first would need to build the source with
-```bash
+### 4.1- (Optional) Deploy each protocol.
+We will consider other protocol addresses from your local ignored files `.soroban/mainnet.contrats.json` and `.soroban/testnet.contrats.json`.
+
+If you want to change their addresses do it there. Also sometimes projects do not keep a testnet version of their protocols. If you need to deploy your own Phoenix, Comet or Aqua version of the protocol, do:
+
+```
 cd /workspace
 yarn build
+yarn setup-phoenix testnet # To Setup Phoenix. Now you will have the new deployed addresses in .soroban/testnet.contrats.json
+
+```
+### 4.2 Deploy all adapters and Aggregator
+
+To deploy the smart contracts you first would need to build the source with
+```bash
+cd /workspace/contracts
+make build
 ```
 The .wasm files will already be optimized and will be available in 
 `/workspace/contracts/target/wasm32-unknown-unknown/release/` with a name like `[NAME-OF-CONTRACT].optimized.wasm`
@@ -115,30 +154,26 @@ after the WASMs are built you can run this to deploy, networks can be `testnet`,
 
 ```bash
 cd /workspace
-yarn deploy <network>
+yarn build
+yarn deploy <network> # use testnet or mainnet
 ```
-You can deploy in Futurenet, Testnet and Mainnet from any type of Quickstart Image configuration. However if you want to deploy them on `standalone`, make sure that you have run the quickstart image with the `standalone` config.
+
+NOTE: For Testnet we will use the deployed addresse on the soroswap core repo, so make sure to pull the last version:
+
+```
+cd protocols/soroswap/
+git pull origin main
+```
 
 when deployment is completed you can find the addresses in ./.soroban directory
 
-If you deployed in Testnet. A new version of Phoenix will be deployed, so you will need to add liquidity to these pairs
-```
-yarn 
-```
-
-
+## 6.- Run Tests directly on the Blockchain
 Run javascript tests
 ```
 cd /workspace
 yarn test
 ```
 
-
-## 5.- Publish Phoenix Aggregator in Mainnet
-```
-yarn build && yarn deploy-phoenix-adapter mainnet
-
-```
 
 ## 6.- Publish deployed address.
 If you want to publish the json files that are in the ignored `.soroban` folder, do:
@@ -147,6 +182,8 @@ If you want to publish the json files that are in the ignored `.soroban` folder,
 yarn publish_addresses <network>
 ```
 
+
+```
 ## 7.- Integration Test in Public Testnet. 
 Its important to allways test contracts in a live testnet Blockchain.
 We have prepared some scripts to interact with the deployed Soroswap.Finance testnet version and with a custom deployed Phoenix protocol. This is because Phoenix does not officially support a testnet version.
@@ -178,3 +215,15 @@ This will create pairs with all tokens listed in the [Soroswap tokens list](http
 
 > [!NOTE] 
 > *The number of tokens is optional, if not provided, the script will add liquidity to all the pools.
+
+### Add new protocol as submodule
+```bash
+git submodule add <remote_url> <destination_folder>
+```
+
+OLD
+
+
+## 5.- Publish Phoenix Aggregator in Mainnet
+```
+yarn build && yarn deploy-phoenix-adapter mainnet

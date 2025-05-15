@@ -1,8 +1,7 @@
 use soroban_sdk::{
    Env, BytesN, Address, Symbol, String, Vec, Val, IntoVal
 };
-use super::{generate_salt, DeployerClient};
-
+use test_utils::phoenix_setup::{DeployerClient, generate_salt};
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
         file = "../adapters/soroswap/soroswap_contracts/soroswap_pair.wasm"
@@ -19,7 +18,7 @@ use factory::SoroswapFactoryClient;
 
 pub fn create_soroswap_factory<'a>(e: &Env, setter: &Address) -> SoroswapFactoryClient<'a> {
     let pair_hash = pair_contract_wasm(&e);
-    let factory_address = &e.register_contract_wasm(None, factory::WASM);
+    let factory_address = &e.register(factory::WASM, ());
     let factory = SoroswapFactoryClient::new(e, factory_address);
     factory.initialize(&setter, &pair_hash);
     factory
@@ -34,7 +33,7 @@ pub use router::SoroswapRouterClient;
 
 // SoroswapRouter Contract
 pub fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
-    let router_address = &e.register_contract_wasm(None, router::WASM);
+    let router_address = &e.register(router::WASM, ());
     let router = SoroswapRouterClient::new(e, router_address);
     router
 }

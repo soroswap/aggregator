@@ -1,5 +1,6 @@
 // use crate::DexDistribution;
 use soroban_sdk::{symbol_short, testutils::{Events, Address as _}, vec, Address, IntoVal, String, Vec};
+use super::soroswap_aggregator_contract::Protocol;
 
 use crate::test::{
     create_protocols_addresses, create_soroswap_phoenix_comet_addresses_for_deployer, new_update_adapters_addresses_deployer, SoroswapAggregatorTest
@@ -162,7 +163,7 @@ fn remove_adapter_event() {
     let test = SoroswapAggregatorTest::setup();
 
     // Remove protocol
-    let protocol_id = String::from_str(&test.env, "soroswap");
+    let protocol_id = Protocol::Soroswap;
     test.aggregator_contract.remove_adapter(&protocol_id);
 
     let removed_event = test.env.events().all().last().unwrap();
@@ -225,7 +226,7 @@ fn set_pause_event() {
     let test = SoroswapAggregatorTest::setup();
 
     // Remove protocol
-    let protocol_id = String::from_str(&test.env, "soroswap");
+    let protocol_id = Protocol::Soroswap;
     let true_false_vec = vec![&test.env, true, false];
 
     for my_bool in true_false_vec.iter() {
@@ -373,9 +374,10 @@ fn swap_exact_tokens_for_tokens_event() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path,
         parts: 1,
+        bytes: None,
     };
     distribution_vec.push_back(distribution_0);
 
@@ -432,9 +434,10 @@ fn swap_tokens_for_exact_tokens_event() {
     path.push_back(test.token_1.address.clone());
 
     let distribution_0 = DexDistribution {
-        protocol_id: String::from_str(&test.env, "soroswap"),
+        protocol_id: Protocol::Soroswap,
         path: path.clone(),
         parts: 1,
+        bytes: None,
     };
     distribution_vec.push_back(distribution_0);
 

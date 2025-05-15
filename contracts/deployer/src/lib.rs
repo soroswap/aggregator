@@ -33,7 +33,7 @@ impl Deployer {
         let deployed_address = env
             .deployer()
             .with_address(deployer, salt)
-            .deploy(wasm_hash);
+            .deploy_v2(wasm_hash, ());
 
         // Invoke the init function with the given arguments.
         let res: Val = env.invoke_contract(&deployed_address, &init_fn, init_args);

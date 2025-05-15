@@ -6,7 +6,7 @@ use adapter_interface::AdapterError;
 #[test]
 fn swap_tokens_for_exact_tokens_not_initialized() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_contract_not_initialized.try_swap_tokens_for_exact_tokens(
@@ -15,6 +15,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -25,7 +26,7 @@ fn swap_tokens_for_exact_tokens_not_initialized() {
 #[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_tokens_for_exact_tokens_amount_out_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -35,6 +36,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 }
 
@@ -42,7 +44,7 @@ fn swap_tokens_for_exact_tokens_amount_out_negative() {
 #[should_panic(expected = "HostError: Error(Contract, #502)")]
 fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = Vec::new(&test.env);
 
@@ -52,6 +54,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_negative() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 }
 
@@ -68,6 +71,7 @@ fn swap_tokens_for_exact_tokens_expired() {
         &path,     // path
         &test.user, // to
         &0,        // deadline
+        &None
     );
 }
 
@@ -87,6 +91,7 @@ fn try_swap_tokens_for_exact_tokens_invalid_path() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
    
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInvalidPath)));
@@ -111,7 +116,9 @@ fn swap_tokens_for_exact_tokens_pair_does_not_exist() {
         &0,  // amount_in_max
         &path, // path
         &test.user, // to
-        &deadline); // deadline
+        &deadline, // deadline
+        &None
+    );
 }
 
 
@@ -127,13 +134,14 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
     path.push_back(test.token_1.address.clone());
 
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_contract.swap_tokens_for_exact_tokens(
         &0,        // amount_out
         &0,        // amount_in_max
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
     // assert_eq!(result, Err(Ok(CombinedRouterError::LibraryInsufficientOutputAmount)));
 }
@@ -142,7 +150,7 @@ fn try_swap_tokens_for_exact_tokens_insufficient_output_amount() {
 #[should_panic] // TODO: Test the imported error
 fn swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -158,6 +166,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
         &path,                // path
         &test.user,           // to
         &deadline,            // deadline
+        &None
     );
 
     // assert_eq!(
@@ -170,7 +179,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough() {
 #[should_panic] // TODO: Test the imported error
 fn swap_tokens_for_exact_tokens_amount_in_max_not_enough_amount_in_should_minus_1() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;
 
@@ -192,6 +201,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough_amount_in_should_minus_
         &path,                // path
         &test.user,           // to
         &deadline,            // deadline
+        &None
     );
 
     // assert_eq!(
@@ -204,7 +214,7 @@ fn swap_tokens_for_exact_tokens_amount_in_max_not_enough_amount_in_should_minus_
 #[test]
 fn swap_tokens_for_exact_tokens_amount_in_should() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let deadline: u64 = test.env.ledger().timestamp() + 1000;  
 
@@ -223,9 +233,11 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
         &(amount_in_should),  // amount_in_max
         &path, // path
         &test.user, // to
-        &deadline); // deadline
+        &deadline, // deadline
+        &None
 
-    assert_eq!(amounts.get(0).unwrap(), amount_in_should);
+ 
+);   assert_eq!(amounts.get(0).unwrap(), amount_in_should);
     assert_eq!(amounts.get(1).unwrap(), expected_amount_out);
 
     let initial_user_balance = 20_000_000_000_000_000_000;
@@ -265,7 +277,7 @@ fn swap_tokens_for_exact_tokens_amount_in_should() {
 #[test]
 fn swap_tokens_for_exact_tokens_2_hops() {
     let test = SoroswapAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let ledger_timestamp = 100;
     let desired_deadline = 1000;
@@ -309,10 +321,12 @@ fn swap_tokens_for_exact_tokens_2_hops() {
         &amount_in_should,  // amount_in_max
         &path, // path
         &test.user, // to
-        &desired_deadline); // deadline
+        &desired_deadline, // deadline
+        &None
 
 
-    assert_eq!(amounts.get(0).unwrap(), amount_in_should); 
+
+);        assert_eq!(amounts.get(0).unwrap(), amount_in_should); 
     assert_eq!(amounts.get(1).unwrap(), middle_amount_in); 
     assert_eq!(amounts.get(2).unwrap(), expected_amount_out);
 

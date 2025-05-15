@@ -1,6 +1,6 @@
 //! Definition of the Events used in the contract
-use crate::models::{Adapter, DexDistribution};
-use soroban_sdk::{contracttype, symbol_short, Address, Env, String, Vec};
+use crate::models::{Adapter, DexDistribution, Protocol};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 
 // INITIALIZED
 #[contracttype]
@@ -38,10 +38,10 @@ pub(crate) fn protocols_updated(e: &Env, adapter_addresses: Vec<Adapter>) {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct RemovedProtocolEvent {
-    pub protocol_id: String,
+    pub protocol_id: Protocol,
 }
 
-pub(crate) fn protocol_removed(e: &Env, protocol_id: String) {
+pub(crate) fn protocol_removed(e: &Env, protocol_id: Protocol) {
     let event = RemovedProtocolEvent { protocol_id };
 
     e.events()
@@ -52,11 +52,11 @@ pub(crate) fn protocol_removed(e: &Env, protocol_id: String) {
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PausedProtocolEvent {
-    pub protocol_id: String,
+    pub protocol_id: Protocol,
     pub paused: bool,
 }
 
-pub(crate) fn protocol_paused(e: &Env, protocol_id: String, paused: bool) {
+pub(crate) fn protocol_paused(e: &Env, protocol_id: Protocol, paused: bool) {
     let event = PausedProtocolEvent {
         protocol_id,
         paused,

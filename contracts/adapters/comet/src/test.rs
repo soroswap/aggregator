@@ -18,13 +18,13 @@ use deployer_contract::DeployerClient;
 use crate::{CometAggregatorAdapter, CometAggregatorAdapterClient};
 
 fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
-    let deployer_address = &e.register_contract_wasm(None, deployer_contract::WASM);
+    let deployer_address = &e.register(deployer_contract::WASM, ());
     let deployer = DeployerClient::new(e, deployer_address);
     deployer
 }
 
 fn create_comet_aggregator_adapter<'a>(e: &Env) -> CometAggregatorAdapterClient<'a> {
-    CometAggregatorAdapterClient::new(e, &e.register_contract(None, CometAggregatorAdapter {}))
+    CometAggregatorAdapterClient::new(e, &e.register(CometAggregatorAdapter {}, ()))
 }
 
 pub mod comet_adapter_contract {

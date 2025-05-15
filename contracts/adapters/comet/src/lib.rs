@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
+use soroban_sdk::{contract, contractimpl, Address, BytesN, Env, String, Vec};
 
 mod event;
 mod storage;
@@ -65,6 +65,7 @@ impl AdapterTrait for CometAggregatorAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        _bytes: Option<Vec<BytesN<32>>>
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -76,7 +77,7 @@ impl AdapterTrait for CometAggregatorAdapter {
             &amount_in, 
             &amount_out_min, 
             &path, 
-            &to, 
+            &to,
         )?;
 
         event::swap(&e, amount_in, path, to);
@@ -90,6 +91,7 @@ impl AdapterTrait for CometAggregatorAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        _bytes: Option<Vec<BytesN<32>>>
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);

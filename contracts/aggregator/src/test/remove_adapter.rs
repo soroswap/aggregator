@@ -9,13 +9,13 @@ use soroban_sdk::{
 use soroban_sdk::{vec, String, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, Adapter};
 
-pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &String) -> Vec<Adapter> {
+pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);
     vec![
         &test.env,
         Adapter {
             protocol_id: protocol_id.clone(),
-            address: new_router.address,
+            router: new_router.address,
             paused: false,
         },
     ]
@@ -33,15 +33,16 @@ fn test_remove_adapter() {
     // check that protocol is not paused
     let is_protocol_paused = test
         .aggregator_contract
-        .get_paused(&String::from_str(&test.env, "soroswap"));
+        .get_paused(&Protocol::Soroswap);
     assert_eq!(is_protocol_paused, false);
 
     test.aggregator_contract
-        .remove_adapter(&String::from_str(&test.env, "soroswap"));
+        .remove_adapter(&Protocol::Soroswap);
+
     test.aggregator_contract
-        .remove_adapter(&String::from_str(&test.env, "phoenix"));
+        .remove_adapter(&Protocol::Phoenix);
     test.aggregator_contract
-    .remove_adapter(&String::from_str(&test.env, "comet"));
+    .remove_adapter(&Protocol::Comet);
 
     let mut updated_protocols = test.aggregator_contract.get_adapters();
     let expected_empty_vec = vec![&test.env];
@@ -50,14 +51,14 @@ fn test_remove_adapter() {
     // when removing protocol, paused return error
     let is_protocol_paused = test
         .aggregator_contract
-        .try_get_paused(&String::from_str(&test.env, "soroswap"));
+        .try_get_paused(&Protocol::Soroswap);
     assert_eq!(
         is_protocol_paused,
         Err(Ok(AggregatorError::ProtocolNotFound))
     );
 
     //add new protocol
-    let new_protocol_0 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_0"));
+    let new_protocol_0 = new_protocol_vec(&test, &Protocol::Comet);
     test.aggregator_contract.update_adapters(&new_protocol_0);
 
     updated_protocols = test.aggregator_contract.get_adapters();
@@ -72,7 +73,7 @@ fn test_remove_adapter() {
     // }
 
     // add new protoco 1
-    let new_protocol_1 = new_protocol_vec(&test, &String::from_str(&test.env, "new_protocol_1"));
+    let new_protocol_1 = new_protocol_vec(&test, &Protocol::Comet);
     test.aggregator_contract.update_adapters(&new_protocol_1);
 
     updated_protocols = test.aggregator_contract.get_adapters();
@@ -81,7 +82,7 @@ fn test_remove_adapter() {
 
     // remove new protocol 0
     test.aggregator_contract
-        .remove_adapter(&String::from_str(&test.env, "new_protocol_0"));
+        .remove_adapter(&Protocol::Comet);
     updated_protocols = test.aggregator_contract.get_adapters();
     assert_eq!(updated_protocols, new_protocol_1);
 }
@@ -92,7 +93,7 @@ fn test_remove_adapter_not_yet_initialized() {
     let test = SoroswapAggregatorTest::setup();
     let result = test
         .aggregator_contract_not_initialized
-        .try_remove_adapter(&String::from_str(&test.env, "soroswap"));
+        .try_remove_adapter(&Protocol::Soroswap);
 
     assert_eq!(result, Err(Ok(AggregatorErrorFromCrate::NotInitialized)));
 }
@@ -112,12 +113,12 @@ fn test_update_adapters_with_mock_auth() {
     let protocols = test.aggregator_contract.get_adapters();
     assert_eq!(protocols, initialize_aggregator_addresses);
 
-    let protocol_id_to_remove = String::from_str(&test.env, "soroswap");
+    let protocol_id_to_remove = Protocol::Soroswap;
 
     //  MOCK THE SPECIFIC AUTHORIZATION
     test.aggregator_contract
         .mock_auths(&[MockAuth {
-            address: &test.admin.clone(),
+            router: &test.admin.clone(),
             invoke: &MockAuthInvoke {
                 contract: &test.aggregator_contract.address.clone(),
                 fn_name: "remove_adapter",

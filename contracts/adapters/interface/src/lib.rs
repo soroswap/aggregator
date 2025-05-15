@@ -1,7 +1,7 @@
 // #![deny(warnings)]
 #![no_std]
 
-use soroban_sdk::{contractclient, contractspecfn, Address, Env, Vec, String};
+use soroban_sdk::{contractclient, contractspecfn, Address, Env, Vec, String, BytesN};
 pub struct Spec;
 
 mod error;
@@ -27,6 +27,7 @@ pub trait AdapterTrait {
     ///         and the last is the output token. Intermediate elements represent pairs to trade through.
     /// * `to` - The address where the output tokens will be sent to.
     /// * `deadline` - The deadline for executing the operation.
+    /// * `bytes` - Optional bytes containing additional data for the swap.
     /// # Returns
     /// A vector containing the amounts of tokens received at each step of the trading route.
     fn swap_exact_tokens_for_tokens(
@@ -36,6 +37,7 @@ pub trait AdapterTrait {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError>;
 
 
@@ -50,6 +52,7 @@ pub trait AdapterTrait {
     ///         and the last is the output token. Intermediate elements represent pairs to trade through.
     /// * `to` - The address where the output tokens will be sent to.
     /// * `deadline` - The deadline for executing the operation.
+    /// * `bytes` - Optional bytes containing additional data for the swap.
     
     /// # Returns
     /// A vector containing the amounts of tokens used at each step of the trading route.
@@ -60,6 +63,7 @@ pub trait AdapterTrait {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError>;
 
     /*  *** Read only functions: *** */

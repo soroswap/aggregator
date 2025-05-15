@@ -1,17 +1,18 @@
 [workspace]
-members = ["adapters/*", "aggregator", "deployer"]
+members = ["adapters/*", "aggregator", "deployer", "test-utils"]
 resolver = "2"
 
 [workspace.package]
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 license = "GPL-3.0"
 repository = "https://github.com/soroswap/aggregator"
 homepage = "https://github.com/soroswap/aggregator"
 
 [workspace.dependencies]
-soroban-sdk = "21.0.1-preview.3"
+soroban-sdk = "22.0.7"
 adapter-interface={path="./adapters/interface", package="adapter-interface"}
+test-utils = { path = "./test-utils" }
 
 [profile.release]
 opt-level = "z"

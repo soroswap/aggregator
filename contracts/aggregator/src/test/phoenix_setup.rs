@@ -50,7 +50,9 @@ use soroban_sdk::{
     testutils::{
         arbitrary::std,
         Address as _,
-    }, vec, Address, Bytes, BytesN, Env, String, Symbol, Vec, Val, IntoVal
+    }, vec, Address, 
+    // Bytes, 
+    BytesN, Env, String, Symbol, Vec, Val, IntoVal
 };
 
 /* *************  PHOENIX FACTORY  *************  */
@@ -63,14 +65,6 @@ pub mod factory {
 }
 use factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
 pub use factory::PoolType;
-
-pub fn deploy_factory_contract(e: &Env, admin: & Address) -> Address {
-    let factory_wasm = e.deployer().upload_contract_wasm(factory::WASM);
-    let salt = Bytes::new(&e.clone());
-    let salt = e.crypto().sha256(&salt);
-
-    e.deployer().with_address(admin.clone(), salt).deploy(factory_wasm)
-}
 
 pub use factory::Client as PhoenixFactory;
 
@@ -95,11 +89,8 @@ pub fn deploy_multihop_contract<'a>(
 ) -> MultihopClient<'a> {
     let admin = admin.into().unwrap_or(Address::generate(env));
 
-    let multihop_address = &env.register_contract_wasm(None, multihop::WASM);
-    let multihop = MultihopClient::new(env, multihop_address); 
-
-    multihop.initialize(&admin, factory);
-    multihop
+    let args = (admin, factory);
+    MultihopClient::new(env, &env.register(multihop::WASM, args))
 }
 
 
@@ -144,28 +135,51 @@ pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
 
 
 pub fn deploy_and_initialize_factory<'a>(env: &Env, admin: Address) -> PhoenixFactory<'a> {
-    let factory_addr = deploy_factory_contract(&env, &admin.clone());
-    let factory_client = PhoenixFactory::new(env, &factory_addr);
+    // let factory_addr = deploy_factory_contract(&env, &admin.clone());
     let multihop_wasm_hash = install_multihop_wasm(env);
     let whitelisted_accounts = vec![env, admin.clone()];
-
+    
     let lp_wasm_hash = install_lp_contract(env);
     let stable_wasm_hash = install_stable_contract(env);
     let stake_wasm_hash = install_stake_wasm(env);
     let token_wasm_hash = install_token_wasm(env);
+    
+    // fn initialize(
+        //     env: Env,
+        //     admin: Address,
+        //     multihop_wasm_hash: BytesN<32>,
+        //     lp_wasm_hash: BytesN<32>,
+        //     stable_wasm_hash: BytesN<32>,
+        //     stake_wasm_hash: BytesN<32>,
+        //     token_wasm_hash: BytesN<32>,
+        //     whitelisted_accounts: Vec<Address>,
+        //     lp_token_decimals: u32,
+        // );
+        
+    // let factory_client = PhoenixFactory::new(env, &factory_addr);
+    // factory_client.initialize( 
+    //     &admin.clone(),
+    //     &multihop_wasm_hash,
+    //     &lp_wasm_hash,
+    //     &stable_wasm_hash,
+    //     &stake_wasm_hash,
+    //     &token_wasm_hash,
+    //     &whitelisted_accounts,
+    //     &10u32,
+    // );
+    // factory_client
 
-    factory_client.initialize( 
-        &admin.clone(),
-        &multihop_wasm_hash,
-        &lp_wasm_hash,
-        &stable_wasm_hash,
-        &stake_wasm_hash,
-        &token_wasm_hash,
-        &whitelisted_accounts,
-        &10u32,
+    let args = ( 
+        admin.clone(),
+        multihop_wasm_hash,
+        lp_wasm_hash,
+        stable_wasm_hash,
+        stake_wasm_hash,
+        token_wasm_hash,
+        whitelisted_accounts,
+        10u32,
     );
-
-    factory_client
+    PhoenixFactory::new(env, &env.register(factory::WASM, args))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -229,5 +243,6 @@ pub fn deploy_and_initialize_lp(
         &None, //     min_b: Option<i128>,
         &None::<i64>, //     custom_slippage_bps: Option<i64>,
         &None::<u64>, //     deadline: Option<u64>,
+        &false, //     auto_stake: bool,
     );
 }

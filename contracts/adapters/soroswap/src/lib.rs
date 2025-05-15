@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String};
+use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String, BytesN};
 
 mod event;
 mod storage;
@@ -57,6 +57,7 @@ impl AdapterTrait for SoroswapAggregatorAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        _bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -82,6 +83,7 @@ impl AdapterTrait for SoroswapAggregatorAdapter {
         path: Vec<Address>,
         to: Address,
         deadline: u64,
+        _bytes: Option<Vec<BytesN<32>>>,
     ) -> Result<Vec<i128>, AdapterError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);

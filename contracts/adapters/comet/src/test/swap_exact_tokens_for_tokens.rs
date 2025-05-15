@@ -7,7 +7,7 @@ use adapter_interface::AdapterError;
 #[test]
 fn swap_exact_tokens_for_tokens_not_initialized() {
     let test = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let path: Vec<Address> = Vec::new(&test.env);
 
     let result = test.adapter_contract_not_initialized.try_swap_exact_tokens_for_tokens(
@@ -16,6 +16,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 
     assert_eq!(result,Err(Ok(AdapterError::NotInitialized)));
@@ -26,7 +27,7 @@ fn swap_exact_tokens_for_tokens_not_initialized() {
 #[should_panic(expected = "HostError: Error(Contract, #37)")]
 fn swap_exact_tokens_for_tokens_amount_in_negative() {
     let test = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = vec![&test.env, test.token_0.address, test.token_1.address];
 
@@ -36,6 +37,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
         &path,         // path
         &test.user,    // to
         &1,            // deadline
+        &None
     );
 }
 
@@ -43,7 +45,7 @@ fn swap_exact_tokens_for_tokens_amount_in_negative() {
 #[should_panic(expected = "HostError: Error(Contract, #37)")]
 fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
     let test: CometAggregatorAdapterTest<'_> = CometAggregatorAdapterTest::setup();
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     let path: Vec<Address> = vec![&test.env, test.token_0.address, test.token_1.address];
 
@@ -53,6 +55,7 @@ fn swap_exact_tokens_for_tokens_amount_out_min_negative() {
         &path,         // path
         &test.user,    // to
         &1,            // deadline
+        &None
     );
 }
 
@@ -69,6 +72,7 @@ fn swap_exact_tokens_for_tokens_expired() {
         &path,         // path
         &test.user,    // to
         &0,            // deadline
+        &None
     );
 }
 
@@ -87,6 +91,7 @@ fn try_swap_exact_tokens_for_tokens_invalid_path() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
 }
 
@@ -102,7 +107,7 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
 
     let amount = 100_000;
@@ -113,6 +118,7 @@ fn try_swap_exact_tokens_for_tokens_insufficient_input_amount() {
         &path,     // path
         &test.user, // to
         &deadline, // deadline
+        &None
     );
 }
 
@@ -153,13 +159,14 @@ fn swap_exact_tokens_for_tokens_insufficient_output_amount() {
     // balance_ratio = BONE - 999995015015531351 => 4984984468649
     // 2000000000000000000 * 4984984468649 / BONE / 10**7 => 996996
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     test.adapter_contract.swap_exact_tokens_for_tokens(
         &amount_in,       // amount_in
         &(expected_amount_out + 1),  // amount_out_min
         &path,            // path
         &test.user,       // to
         &deadline,        // deadline
+        &None
     );
 }
 
@@ -198,14 +205,15 @@ fn swap_exact_tokens_for_tokens_enough_output_amount() {
     // balance_ratio = BONE - 999995015015531351 => 4984984468649
     // 2000000000000000000 * 4984984468649 / BONE / 10**7 => 996996
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     let executed_amounts = test.adapter_contract.swap_exact_tokens_for_tokens(
         &amount_in, //amount_in
         &(expected_amount_out),  // amount_out_min
         &path, // path
         &test.user, // to
-        &deadline); // deadline
-
+        &deadline, // deadline
+        &None
+    );
     assert_eq!(executed_amounts.get(0).unwrap(), amount_in);
     assert_eq!(executed_amounts.get(1).unwrap(), expected_amount_out);
     
