@@ -27,7 +27,7 @@ export async function deployAdaptersAndAggregator(addressBook: AddressBook) {
     phoenixMultihop = phoenixAddressBook.getContractId('phoenix_multihop');
   }
   else { // On Tesntet we will get from contracts we have deployed
-    phoenixMultihop = addressBook.getContractId('phoenix_multihop');
+    phoenixMultihop = "CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH";
   }
 
   // console.log('-------------------------------------------------------');
