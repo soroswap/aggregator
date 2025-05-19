@@ -732,7 +732,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_in_max,   // amount_in_max
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &deadline,
@@ -743,7 +743,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_in_max,   // amount_in_max
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &deadline,
@@ -754,7 +754,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_in_max,   // amount_in_max
+                        &i64::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                         &dist.bytes,
@@ -765,7 +765,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &amount_in_max,   // amount_in_max
+                        &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,
                     )?

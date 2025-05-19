@@ -113,7 +113,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     e: &Env,
     aqua_router_address: &Address,
     amount_out: &i128,
-    amount_in_max: &i128,
+    amount_in_max: &i64,
     path: &Vec<Address>,
     to: &Address,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
