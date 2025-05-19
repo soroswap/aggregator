@@ -1,0 +1,3 @@
+rpc_url = "https://testnet.stellar.validationcloud.io/v1/FQ2s-y1fhQSsMzT1GH4fkp6KZRf8uif6TtmNCv_yCoA"
+rpc_headers = []
+network_passphrase = "Test SDF Network ; September 2015"
