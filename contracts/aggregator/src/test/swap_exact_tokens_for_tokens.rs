@@ -2,7 +2,7 @@ extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 use crate::test::SoroswapAggregatorTest;
 // use crate::DexDistribution;
-use soroban_sdk::{Address, String, Vec};
+use soroban_sdk::{Address, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
 use super::soroswap_aggregator_contract::Protocol;
 

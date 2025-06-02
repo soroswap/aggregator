@@ -135,27 +135,27 @@ pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_
     ]
 }
 
-pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
-    vec![
-        &test.env,
-        Adapter {
-            protocol_id: Protocol::Soroswap,
-            router: test.soroswap_router_address.clone(),
-            paused: false,
-        },
-    ]
-}
+// pub fn new_update_adapters_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
+//     vec![
+//         &test.env,
+//         Adapter {
+//             protocol_id: Protocol::Soroswap,
+//             router: test.soroswap_router_address.clone(),
+//             paused: false,
+//         },
+//     ]
+// }
 
-pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
-    vec![
-        &test.env,
-        AdapterFromWasm {
-            protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
-            router: test.soroswap_router_address.clone(),
-            paused: false,
-        },
-    ]
-}
+// pub fn new_update_adapters_addresses_deployer(test: &SoroswapAggregatorTest) -> Vec<AdapterFromWasm> {
+//     vec![
+//         &test.env,
+//         AdapterFromWasm {
+//             protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+//             router: test.soroswap_router_address.clone(),
+//             paused: false,
+//         },
+//     ]
+// }
 
 // pub fn create_only_soroswap_protocol_address(test: &SoroswapAggregatorTest) -> Vec<Adapter> {
 //     vec![&test.env,

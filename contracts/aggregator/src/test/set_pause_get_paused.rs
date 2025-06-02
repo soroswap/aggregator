@@ -3,12 +3,12 @@ extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 // use crate::models::Adapter;
 use crate::test::{create_soroswap_phoenix_comet_addresses_for_deployer, create_soroswap_router, SoroswapAggregatorTest};
-use soroban_sdk::{vec, String, Vec};
+use soroban_sdk::{vec, Vec};
 use super::soroswap_aggregator_contract::Protocol;
 use crate::test::Protocol as ProtocolOriginal;
 
 
-use super::soroswap_aggregator_contract::{Adapter, AggregatorError};
+use super::soroswap_aggregator_contract::{Adapter};
 
 pub fn new_protocol_vec(test: &SoroswapAggregatorTest, protocol_id: &Protocol) -> Vec<Adapter> {
     let new_router = create_soroswap_router(&test.env);

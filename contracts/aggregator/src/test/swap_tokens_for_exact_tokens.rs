@@ -2,7 +2,7 @@ extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 use crate::test::SoroswapAggregatorTest;
 // use crate::DexDistribution;
-use soroban_sdk::{Address, String, Vec};
+use soroban_sdk::{Address, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
 use super::soroswap_aggregator_contract::Protocol;
 
@@ -885,10 +885,10 @@ fn swap_tokens_for_exact_tokens_succeed_comet() {
     let expected_amount_in = 1_003_015;
 
     // check initial user balance of both tokens
-    let user_balance_before_0 = test.token_0.balance(&test.user);
-    let user_balance_before_2 = test.token_2.balance(&test.user);
+    // let user_balance_before_0 = test.token_0.balance(&test.user);
+    // let user_balance_before_2 = test.token_2.balance(&test.user);
 
-    let result = test
+    let _result = test
         .aggregator_contract
         .swap_tokens_for_exact_tokens(
             &test.token_0.address.clone(),

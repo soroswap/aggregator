@@ -111,7 +111,7 @@ For Scout Audits (tool created by CoinFabrik), you should enter in each of the s
 cd /workspace/contracts/aggregator
 cargo scout-audit
 ```
-or, in the case you want to audit the Soroswap.Finance adapter,
+or, in the case you want to audit the Soroswap.Finance adapter (deprecated)
 ```bash
 cd /workspace/contracts/adapters/soroswap
 cargo scout-audit
@@ -140,7 +140,7 @@ yarn build
 yarn setup-phoenix testnet # To Setup Phoenix. Now you will have the new deployed addresses in .soroban/testnet.contrats.json
 
 ```
-### 4.2 Deploy all adapters and Aggregator
+### 4.2 Deploy the Aggregator Aggregator
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
