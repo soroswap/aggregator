@@ -2,9 +2,16 @@ extern crate std;
 use crate::error::AggregatorError as AggregatorErrorFromCrate;
 use crate::test::SoroswapAggregatorTest;
 // use crate::DexDistribution;
-use soroban_sdk::{Address, Vec};
 use super::soroswap_aggregator_contract::{AggregatorError, DexDistribution};
-use super::soroswap_aggregator_contract::Protocol;
+use super::soroswap_aggregator_contract::Protocol; 
+
+use soroban_sdk::{Address, Vec, vec, BytesN, Symbol};
+use soroban_sdk::token::TokenClient;
+use soroban_sdk::U256;
+use soroban_sdk::testutils::{
+    Address as _,
+};
+use soroban_sdk::FromVal; 
 
 
 #[test]
@@ -1047,3 +1054,285 @@ fn swap_tokens_for_exact_tokens_succeed_comet_soroswap_two_hops() {
 
     assert_eq!(result, expected_result);
 }
+
+// Aqua
+
+#[test]
+fn swap_tokens_for_exact_tokens_missing_hash_aqua() {
+    let test = SoroswapAggregatorTest::setup();
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    let mut distribution_vec = Vec::new(&test.env);
+    let mut path: Vec<Address> = Vec::new(&test.env);
+    path.push_back(test.token_0.address.clone());
+    path.push_back(test.token_2.address.clone());
+
+    let distribution_0 = DexDistribution {
+        protocol_id: Protocol::Aqua,
+        path,
+        parts: 1,
+        bytes: None
+    };
+    distribution_vec.push_back(distribution_0);
+
+    let amount_in = 1_000_000;
+    let expected_amount_out = 996996;
+
+    let result = test.aggregator_contract.try_swap_tokens_for_exact_tokens(
+            &test.token_0.address.clone(),
+            &test.token_2.address.clone(),
+            &amount_in,
+            &(expected_amount_out),
+            &distribution_vec.clone(),
+            &test.user.clone(),
+            &deadline,
+        );
+
+    assert_eq!(result, Err(Ok(AggregatorError::MissingPoolHashes)));
+}
+
+
+#[test]
+fn swap_tokens_for_exact_tokens_constant_product_pool_1_hop() {
+    let test = SoroswapAggregatorTest::setup();
+    let aqua_setup = test.aqua_setup;
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    let router = aqua_setup.router;
+    let [token1, token2, _, _] = aqua_setup.tokens;
+
+    let tokens = Vec::from_array(&test.env, [token1.address.clone(), token2.address.clone()]);
+    let user1 = Address::generate(&test.env);
+    aqua_setup.reward_token.mint(&user1, &10_0000000);
+
+    let (pool_hash, pool_address) = router.init_standard_pool(&user1, &tokens, &30);
+    assert_eq!(
+        router.pool_type(&tokens, &pool_hash),
+        Symbol::new(&test.env, "constant_product")
+    );
+    let pool_info = router.get_info(&tokens, &pool_hash);
+    assert_eq!(
+        Symbol::from_val(&test.env, &pool_info.get(Symbol::new(&test.env, "pool_type")).unwrap()),
+        Symbol::new(&test.env, "constant_product")
+    );
+
+    let token_share = TokenClient::new(&test.env, &router.share_id(&tokens, &pool_hash));
+
+    token1.mint(&user1, &1000);
+    assert_eq!(token1.balance(&user1), 1000);
+
+    token2.mint(&user1, &1000);
+    assert_eq!(token2.balance(&user1), 1000);
+
+    assert_eq!(token_share.balance(&user1), 0);
+
+    let desired_amounts = Vec::from_array(&test.env, [100, 100]);
+    router.deposit(&user1, &tokens, &pool_hash, &desired_amounts, &0);
+    assert_eq!(router.get_total_liquidity(&tokens), U256::from_u32(&test.env, 2));
+
+    assert_eq!(token_share.balance(&user1), 100);
+    assert_eq!(router.get_total_shares(&tokens, &pool_hash), 100);
+    assert_eq!(token_share.balance(&pool_address), 0);
+    assert_eq!(token1.balance(&user1), 900);
+    assert_eq!(token1.balance(&pool_address), 100);
+    assert_eq!(token2.balance(&user1), 900);
+    assert_eq!(token2.balance(&pool_address), 100);
+
+    assert_eq!(
+        router.get_reserves(&tokens, &pool_hash),
+        Vec::from_array(&test.env, [100, 100])
+    );
+
+    assert_eq!(
+        router.estimate_swap(&tokens, &token1.address, &token2.address, &pool_hash, &97),
+        48
+    );
+
+
+    let path: Vec<Address> = vec![&test.env,
+        token1.address.clone(),
+        token2.address.clone()];
+
+    // vec pool hash
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env, pool_hash.clone()];
+    // in 97, our  48
+
+    let mut distribution_vec = Vec::new(&test.env);
+    let distribution_0 = DexDistribution {
+        protocol_id: Protocol::Aqua,
+        path,
+        parts: 1,
+        bytes: Some(bytes_vec)
+    };
+    distribution_vec.push_back(distribution_0);
+
+    // let executed_amounts = test.adapter_client.swap_tokens_for_exact_tokens(
+    //     &48,        // amount_out
+    //     &98,        // amount_in_max
+    //     &path,     // path
+    //     &user1, // to
+    //     &0, // deadline,
+    //     &Some(bytes_vec),
+    // );
+    let result = test.aggregator_contract.mock_all_auths().swap_tokens_for_exact_tokens(
+        &token1.address.clone(),
+        &token2.address.clone(),
+        &48,        // amount_in
+        &98,        // amount_out_min
+        &distribution_vec.clone(),
+        &user1.clone(),
+        &deadline,
+    );
+    
+
+    // // error OutMinNotSatisfied = 2006,
+    
+    assert_eq!(token1.balance(&user1), 803);
+    assert_eq!(token1.balance(&pool_address), 197);
+    assert_eq!(token2.balance(&user1), 948);
+    assert_eq!(token2.balance(&pool_address), 52);
+    assert_eq!(
+        router.get_reserves(&tokens, &pool_hash),
+        Vec::from_array(&test.env, [197, 52])
+    );
+
+    let mut expected_aqua_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_aqua_result_vec.push_back(97);
+    expected_aqua_result_vec.push_back(48);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_aqua_result_vec);
+
+    assert_eq!(result, expected_result);
+}
+
+
+
+#[test]
+fn swap_tokens_for_exact_tokens_constant_product_pool_2_hops() {
+    let test = SoroswapAggregatorTest::setup();
+    
+    let aqua_setup = test.aqua_setup;
+    let deadline: u64 = test.env.ledger().timestamp() + 1000;
+
+    let router = aqua_setup.router;
+    let [token1, token2, token3, _] = aqua_setup.tokens;
+
+    let admin = aqua_setup.admin;
+    let reward_token = aqua_setup.reward_token;
+
+    let user1 = Address::generate(&test.env);
+    reward_token.mint(&user1, &10_0000000);
+    test.env.mock_auths(&[]);
+
+    let tokens1 = Vec::from_array(&test.env, [token1.address.clone(), token2.address.clone()]);
+    let tokens2 = Vec::from_array(&test.env, [token2.address.clone(), token3.address.clone()]);
+
+    let swapper = Address::generate(&test.env);
+
+    router.mock_all_auths().configure_init_pool_payment(
+        &admin,
+        &TokenClient::new(
+            &test.env,
+            &test.env.register_stellar_asset_contract_v2(admin.clone())
+            .address(),
+    ).address,
+        &0,
+        &0,
+        &router.address,
+    );
+
+    let (pool_index1, _pool_address1) = router
+        .mock_all_auths()
+        .init_standard_pool(&swapper, &tokens1, &30);
+    let (pool_index2, _pool_address2) = router
+        .mock_all_auths()
+        .init_standard_pool(&swapper, &tokens2, &30);
+    token1.mock_all_auths().mint(&admin, &10000);
+    token2.mock_all_auths().mint(&admin, &20000);
+    token3.mock_all_auths().mint(&admin, &10000);
+    router.mock_all_auths().deposit(
+        &admin,
+        &tokens1,
+        &pool_index1,
+        &Vec::from_array(&test.env, [10000, 10000]),
+        &0,
+    );
+    router.mock_all_auths().deposit(
+        &admin,
+        &tokens2,
+        &pool_index2,
+        &Vec::from_array(&test.env, [10000, 10000]),
+        &0,
+    );
+
+    token1.mock_all_auths().mint(&swapper, &1000);
+
+    
+
+    assert_eq!(token1.balance(&swapper), 1000);
+    assert_eq!(token2.balance(&swapper), 0);
+    assert_eq!(token3.balance(&swapper), 0);
+    assert_eq!(token1.balance(&router.address), 0);
+    assert_eq!(token2.balance(&router.address), 0);
+    assert_eq!(token3.balance(&router.address), 0);
+
+
+    let path: Vec<Address> = vec![&test.env,
+        token1.address.clone(),
+        token2.address.clone(),
+        token3.address.clone()];
+
+    // vec pool hash
+    let bytes_vec: Vec<BytesN<32>> = vec![&test.env,
+        pool_index1.clone(),
+        pool_index2.clone()];
+    
+    let mut distribution_vec = Vec::new(&test.env);
+    let distribution_0 = DexDistribution {
+        protocol_id: Protocol::Aqua,
+        path,
+        parts: 1,
+        bytes: Some(bytes_vec)
+    };
+    distribution_vec.push_back(distribution_0);
+
+    // let executed_amounts = test.adapter_client.mock_all_auths().swap_tokens_for_exact_tokens(
+    //     &96,        // amount_out
+    //     &100,        // amount_in_max
+    //     &path,     // path
+    //     &swapper, // to
+    //     &0, // deadline,
+    //     &Some(bytes_vec.clone()),
+    // );
+
+    let result = test.aggregator_contract.mock_all_auths().swap_tokens_for_exact_tokens(
+        &token1.address.clone(),
+        &token3.address.clone(),
+        &96,        // amount_out
+        &100,        // amount_in_max
+        &distribution_vec.clone(),
+        &swapper.clone(),
+        &deadline,
+    );
+    
+    
+
+    assert_eq!(token1.balance(&swapper), 900);
+    assert_eq!(token2.balance(&swapper), 0);
+    assert_eq!(token3.balance(&swapper), 96);
+    assert_eq!(token1.balance(&router.address), 0);
+    assert_eq!(token2.balance(&router.address), 0);
+    assert_eq!(token3.balance(&router.address), 0);
+
+    
+    let mut expected_aqua_result_vec: Vec<i128> = Vec::new(&test.env);
+    expected_aqua_result_vec.push_back(100);
+    expected_aqua_result_vec.push_back(96);
+
+    let mut expected_result = Vec::new(&test.env);
+    expected_result.push_back(expected_aqua_result_vec);
+
+    assert_eq!(result, expected_result);
+}
+

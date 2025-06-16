@@ -1,4 +1,6 @@
 use soroban_sdk::{Env, Address, Vec, token::Client as TokenClient, BytesN, vec};
+use soroban_sdk::IntoVal;
+use soroban_sdk::Symbol;
 
 use crate::error::AggregatorError;
 
@@ -113,7 +115,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     e: &Env,
     aqua_router_address: &Address,
     amount_out: &i128,
-    amount_in_max: &i64,
+    // amount_in_max: &i64, will be calculated
     path: &Vec<Address>,
     to: &Address,
     bytes: &Option<Vec<BytesN<32>>>, // (pool_hash_0, pool_hash_1, pool_hash_2)
@@ -122,7 +124,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
     let aqua_router_client = AquaRouterClient::new(&e, &aqua_router_address);
     let swaps_chain = convert_to_swaps_chain(e, path, bytes)?;
     /*
-        fn swap_chained_strict_receive(
+        fn swap_chained_strict_receive( 
             e: Env,
             user: Address,
             swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
@@ -130,8 +132,55 @@ pub fn protocol_swap_tokens_for_exact_tokens(
             out_amount: u128, // fixed amount of output token to receive
             max_in: u128,     // maximum input token amount allowed
         ) -> u128 // final_amount_in
+
     */
 
+    // We will calculate the exact amount in needed.
+        let token_in = path.get(0).expect("Failed to get token in address"); // should be safe as we checked the length of path 
+        let out_amount = *amount_out as u128;
+
+        let mut required_amounts: Vec<u128> = Vec::new(&e);
+        let mut desired_out = out_amount;
+
+        
+        let estimate_fn = Symbol::new(&e, "estimate_swap_strict_receive");
+
+        // Process swaps in reverse order
+        for i in (0..swaps_chain.len()).rev() {
+            let (tokens, pool_index, token_out) = swaps_chain.get(i).unwrap();
+            let pool_id = aqua_router_client.get_pool(&tokens, &pool_index);
+            let token_in_for_hop = if i == 0 {
+                token_in.clone()
+            } else {
+                // For a middle hop, the input is the output of the previous swap in the chain.
+                swaps_chain.get(i - 1).unwrap().2.clone()
+            };
+
+            // Calculate required input for this hop using pool pricing.
+            // Assumes the pool has a function like `calc_in_given_out`.
+            let required_in: u128 = e.invoke_contract(
+                &pool_id,
+                &estimate_fn,
+                Vec::from_array(
+                    &e,
+                    [
+                        tokens
+                            .first_index_of(token_in_for_hop.clone())
+                            .unwrap()
+                            .into_val(e),
+                        tokens
+                            .first_index_of(token_out.clone())
+                            .unwrap()
+                            .into_val(e),
+                        desired_out.into_val(e),
+                    ],
+                ),
+            );
+            required_amounts.push_front(required_in);
+            // The output required from the previous hop is the input needed here.
+            desired_out = required_in;
+        }
+        let total_required_input = required_amounts.get_unchecked(0);
 
     let token_in = path.get(0).expect("Failed to get token in address");
     
@@ -140,7 +189,7 @@ pub fn protocol_swap_tokens_for_exact_tokens(
         &swaps_chain, // swaps_chain: Vec<(Vec<Address>, BytesN<32>, Address)>,
         &token_in, // token_in: Address,
         &(*amount_out as u128), // out_amount: u128,
-        &(*amount_in_max as u128), // max_in: u128,
+        &total_required_input, // max_in: u128,
     );
 
     let mut swap_amounts: Vec<i128> = Vec::new(e);

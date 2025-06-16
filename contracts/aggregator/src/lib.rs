@@ -754,7 +754,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                         &e,
                         &adapter.router,
                         &swap_amount,
-                        &i64::MAX,   // amount_in_max
+                        // no amount_in_max, will be calculated by the adapter
                         &dist.path,
                         &to,
                         &dist.bytes,
@@ -764,7 +764,7 @@ impl SoroswapAggregatorTrait for SoroswapAggregator {
                     adapters::comet::protocol_swap_tokens_for_exact_tokens(
                         &e,
                         &adapter.router,
-                        &swap_amount,
+                        &swap_amount, // amount_out
                         &i128::MAX,   // amount_in_max
                         &dist.path,
                         &to,

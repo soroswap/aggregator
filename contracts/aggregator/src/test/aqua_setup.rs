@@ -38,7 +38,7 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> test_token::Client
 }
 
 
-pub use test_token::Client as TokenClient;
+// pub use test_token::Client as TokenClient;
 
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {

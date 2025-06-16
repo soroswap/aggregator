@@ -39,7 +39,7 @@ use comet_setup::{create_comet_adapter, create_comet_factory, deploy_and_init_co
 
 // Aqua
 mod aqua_setup;
-use aqua_setup::{AquaSetup, AquaRouter};
+use aqua_setup::{AquaSetup};
 
 
 
