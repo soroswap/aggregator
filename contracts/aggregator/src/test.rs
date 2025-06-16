@@ -1,16 +1,15 @@
 #![cfg(test)]
 extern crate std;
-use crate::models::Adapter;
-use crate::models::Protocol;
-use crate::{SoroswapAggregator, SoroswapAggregatorClient};
-use comet_setup::comet_adapter::CometAdapterClient;
-use comet_setup::{create_comet_adapter, create_comet_factory, deploy_and_init_comet_pool};
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
     vec, Address, BytesN, Env, Vec, Symbol, Val, IntoVal
 };
 
+use crate::models::Adapter;
+use crate::models::Protocol;
+use crate::{SoroswapAggregator, SoroswapAggregatorClient};
 
+// Soroswap
 mod soroswap_setup;
 use soroswap_setup::{
     create_soroswap_adapter, 
@@ -20,6 +19,7 @@ use soroswap_setup::{
     SoroswapRouterClient,
 };
 
+// Phoenix
 // mod phoenix_setup;
 use test_utils::phoenix_setup::{
     create_deployer,
@@ -30,7 +30,20 @@ use test_utils::phoenix_setup::{
     SoroswapAggregatorAdapterForPhoenixClient
 };
 
+
+// Comet
 mod comet_setup;
+use comet_setup::comet_adapter::CometAdapterClient;
+use comet_setup::{create_comet_adapter, create_comet_factory, deploy_and_init_comet_pool};
+
+
+// Aqua
+mod aqua_setup;
+use aqua_setup::{AquaSetup, AquaRouter};
+
+
+
+
 
 // mod deployer_contract {
 //     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
@@ -114,7 +127,13 @@ pub fn create_protocols_addresses(test: &SoroswapAggregatorTest) -> Vec<Adapter>
 //     ]
 // }
 
-pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_router_address: Address, phoenix_multihop_address: Address, comet_router_address: Address) -> Vec<AdapterFromWasm> {
+pub fn generate_adapter_objects_for_deployer(
+    env: &Env, 
+    soroswap_router_address: Address, 
+    phoenix_multihop_address: Address, 
+    comet_router_address: Address,
+    aqua_router_address: Address,
+) -> Vec<AdapterFromWasm> {
     vec![
         env,
         AdapterFromWasm {
@@ -130,6 +149,11 @@ pub fn create_soroswap_phoenix_comet_addresses_for_deployer(env: &Env, soroswap_
         AdapterFromWasm {
             protocol_id: soroswap_aggregator_contract::Protocol::Comet,
             router: comet_router_address.clone(),
+            paused: false,
+        },
+        AdapterFromWasm {
+            protocol_id: soroswap_aggregator_contract::Protocol::Aqua,
+            router: aqua_router_address.clone(),
             paused: false,
         },
     ]
@@ -198,6 +222,7 @@ pub struct SoroswapAggregatorTest<'a> {
     soroswap_router_address: Address,
     phoenix_multihop_address: Address,
     comet_router_address: Address,
+    aqua_setup: AquaSetup<'a>,
 }
 
 
@@ -360,13 +385,35 @@ impl<'a> SoroswapAggregatorTest<'a> {
         let comet_adapter_contract = create_comet_adapter(&env, &deployer_client, comet_pair.address.clone(), admin.clone());
 
         let wasm_hash = env.deployer().upload_contract_wasm(soroswap_aggregator_contract::WASM);
-        
+
+
+        // AQUA
+        let aqua_setup = AquaSetup::aqua_setup(&env);
+
         // Deploy aggregator using deployer, and include an init function to call.
-        let initialize_aggregator_addresses = create_soroswap_phoenix_comet_addresses_for_deployer(&env, 
-            soroswap_router_contract.address.clone(),
-            phoenix_multihop_client.address.clone(),
-            comet_pair.address.clone()
-        );
+        let initialize_aggregator_addresses = vec![
+            &env,
+            AdapterFromWasm {
+                protocol_id: soroswap_aggregator_contract::Protocol::Soroswap,
+                router: soroswap_router_contract.address.clone(),
+                paused: false,
+            },
+            AdapterFromWasm {
+                protocol_id: soroswap_aggregator_contract::Protocol::Phoenix,
+                router: phoenix_multihop_client.address.clone(),
+                paused: false,
+            },
+            AdapterFromWasm {
+                protocol_id: soroswap_aggregator_contract::Protocol::Comet,
+                router: comet_pair.address.clone(),
+                paused: false,
+            },
+            AdapterFromWasm {
+                protocol_id: soroswap_aggregator_contract::Protocol::Aqua,
+                router: aqua_setup.router.address.clone(),
+                paused: false,
+            },
+        ];
 
         // Convert the arguments into a Vec<Val>
         let init_fn_args: Vec<Val> = (admin.clone(), initialize_aggregator_addresses).into_val(&env);
@@ -399,6 +446,7 @@ impl<'a> SoroswapAggregatorTest<'a> {
             soroswap_router_address, 
             phoenix_multihop_address: phoenix_multihop_client.address.clone(),
             comet_router_address: comet_pair.address.clone(),
+            aqua_setup,
         }
     }
 }
