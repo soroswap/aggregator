@@ -12,3 +12,6 @@ contracts/adapters/*/test_snapshots
 node_modules/
 .env
 /dist
+/dev
+/README-apuntes.md
+.stellar
