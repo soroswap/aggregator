@@ -49,20 +49,20 @@ export async function invokeTransaction(tx: Transaction, source: Keypair, sim: b
   }
 
   // assemble and sign the TX
-  const txResources = simulation_resp.transactionData.build().resources();
-  simulation_resp.minResourceFee = (Number(simulation_resp.minResourceFee) + 10000000).toString();
-  const sim_tx_data = simulation_resp.transactionData
-    .setResources(
-      txResources.instructions() == 0 ? 0 : txResources.instructions() + 500000,
-      txResources.readBytes(),
-      txResources.writeBytes()
-    )
-    .build();
+  // const txResources = simulation_resp.transactionData.build().resources();
+  // simulation_resp.minResourceFee = (Number(simulation_resp.minResourceFee) + 10000000).toString();
+  // const sim_tx_data = simulation_resp.transactionData
+  //   .setResources(
+  //     txResources.instructions() == 0 ? 0 : txResources.instructions() + 500000,
+  //     txResources.readBytes(),
+  //     txResources.writeBytes()
+  //   )
+  //   .build();
   const assemble_tx = rpc.assembleTransaction(tx, simulation_resp);
-  sim_tx_data.resourceFee(
-    xdr.Int64.fromString((Number(sim_tx_data.resourceFee().toString()) + 100000).toString())
-  );
-  const prepped_tx = assemble_tx.setSorobanData(sim_tx_data).build();
+  // sim_tx_data.resourceFee(
+  //   xdr.Int64.fromString((Number(sim_tx_data.resourceFee().toString()) + 100000).toString())
+  // );
+  const prepped_tx = assemble_tx.build();
   prepped_tx.sign(source);
   const tx_hash = prepped_tx.hash().toString('hex');
 
