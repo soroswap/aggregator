@@ -40,26 +40,26 @@ If you want to update the submodules, do
 git pull --recurse-submodules
 ```
 
-1.2 Copy the `.env.example` file into `.env` and modify the necessary parameters
+1.2. Copy the `.env.example` file into `.env` and modify the necessary parameters
 ```bash
 cp .env.example .env
 ```
 For the **secret keys**, you can create an account and private keys in https://laboratory.stellar.org/#account-creator?network=test.
 For `MAINNET_RPC_URL`, you will need to subscribe to one of the Stellar Mainnet RPC providers: https://app.validationcloud.io/, https://nownodes.io/ or others (ask in the Stellar Discord)
 
-1.2 In one terminal: (choose standalone, futurenet or testnet)
+1.3. In one terminal: (choose standalone, futurenet or testnet)
 
 ```bash
 bash scripts/quickstart.sh standalone # or futurenet or testnet
 ```
 
-1.3. In another terminal, to enter the docker container
+1.4. In another terminal, to enter the docker container
 
 ```bash
 bash scripts/run.sh
 ```
 
-1.4 yarn install
+1.5. yarn install
 
 ```bash
 yarn
@@ -101,7 +101,7 @@ task build
 cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/aqua/aqua_contracts/
 ```
 
-## 2. Run Tests and Scout Audit
+## 2.- Run Tests and Scout Audit
 ```
 cd /workspace/contracts/
 make test
