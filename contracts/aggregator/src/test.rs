@@ -46,7 +46,7 @@ use aqua_setup::{AquaSetup};
 
 
 // mod deployer_contract {
-//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+//     soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
 //     pub type DeployerClient<'a> = Client<'a>;
 // }
 // pub use deployer_contract::DeployerClient;
@@ -63,7 +63,7 @@ fn create_soroswap_aggregator<'a>(e: &Env) -> SoroswapAggregatorClient<'a> {
 }
 
 pub mod soroswap_aggregator_contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/soroswap_aggregator.optimized.wasm");
     pub type SoroswapAggregatorClientFromWasm<'a> = Client<'a>;
 }
 use soroswap_aggregator_contract::{SoroswapAggregatorClientFromWasm, Adapter as AdapterFromWasm};

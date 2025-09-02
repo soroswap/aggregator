@@ -20,7 +20,7 @@ pub mod factory {
 use factory::CometFactoryClient;
 
 pub mod comet_adapter{
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/comet_adapter.optimized.wasm");
     pub type CometAdapterClient<'a> = Client<'a>;
 }
 

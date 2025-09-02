@@ -6,9 +6,9 @@ test: build
 	cargo test
 
 build:
-	cargo build --target wasm32-unknown-unknown --release
-	soroban contract optimize --wasm ../../target/wasm32-unknown-unknown/release/phoenix_adapter.wasm
-	@rm ../../target/wasm32-unknown-unknown/release/phoenix_adapter.wasm
+	cargo build --target wasm32v1-none --release
+	stellar contract optimize --wasm ../../target/wasm32v1-none/release/phoenix_adapter.wasm
+	@rm ../../target/wasm32v1-none/release/phoenix_adapter.wasm
 
 fmt:
 	cargo fmt --all --check

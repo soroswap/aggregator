@@ -381,7 +381,7 @@ impl<'a> PhoenixTest<'a> {
 
 
 mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
     pub type DeployerClient<'a> = Client<'a>;
 }
 pub use deployer_contract::DeployerClient;
@@ -404,7 +404,7 @@ pub fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
 mod phoenix_adapter {
     soroban_sdk::contractimport!(
         file =
-            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+            "../target/wasm32v1-none/release/phoenix_adapter.optimized.wasm"
     );
     pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
 }

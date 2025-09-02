@@ -10,7 +10,7 @@ use soroban_sdk::{
 };
 
 mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
     pub type DeployerClient<'a> = Client<'a>;
 }
 use deployer_contract::DeployerClient;
@@ -29,7 +29,7 @@ fn create_comet_aggregator_adapter<'a>(e: &Env) -> CometAggregatorAdapterClient<
 
 pub mod comet_adapter_contract {
     soroban_sdk::contractimport!(
-        file = "../../target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm"
+        file = "../../target/wasm32v1-none/release/comet_adapter.optimized.wasm"
     );
     pub type CometAggregatorAdapterClientFromWasm<'a> = Client<'a>;
 }

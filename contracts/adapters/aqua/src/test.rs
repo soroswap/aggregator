@@ -18,7 +18,7 @@ use crate::{SoroswapAggregatorAquaAdapter, SoroswapAggregatorAquaAdapterClient};
 use aqua_setup::{AquaTest, TokenClient, AquaRouter};
 
 mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
     pub type DeployerClient<'a> = Client<'a>;
 }
 use deployer_contract::DeployerClient;
@@ -35,7 +35,7 @@ fn create_soroswap_aggregator_aqua_adapter<'a>(e: &Env) -> SoroswapAggregatorAqu
 }
 
 pub mod aqua_adapter_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/aqua_adapter.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/aqua_adapter.optimized.wasm");
     pub type SoroswapAggregatorAquaAdapterClientFromWasm<'a> = Client<'a>;
 }
 use aqua_adapter_contract::SoroswapAggregatorAquaAdapterClientFromWasm;

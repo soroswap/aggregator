@@ -4,7 +4,7 @@ use super::{generate_salt, DeployerClient};
 mod phoenix_adapter {
     soroban_sdk::contractimport!(
         file =
-            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+            "../target/wasm32v1-none/release/phoenix_adapter.optimized.wasm"
     );
     pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
 }

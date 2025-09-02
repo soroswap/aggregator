@@ -18,7 +18,7 @@ use factory::SoroswapFactoryClient;
 use router::SoroswapRouterClient;
 
 mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
     pub type DeployerClient<'a> = Client<'a>;
 }
 use deployer_contract::DeployerClient;
@@ -35,7 +35,7 @@ fn create_soroswap_aggregator_adapter<'a>(e: &Env) -> SoroswapAggregatorAdapterC
 }
 
 pub mod soroswap_adapter_contract {
-    soroban_sdk::contractimport!(file = "../../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../../target/wasm32v1-none/release/soroswap_adapter.optimized.wasm");
     pub type SoroswapAggregatorAdapterClientFromWasm<'a> = Client<'a>;
 }
 use soroswap_adapter_contract::SoroswapAggregatorAdapterClientFromWasm;

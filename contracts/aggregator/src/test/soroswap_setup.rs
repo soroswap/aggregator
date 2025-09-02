@@ -42,7 +42,7 @@ pub fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
 // SoroswapAggregatorAdapter Contract
 // For Soroswap
 mod soroswap_adapter {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/soroswap_adapter.optimized.wasm");
     pub type SoroswapAggregatorAdapterForSoroswapClient<'a> = Client<'a>;
 }
 pub use soroswap_adapter::SoroswapAggregatorAdapterForSoroswapClient;
