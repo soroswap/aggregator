@@ -82,13 +82,13 @@ For Phoenix:
 ```
 cd protocols/phoenix-contracts/
 make build
-cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
+cp target/wasm32v1-none/release/*.wasm ../../contracts/adapters/phoenix/phoenix_contracts/
 
 # make sure the tests still pass
 cd /workspace/contracts/adapters/phoenix
 rustup install 1.79.0 # Phoenix needs to downgrade
 rustup override set 1.79.0
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32v1-none
 make test
 
 ```
@@ -98,7 +98,7 @@ For Aqua:
 cd protocols/aqua
 npm install -g @go-task/cli
 task build
-cp target/wasm32-unknown-unknown/release/*.wasm ../../contracts/adapters/aqua/aqua_contracts/
+cp target/wasm32v1-none/release/*.wasm ../../contracts/adapters/aqua/aqua_contracts/
 ```
 
 ## 2. Run Tests and Scout Audit
@@ -148,7 +148,7 @@ cd /workspace/contracts
 make build
 ```
 The .wasm files will already be optimized and will be available in 
-`/workspace/contracts/target/wasm32-unknown-unknown/release/` with a name like `[NAME-OF-CONTRACT].optimized.wasm`
+`/workspace/contracts/target/wasm32v1-none/release/` with a name like `[NAME-OF-CONTRACT].optimized.wasm`
 
 after the WASMs are built you can run this to deploy, networks can be `testnet`, `standalone`, `futurenet`, `mainnet`. The RPCs will be taken from the `configs.json` file.
 
@@ -171,7 +171,7 @@ when deployment is completed you can find the addresses in ./.soroban directory
 Run javascript tests
 ```
 cd /workspace
-yarn test
+yarn test testnet
 ```
 
 
