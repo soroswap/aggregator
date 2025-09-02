@@ -71,7 +71,7 @@ use soroswap_aggregator_contract::{SoroswapAggregatorClientFromWasm, Adapter as 
 
 // Token Contract
 mod token {
-    soroban_sdk::contractimport!(file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm");
+    soroban_sdk::contractimport!(file = "../aggregator/soroswap_contracts/soroban_token_contract.wasm");
     pub type TokenClient<'a> = Client<'a>;
 }
 use token::TokenClient;
@@ -81,7 +81,7 @@ pub fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient<'a> {
 
 // pub fn install_token_wasm(env: &Env) -> BytesN<32> {
 //     soroban_sdk::contractimport!(
-//         file = "../adapters/soroswap/soroswap_contracts/soroban_token_contract.wasm"
+//         file = "../aggregator/soroswap_contracts/soroban_token_contract.wasm"
 //     );
 //     env.deployer().upload_contract_wasm(WASM)
 // }
