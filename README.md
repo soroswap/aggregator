@@ -140,7 +140,7 @@ yarn build
 yarn setup-phoenix testnet # To Setup Phoenix. Now you will have the new deployed addresses in .soroban/testnet.contrats.json
 
 ```
-### 4.2 Deploy the Aggregator Aggregator
+### 4.2 Deploy the Aggregator
 
 To deploy the smart contracts you first would need to build the source with
 ```bash
