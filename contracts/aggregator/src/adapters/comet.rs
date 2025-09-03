@@ -2,7 +2,7 @@ use soroban_sdk::{vec, Address, Env, Vec};
 use crate::error::AggregatorError;
 
 soroban_sdk::contractimport!(
-    file = "./comet_contracts/comet_pool.wasm"
+    file = "../external_wasms/comet_contracts/comet_pool.wasm"
 );
 pub type CometPoolClient<'a> = Client<'a>;
 

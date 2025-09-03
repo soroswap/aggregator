@@ -1,5 +1,5 @@
 [workspace]
-members = ["adapters/*", "aggregator", "deployer", "test-utils"]
+members = ["aggregator", "deployer", "test-utils"]
 resolver = "2"
 
 [workspace.package]
@@ -10,8 +10,7 @@ repository = "https://github.com/soroswap/aggregator"
 homepage = "https://github.com/soroswap/aggregator"
 
 [workspace.dependencies]
-soroban-sdk = "22.0.7"
-adapter-interface={path="./adapters/interface", package="adapter-interface"}
+soroban-sdk = "23.0.0-rc.2.4"
 test-utils = { path = "./test-utils" }
 
 [profile.release]

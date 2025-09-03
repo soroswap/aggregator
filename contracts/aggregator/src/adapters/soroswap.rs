@@ -3,7 +3,7 @@ use soroban_sdk::{Env, Address, Vec};
 use crate::error::AggregatorError;
 
 soroban_sdk::contractimport!(
-    file = "./soroswap_contracts/soroswap_router.wasm"
+    file = "../external_wasms/soroswap_contracts/soroswap_router.wasm"
 );
 pub type SoroswapRouterClient<'a> = Client<'a>;
 

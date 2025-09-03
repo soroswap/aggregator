@@ -6,7 +6,7 @@ use crate::error::AggregatorError;
 // use phoenix_contracts::PoolType;
 
 soroban_sdk::contractimport!(
-    file = "./phoenix_contracts/phoenix_multihop.wasm"
+    file = "../external_wasms/phoenix_contracts/phoenix_multihop.wasm"
 );
 pub type PhoenixMultihopClient<'a> = Client<'a>;
 

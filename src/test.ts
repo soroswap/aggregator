@@ -12,16 +12,16 @@ export async function testAggregator(addressBook: AddressBook) {
   const usdc_address = "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"
   const xtar_address = "CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS"
 
-  console.log("Getting protocols")
-  const result = await invokeContract(
-    'aggregator',
-    addressBook,
-    'get_protocols',
-    [],
-    loadedConfig.admin,
-    true
-  );
-  console.log('🚀 « result:', scValToNative(result.result.retval));
+  // console.log("Getting protocols")
+  // const result = await invokeContract(
+  //   'aggregator',
+  //   addressBook,
+  //   'get_protocols',
+  //   [],
+  //   loadedConfig.admin,
+  //   true
+  // );
+  // console.log('🚀 « result:', scValToNative(result.result.retval));
 
   console.log("-------------------------------------------------------");
   console.log("Starting Balances");

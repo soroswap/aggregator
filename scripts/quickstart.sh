@@ -11,7 +11,7 @@ set -e
 case "$1" in
 standalone)
     echo "Using standalone network"
-    ARGS="--local --enable-soroban-diagnostic-events"
+    ARGS="--local"
     ;;
 futurenet)
     echo "Using Futurenet network"
@@ -83,6 +83,4 @@ docker run --rm -ti \
   stellar/quickstart:${quickstartHash} \
   $ARGS \
   --enable-soroban-rpc \
-  --protocol-version ${protocolVersion} \
-  --enable-soroban-diagnostic-events \
-  "$@" # Pass through args from the CLI
+  --protocol-version ${protocolVersion}

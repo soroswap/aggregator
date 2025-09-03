@@ -14,21 +14,21 @@ use soroswap_aggregator_contract::Adapter;
 mod soroswap_adapter_contract {
     soroban_sdk::contractimport!(
         file =
-            "../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm"
+            "../target/wasm32v1-none/release/soroswap_adapter.optimized.wasm"
     );
 }
 
 mod phoenix_adapter_contract {
   soroban_sdk::contractimport!(
       file =
-          "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+          "../target/wasm32v1-none/release/phoenix_adapter.optimized.wasm"
   );
 }
 
 mod soroswap_aggregator_contract {
   soroban_sdk::contractimport!(
       file =
-          "../target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm"
+          "../target/wasm32v1-none/release/soroswap_aggregator.optimized.wasm"
   );
 }
 
