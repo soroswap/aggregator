@@ -12,7 +12,6 @@ mod test;
 
 use error::AggregatorError;
 use models::{Protocol, Adapter, DexDistribution, MAX_DISTRIBUTION_LENGTH};
-use adapter_interface::AdapterClient;
 use storage::{
     extend_instance_ttl, get_adapter, get_admin, get_protocol_ids, has_adapter, is_initialized,
     put_adapter, remove_adapter, set_admin, set_initialized, set_pause_protocol,
@@ -103,17 +102,6 @@ fn calculate_distribution_amounts_and_check_paths(
     }
 
     Ok(swap_amounts)
-}
-
-pub fn get_adapter_client(
-    e: &Env,
-    protocol_id: Protocol,
-) -> Result<AdapterClient, AggregatorError> {
-    let adapter = get_adapter(&e, protocol_id.clone())?;
-    if adapter.paused {
-        return Err(AggregatorError::ProtocolPaused);
-    }
-    Ok(AdapterClient::new(&e, &adapter.router))
 }
 
 /*

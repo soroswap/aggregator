@@ -1,5 +1,5 @@
 $MAKEFILES = $(shell find . -maxdepth 3 -type f -name Makefile)
-SUBDIRS = adapters aggregator deployer
+SUBDIRS = aggregator deployer
 default: build
 
 all: test

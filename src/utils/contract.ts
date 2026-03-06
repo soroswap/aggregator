@@ -21,21 +21,21 @@ import { createTxBuilder, invoke, invokeTransaction } from './tx.js';
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   deployer:
-    '../../contracts/target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm',
+    '../../contracts/target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm',
   aggregator:
-    '../../contracts/target/wasm32-unknown-unknown/release/soroswap_aggregator.optimized.wasm',
-  soroswap_adapter: '../../contracts/target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm',
-  phoenix_adapter: '../../contracts/target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm',
+    '../../contracts/target/wasm32v1-none/release/soroswap_aggregator.optimized.wasm',
+  soroswap_adapter: '../../contracts/target/wasm32v1-none/release/soroswap_adapter.optimized.wasm',
+  phoenix_adapter: '../../contracts/target/wasm32v1-none/release/phoenix_adapter.optimized.wasm',
   phoenix_factory: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_factory.wasm',
   phoenix_multihop: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm',
   phoenix_token: '../../contracts/adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm',
   phoenix_pool: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool.wasm',
   phoenix_stake: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_stake.wasm',
   phoenix_stable: '../../contracts/adapters/phoenix/phoenix_contracts/phoenix_pool_stable.wasm',
-  comet_adapter: '../../contracts/target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm',
+  comet_adapter: '../../contracts/target/wasm32v1-none/release/comet_adapter.optimized.wasm',
   comet_factory: '../../contracts/adapters/comet/comet_contracts/comet_factory.wasm',
   comet_pool: '../../contracts/adapters/comet/comet_contracts/comet_pool.wasm',
-  aqua_adapter: '../../contracts/target/wasm32-unknown-unknown/release/aqua_adapter.optimized.wasm',
+  aqua_adapter: '../../contracts/target/wasm32v1-none/release/aqua_adapter.optimized.wasm',
 };
 
 const network = process.argv[2];

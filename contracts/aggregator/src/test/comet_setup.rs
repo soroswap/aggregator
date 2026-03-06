@@ -5,7 +5,7 @@ use soroban_sdk::{vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec};
 use test_utils::phoenix_setup::{generate_salt, DeployerClient};
 
 pub mod pair {
-    soroban_sdk::contractimport!(file = "../adapters/comet/comet_contracts/comet_pool.wasm");
+    soroban_sdk::contractimport!(file = "../external_wasms/comet_contracts/comet_pool.wasm");
     pub type CometPairClient<'a> = Client<'a>;
 }
 
@@ -14,13 +14,13 @@ fn pair_contract_wasm(e: &Env) -> BytesN<32> {
 }
 
 pub mod factory {
-    soroban_sdk::contractimport!(file = "../adapters/comet/comet_contracts/comet_factory.wasm");
+    soroban_sdk::contractimport!(file = "../external_wasms/comet_contracts/comet_factory.wasm");
     pub type CometFactoryClient<'a> = Client<'a>;
 }
 use factory::CometFactoryClient;
 
 pub mod comet_adapter{
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/comet_adapter.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/comet_adapter.optimized.wasm");
     pub type CometAdapterClient<'a> = Client<'a>;
 }
 

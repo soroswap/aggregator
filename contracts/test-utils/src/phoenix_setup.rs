@@ -22,7 +22,7 @@ use soroban_sdk::{
 #[allow(clippy::too_many_arguments)]
 pub mod factory {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/phoenix_factory.wasm"
+        file = "../external_wasms/phoenix_contracts/phoenix_factory.wasm"
     );
 }
 use factory::{LiquidityPoolInitInfo, StakeInitInfo, TokenInitInfo};
@@ -34,14 +34,14 @@ pub use factory::PoolType;
 /* *************  MULTIHOP  *************  */
 #[allow(clippy::too_many_arguments)]
 pub mod multihop {
-    soroban_sdk::contractimport!(file = "../adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm");
+    soroban_sdk::contractimport!(file = "../external_wasms/phoenix_contracts/phoenix_multihop.wasm");
     pub type MultihopClient<'a> = Client<'a>;
 }
 pub use multihop::MultihopClient; 
 
 pub fn install_multihop_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/phoenix_multihop.wasm"
+        file = "../external_wasms/phoenix_contracts/phoenix_multihop.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -60,7 +60,7 @@ pub fn deploy_multihop_contract<'a>(
 
 pub mod token_contract {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm"
+        file = "../external_wasms/phoenix_contracts/soroban_token_contract.wasm"
     );
 }
 
@@ -83,7 +83,7 @@ pub use token_contract::Client as TokenClient;
 
 pub fn install_token_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/soroban_token_contract.wasm"
+        file = "../external_wasms/phoenix_contracts/soroban_token_contract.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -98,7 +98,7 @@ pub fn deploy_token_contract<'a>(env: & Env, admin: & Address) -> token_contract
 #[allow(clippy::too_many_arguments)]
 pub mod stable_contract {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/phoenix_pool_stable.wasm"
+        file = "../external_wasms/phoenix_contracts/phoenix_pool_stable.wasm"
     );
 }
 
@@ -111,7 +111,7 @@ pub fn install_stable_contract(env: &Env) -> BytesN<32> {
 #[allow(clippy::too_many_arguments)]
 pub mod lp_contract {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/phoenix_pool.wasm"
+        file = "../external_wasms/phoenix_contracts/phoenix_pool.wasm"
     );
 }
 
@@ -125,7 +125,7 @@ pub fn install_lp_contract(env: &Env) -> BytesN<32> {
 #[allow(clippy::too_many_arguments)]
 pub fn install_stake_wasm(env: &Env) -> BytesN<32> {
     soroban_sdk::contractimport!(
-        file = "../adapters/phoenix/phoenix_contracts/phoenix_stake.wasm"
+        file = "../external_wasms/phoenix_contracts/phoenix_stake.wasm"
     );
     env.deployer().upload_contract_wasm(WASM)
 }
@@ -381,7 +381,7 @@ impl<'a> PhoenixTest<'a> {
 
 
 mod deployer_contract {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/soroswap_aggregator_deployer.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/soroswap_aggregator_deployer.optimized.wasm");
     pub type DeployerClient<'a> = Client<'a>;
 }
 pub use deployer_contract::DeployerClient;
@@ -404,7 +404,7 @@ pub fn create_deployer<'a>(e: &Env) -> DeployerClient<'a> {
 mod phoenix_adapter {
     soroban_sdk::contractimport!(
         file =
-            "../target/wasm32-unknown-unknown/release/phoenix_adapter.optimized.wasm"
+            "../target/wasm32v1-none/release/phoenix_adapter.optimized.wasm"
     );
     pub type SoroswapAggregatorAdapterForPhoenixClient<'a> = Client<'a>;
 }

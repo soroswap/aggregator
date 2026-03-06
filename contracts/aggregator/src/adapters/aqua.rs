@@ -5,7 +5,7 @@ use soroban_sdk::Symbol;
 use crate::error::AggregatorError;
 
 soroban_sdk::contractimport!(
-    file = "./aqua_contracts/soroban_liquidity_pool_router_contract.wasm"
+    file = "../external_wasms/aqua_contracts/soroban_liquidity_pool_router_contract.wasm"
 );
 pub type AquaRouterClient<'a> = Client<'a>;
 
