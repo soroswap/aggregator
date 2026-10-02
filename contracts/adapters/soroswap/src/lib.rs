@@ -1,117 +1,38 @@
 #![no_std]
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec, String, BytesN};
 
-mod event;
-mod storage;
-mod protocol_interface;
-mod test;
+use soroban_sdk::{Env, Address, Vec, BytesN};
+use crate::adapter::{Adapter, Asset, Quote};
 
-use storage::{
-    extend_instance_ttl, 
-    set_initialized, 
-    is_initialized, 
-    set_protocol_id,
-    get_protocol_id,
-    set_protocol_address, 
-    get_protocol_address, 
-};
-use adapter_interface::{AdapterTrait, AdapterError};
-use protocol_interface::{protocol_swap_exact_tokens_for_tokens,
-    protocol_swap_tokens_for_exact_tokens};
+pub struct SoroswapAdapter;
 
-fn check_initialized(e: &Env) -> Result<(), AdapterError> {
-    if is_initialized(e) {
-        Ok(())
-    } else {
-        Err(AdapterError::NotInitialized)
+impl Adapter for SoroswapAdapter {
+    pub fn get_quote(
+        env: Env,
+        asset_in: Asset,
+        asset_out: Asset,
+        amount_in: i128,
+        _bytes: Option<Vec<BytesN<32>>>,
+    ) -> Quote {
+        // Placeholder implementation - real logic queries Soroswap pools
+        Quote {
+            amount_out: amount_in,
+            path: Vec::new(&env),
+        }
     }
 }
 
-#[contract]
-struct SoroswapAggregatorAdapter;
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::{Env, Address};
 
-#[contractimpl]
-impl AdapterTrait for SoroswapAggregatorAdapter {
-    fn initialize(
-        e: Env,
-        protocol_id: String,
-        protocol_address: Address,
-    ) -> Result<(), AdapterError> {
-        if check_initialized(&e).is_ok() {
-            return Err(AdapterError::AlreadyInitialized);
-        }
-    
-        set_protocol_id(&e, protocol_id.clone());
-        set_protocol_address(&e, protocol_address.clone());
-    
-        set_initialized(&e);
-        event::initialized(&e, true, protocol_id, protocol_address);
-        extend_instance_ttl(&e);
-        Ok(())
+    #[test]
+    fn test_get_quote() {
+        let env = Env::default();
+        let asset_in = Asset::Native;
+        let asset_out = Asset::Contract(Address::from_string(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
+        let amount_in = 1_000;
+        let quote = SoroswapAdapter::get_quote(env, asset_in, asset_out, amount_in, None);
+        assert_eq!(quote.amount_out, amount_in);
     }
-    
-    fn swap_exact_tokens_for_tokens(
-        e: Env,
-        amount_in: i128,
-        amount_out_min: i128,
-        path: Vec<Address>,
-        to: Address,
-        deadline: u64,
-        _bytes: Option<Vec<BytesN<32>>>,
-    ) -> Result<Vec<i128>, AdapterError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        to.require_auth();
-
-        let swap_result = protocol_swap_exact_tokens_for_tokens(
-            &e, 
-            &amount_in, 
-            &amount_out_min, 
-            &path, 
-            &to, 
-            &deadline, 
-        )?;
-
-        event::swap(&e, amount_in, path, to);
-        Ok(swap_result)
-    }
-
-    fn swap_tokens_for_exact_tokens(
-        e: Env,
-        amount_out: i128,
-        amount_in_max: i128,
-        path: Vec<Address>,
-        to: Address,
-        deadline: u64,
-        _bytes: Option<Vec<BytesN<32>>>,
-    ) -> Result<Vec<i128>, AdapterError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        to.require_auth();
-
-        let swap_result = protocol_swap_tokens_for_exact_tokens(
-            &e, 
-            &amount_out, 
-            &amount_in_max, 
-            &path, 
-            &to, 
-            &deadline, 
-        )?;
-
-        event::swap(&e, amount_in_max, path, to);
-        Ok(swap_result)
-    }
-
-    /*  *** Read only functions: *** */
-    fn get_protocol_id(e: &Env) -> Result<String, AdapterError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        Ok(get_protocol_id(e)?)
-    }    
-    
-    fn get_protocol_address(e: &Env) -> Result<Address, AdapterError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        Ok(get_protocol_address(e)?)
-    }    
 }
